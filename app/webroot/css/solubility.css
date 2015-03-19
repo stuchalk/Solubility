@@ -1,0 +1,29 @@
+div#right {
+	float: left;
+	background-color: #F0F0F0;
+	width: 450px;
+	-moz-box-shadow: 2px 2px #BBBBBB;
+	-webkit-box-shadow: 2px 2px #BBBBBB;
+	box-shadow: 2px 2px #BBBBBB;
+}
+
+div.variables {
+	float: left;
+	width: 270px;;
+	background-color: #FFFFFF;
+}
+
+div.chemical {
+	float: right;
+	text-align: center;
+	background-color: #F8F8F8;
+	-moz-box-shadow: 2px 2px #BBBBBB;
+	-webkit-box-shadow: 2px 2px #BBBBBB;
+	box-shadow: 2px 2px #BBBBBB;
+	border: 1px solid #BBBBBB;
+	margin-left: 10px;
+}
+
+div.floatreset {
+	clear: both;
+}
