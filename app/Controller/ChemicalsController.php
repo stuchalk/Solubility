@@ -6,9 +6,7 @@
  */
 class ChemicalsController extends AppController
 {
-	public $name = 'Chemicals';
-
-    /**
+	/**
      * Return all chemicals in the database
      */
 	public function index()

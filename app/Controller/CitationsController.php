@@ -1,29 +1,33 @@
 <?php
 
+/**
+ * Class ChemicalsController
+ * Methods to access citations
+ */
 class CitationsController extends AppController
 {
 
-	function index()
+    /**
+     * Return all citations in the database
+     * @param string $format
+     */
+	function index($format="")
 	{
-		$this->Citation->virtualFields['first'] = 'UPPER(SUBSTR(Citation.journal,1,1))';
-		$this->Citation->virtualFields['cite'] = 'CONCAT(Citation.journal," ",Citation.year,", ",Citation.volume,", ",Citation.firstpage)';
-		$data=$this->Citation->find('list', array('fields'=>array('id','cite','first'),'order'=>array('first','cite')));
-		$this->set('data',$data);
+		$data=$this->Citation->find('list', ['fields'=>['id','cite','first'],'order'=>['first','cite']]);
+        if($format=="json") { echo json_encode($data);exit; }
+        $this->set('data',$data);
 	}
 
-	function view($id,$format="")
+    /**
+     * View a specific citation
+     * @param $id
+     * @param string $format
+     */
+    function view($id,$format="")
 	{
-		$data=$this->Citation->find('first', array('conditions'=>array('Citation.id'=>$id)));
+		$data=$this->Citation->find('first', ['conditions'=>['Citation.id'=>$id],'recursive'=>2]);
 		if($format=="json") { echo json_encode($data);exit; }
 		$this->set('data',$data);
 	}
 
-	function authors($id,$format="")
-	{
-		$data=$this->Citation->find('first', array('conditions'=>array('Citation.id'=>$id)));
-		if($format=="json") { echo json_encode($data['Author']);exit; }
-		$this->set('data',$data['Author']);
-		if($this->request->is('requested')) { return $data['Author']; }
-	}
 }
-?>

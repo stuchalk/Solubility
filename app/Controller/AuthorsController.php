@@ -1,23 +1,36 @@
 <?php
 
+/**
+ * Class AuthorsController
+ * Methods to access authors
+ */
 class AuthorsController extends AppController
 {
 
-	function index()
+    /**
+     * Return all authors in the database
+     * @param string $format
+     */
+    function index($format="")
 	{
 		$this->Author->virtualFields['first'] = 'UPPER(SUBSTR(Author.lastname,1,1))';
 		$this->Author->virtualFields['name'] = 'CONCAT(Author.firstname," ",Author.lastname)';
-		$data=$this->Author->find('list', array('fields'=>array('id','name','first'),'order'=>array('first','name')));
-		$this->set('data',$data);
+		$data=$this->Author->find('list', ['fields'=>['id','name','first'],'order'=>['first','name']]);
+        if($format=="json") { echo json_encode($data);exit; }
+        $this->set('data',$data);
 	}
 
-	function view($id,$format="")
+    /**
+     * View a specific author
+     * @param $id
+     * @param string $format
+     */
+    function view($id,$format="")
 	{
 		$this->Author->virtualFields['name'] = 'CONCAT(Author.firstname," ",Author.lastname)';
-		$data=$this->Author->find('first', array('conditions'=>array('Author.id'=>$id)));
+		$data=$this->Author->find('first', ['conditions'=>['Author.id'=>$id]]);
 		if($format=="json") { echo json_encode($data);exit; }
 		$this->set('data',$data);
 	}
 
 }
-?>
