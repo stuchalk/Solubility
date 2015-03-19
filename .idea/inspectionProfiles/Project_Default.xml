@@ -105,6 +105,9 @@
     <inspection_tool class="PhpMultipleClassesDeclarationsInOneFile" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="PhpTraditionalSyntaxArrayLiteralInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="PhpUndefinedCallbackInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PhpUndefinedMethodInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="DOWNGRADE_SEVERITY" value="true" />
+    </inspection_tool>
     <inspection_tool class="PhpUsageOfSilenceOperatorInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="PlatformDetectionJS" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="QuirksModeInspectionTool" enabled="true" level="WARNING" enabled_by_default="true">
