@@ -1,4 +1,5 @@
 <?php
+pr($data);exit;
 $citation=$data['Citation'];
 if(isset($data['System']))		{ $systems=$data['System']; }
 if(isset($data['Author']))		{ $authors=$data['Author']; }

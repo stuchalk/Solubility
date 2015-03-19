@@ -1,6 +1,6 @@
 <h2>Authors</h2>
 <?php
-$chars=array();
+$chars=[];
 foreach($data as $char=>$iarray) { $chars[]=$char; }
 echo "<p>Click on a letter below to show authors by last name</p>";
 echo "<p>";
@@ -23,5 +23,4 @@ foreach($data as $char=>$iarray)
 	echo "</ul></div>";
 }
 ?>
-<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sys_category.aspx',array('target'=>'_blank'));?></p>
-<?php pr($data); ?>
+<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sys_category.aspx',['target'=>'_blank']);?></p>

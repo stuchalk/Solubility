@@ -15,7 +15,7 @@ if(isset($citation)&&($system['citation_id']!='00000'))
 		echo "<div style='float: left;'><h4>Original Citation:&nbsp;</h4></div>\n";
 		echo "<div style='float: left;'>";
 			if(isset($citation['title'])) { echo "<h4 style='margin-bottom: 0px;'>".$citation['title']."</h4>\n"; }
-			$authors=$this->requestAction('/citations/authors/'.$citation['id']);$bib="";
+			$authors=$data['Author'];$bib="";
 			foreach($authors as $au) { $bib.=$au['lastname'].", ".$au['firstname']."; "; }
 			$bib.=$citation['journal']." ".$citation['year'].", ".$citation['volume'];
 			($citation['issue']!="") ? $bib.="(".$citation['issue']."), " : $bib.=", ";
