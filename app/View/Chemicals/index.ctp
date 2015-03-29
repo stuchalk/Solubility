@@ -1,8 +1,8 @@
 <h2>Chemicals</h2>
-<?php pr($data); ?>
+<?php //pr($data); ?>
 <?php //pr($formula); ?>
 <?php
-$chars=array();
+$chars=[];
 foreach($data as $char=>$iarray) { $chars[]=$char; }
 echo "<p>Click on a letter below to show chemicals starting with that letter</p>";
 echo "<p>";
@@ -25,4 +25,4 @@ foreach($data as $char=>$iarray)
 	echo "</ul></div>";
 }
 ?>
-<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sys_category.aspx',array('target'=>'_blank'));?></p>
+<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sys_category.aspx',['target'=>'_blank']);?></p>

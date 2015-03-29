@@ -24,24 +24,41 @@ class ChemicalsController extends AppController
     public function view($id,$format="")
 	{
         // Use id to find an InChI to search on
-        $inchi=file_get_contents("http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi");
-        if(!empty($inchi)) {
+        $inchi=get_headers("http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi",true);
+        //echo "<pre>";print_r($inchi);echo "</pre>";exit;
+        if(stristr($inchi[0],"OK")) {
             $data=$this->Chemical->find('first', ['conditions'=>['Chemical.inchi'=>$inchi],'recursive'=>2]);
         } else {
             if(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.casrn'=>$id],'recursive'=>2]);
-            } elseif(preg_match('[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+',$id)) {
+            } elseif(preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/',$id)) {
                 $data=$this->Chemical->find('first', ['fields'=>['id','formula','first'],'order'=>['first','formula'],'conditions'=>['formula'=>$id],'recursive'=>2]);
-            } elseif(is_integer($id)) {
+            } elseif(is_numeric($id)) {
+                $type="integer";
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.id'=>$id],'recursive'=>2]);
             } elseif(is_string($id)) {
+                $type="string";
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.name'=>$id],'recursive'=>2]);
             } else {
                 $data="No chemical found using '".$id."'";
             }
         }
+        // Check name
+        if(isset($data['Chemical']['inchi'])&&$data['Chemical']['inchi']=="") {
+            $strpath="http://cactus.nci.nih.gov/chemical/structure/".rawurlencode($data['Chemical']['name'])."/stdinchi";
+            $keypath="http://cactus.nci.nih.gov/chemical/structure/".rawurlencode($data['Chemical']['name'])."/stdinchikey";
+            $test=get_headers($strpath,true);
+            if(stristr($test[0],"OK")) {
+                $data['Chemical']['inchi']=file_get_contents($strpath);
+                $data['Chemical']['inchikey']=file_get_contents($keypath);
+                $this->Chemical->save($data);
+            }
+        }
+
 		if($format!="") { $this->export($data,$format); }
 		$this->set('data',$data);
+        $this->set('type',$type);
+        $this->set('base',Configure::read('host.base'));
 	}
 
      /**
