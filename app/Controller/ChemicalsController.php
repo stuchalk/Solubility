@@ -11,7 +11,6 @@ class ChemicalsController extends AppController
      */
 	public function index()
 	{
-		$this->Chemical->virtualFields['first'] = 'UPPER(SUBSTR(Chemical.name,1,1))';
 		$data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'order'=>['first','name']]);
 		$this->set('data',$data);
         $this->set('nist',Configure::read('url.base'));
@@ -24,6 +23,7 @@ class ChemicalsController extends AppController
      */
     public function view($id,$format="")
 	{
+        $type="";
         // Use id to find an InChI to search on
         $inchi=get_headers("http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi",true);
         //echo "<pre>";print_r($inchi);echo "</pre>";exit;
@@ -31,15 +31,16 @@ class ChemicalsController extends AppController
             $data=$this->Chemical->find('first', ['conditions'=>['Chemical.inchi'=>$inchi],'recursive'=>2]);
         } else {
             if(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
-                $data=$this->Chemical->find('first', ['conditions'=>['Chemical.casrn'=>$id],'recursive'=>2]);
+                $type="casrn";
+                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
             } elseif(preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/',$id)) {
                 $type="formula";
-                $data=$this->Chemical->find('first', ['fields'=>['id','formula','first'],'order'=>['first','formula'],'conditions'=>['formula'=>$id],'recursive'=>2]);
+                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.formula'=>$id],'order'=>['name','formula'],'recursive'=>1]);
             } elseif(is_numeric($id)) {
-                $type="integer";
+                $type="id";
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.id'=>$id],'recursive'=>2]);
             } elseif(is_string($id)) {
-                $type="string";
+                $type="name";
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.name'=>$id],'recursive'=>2]);
             } else {
                 $data="No chemical found using '".$id."'";
@@ -56,13 +57,21 @@ class ChemicalsController extends AppController
                 $this->Chemical->save($data);
             }
         }
-
-		if($format!="") { $this->export($data,$format); }
-		$this->set('data',$data);
-        $this->set('type',$type);
-        $this->set('base',Configure::read('host.base'));
-        $this->set('nist',Configure::read('url.base'));
-	}
+        //echo "<pre>";print_r($data);echo '</pre>';exit;
+        if(!isset($data['Chemical'])) {
+            $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>[$type=>$id],'order'=>['first','name']]);
+            $this->set('data',$data);
+            $this->set('nist',Configure::read('url.base'));
+            $this->render('index');
+        } else {
+            if(isset($data[0])) { $data=$data[0]; }
+            $this->set('data',$data);
+            $this->set('type',$type);
+            $this->set('base',Configure::read('host.base'));
+            $this->set('nist',Configure::read('url.base'));
+            if($format!="") { $this->export($data,$format); }
+        }
+    }
 
      /**
      * Generic export public function for actions above
@@ -110,6 +119,7 @@ class ChemicalsController extends AppController
 				$output.="</".$k1.">\n";
 			}
 			$output.="</chemical>";
+            $output=str_replace("&","&amp;",$output);
 			// Output
 			header('Content-type: text/xml');
 			echo $output;exit;

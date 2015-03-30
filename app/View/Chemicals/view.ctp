@@ -24,7 +24,8 @@ else
 	<?php
 	if(isset($chemical['formula']))		{ echo "<h4>Chemical Formula: ".$chemical['formula']."</h4>"; }
 	if(isset($chemical['casrn']))		{ echo "<h4>CAS Registry Number: ".$chemical['casrn']."</h4>"; }
-	if(isset($chemical['inchi']))		{ echo "<h4>InChI String: ".$chemical['inchi']."</h4>"; }
+    if(isset($chemical['inchikey']))	{ echo "<h4>InChI Key: ".$chemical['inchikey']."</h4>"; }
+    //if(isset($chemical['inchi']))		{ echo "<h4>InChI String: ".$chemical['inchi']."</h4>"; }
 	echo "<div id='chemical' class='chemical' style='float: left'>";
 	echo "<script type='text/javascript'>\n";
 	echo "  var Info = { color: '#000000', height: 290, width: 300, use: 'HTML5', defaultModel: '$".$chemical['name']."', j2sPath: '/solubility/js/jsmol/j2s' };\n";

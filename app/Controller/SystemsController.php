@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Class SystemsController
+ * Methods to access systems
+ */
 class SystemsController extends AppController
 {
 	public $name = 'Systems';
@@ -45,6 +49,7 @@ class SystemsController extends AppController
         $input=$data['System'];
         $input['url']=$path."systems/view/".$input['sysID'];unset($input['id']);
         $input['refs']=json_decode($input['refs']);
+        $input['source']=json_decode($input['source']);
         // Replace the volume data
         $input['volume']=$data['Volume'];unset($input['volume_id']);unset($input['volume']['id']);
         $input['volume']['url']=$path."volumes/view/".$data['Volume']['id'];
@@ -138,6 +143,7 @@ class SystemsController extends AppController
                 $output.="</".$k1.">\n";
             }
             $output.="</system>";
+            $output=str_replace("&","&amp;",$output);
             // Output
             header('Content-type: text/xml');
             echo $output;exit;
