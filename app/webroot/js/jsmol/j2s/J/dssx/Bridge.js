@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.dssx");
-Clazz.load (null, "J.dssx.Bridge", ["java.lang.Boolean", "JW.Escape"], function () {
+Clazz.load (null, "J.dssx.Bridge", ["java.lang.Boolean", "JU.Escape"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.a = null;
 this.b = null;
@@ -46,6 +46,6 @@ if (this.ladder[1][1] < index2) this.ladder[1][1] = index2;
 }, "~N,~N");
 Clazz.overrideMethod (c$, "toString", 
 function () {
-return (this.isAntiparallel ? "a " : "p ") + this.a + " - " + this.b + "\t" + JW.Escape.e (this.ladder);
+return (this.isAntiparallel ? "a " : "p ") + this.a + " - " + this.b + "\t" + JU.Escape.e (this.ladder);
 });
 });

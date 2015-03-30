@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["java.io.BufferedReader", "JSV.api.JSVZipReader"], "JSV.common.JSVZipFileSequentialReader", ["java.io.StringReader", "java.util.zip.ZipInputStream", "JU.SB", "JW.Logger"], function () {
+Clazz.load (["java.io.BufferedReader", "JSV.api.JSVZipReader"], "JSV.common.JSVZipFileSequentialReader", ["java.io.StringReader", "java.util.zip.ZipInputStream", "JU.SB", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.subFileList = null;
 this.zis = null;
@@ -95,10 +95,10 @@ Clazz.defineMethod (c$, "isEntryOK",
  function (name) {
 if (this.subFileList == null || this.subFileList.length == 1) return true;
 for (var i = this.subFileList.length; --i >= 0; ) if (this.subFileList[i].equals (name)) {
-JW.Logger.info ("...reading zip entry " + name);
+JU.Logger.info ("...reading zip entry " + name);
 return true;
 }
-JW.Logger.info ("...skipping zip entry " + name);
+JU.Logger.info ("...skipping zip entry " + name);
 return false;
 }, "~S");
 Clazz.defineMethod (c$, "getEntryLine", 

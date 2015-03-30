@@ -1,5 +1,5 @@
 Clazz.declarePackage ("javajs.export");
-Clazz.load (null, "javajs.export.PDFCreator", ["java.lang.Double", "java.util.Hashtable", "javajs.export.PDFObject", "JU.List", "$.SB"], function () {
+Clazz.load (null, "javajs.export.PDFCreator", ["java.lang.Double", "java.util.Hashtable", "javajs.export.PDFObject", "JU.Lst", "$.SB"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.os = null;
 this.indirectObjects = null;
@@ -27,7 +27,7 @@ this.width = (isLandscape ? paperHeight : paperWidth);
 this.height = (isLandscape ? paperWidth : paperHeight);
 System.out.println ("Creating PDF with width=" + this.width + " and height=" + this.height);
 this.fonts =  new java.util.Hashtable ();
-this.indirectObjects =  new JU.List ();
+this.indirectObjects =  new JU.Lst ();
 this.root = this.newObject ("Catalog");
 var pages = this.newObject ("Pages");
 var page = this.newObject ("Page");
@@ -148,7 +148,7 @@ this.os.close ();
 Clazz.defineMethod (c$, "outputHeader", 
  function () {
 this.output ("%PDF-1.3\n%");
-var b = [-1, -1, -1, -1];
+var b =  Clazz.newByteArray (-1, [-1, -1, -1, -1]);
 this.os.write (b, 0, b.length);
 this.pt += 4;
 this.output ("\n");

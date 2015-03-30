@@ -72,5 +72,5 @@ function (toDelete) {
 for (var i = 0; i < toDelete.size (); i++) {
 this.spectraTreeModel.removeNodeFromParent (toDelete.get (i));
 }
-}, "JU.List");
+}, "JU.Lst");
 });

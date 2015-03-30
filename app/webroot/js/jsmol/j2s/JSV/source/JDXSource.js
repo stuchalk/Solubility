@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (["JSV.source.JDXHeader"], "JSV.source.JDXSource", ["JU.List"], function () {
+Clazz.load (["JSV.source.JDXHeader"], "JSV.source.JDXSource", ["JU.Lst"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.type = 0;
 this.isCompoundSource = false;
@@ -20,8 +20,8 @@ function (type, filePath) {
 Clazz.superConstructor (this, JSV.source.JDXSource, []);
 this.type = type;
 this.setFilePath (filePath);
-this.headerTable =  new JU.List ();
-this.jdxSpectra =  new JU.List ();
+this.headerTable =  new JU.Lst ();
+this.jdxSpectra =  new JU.Lst ();
 this.isCompoundSource = (type != 0);
 }, "~N,~S");
 Clazz.defineMethod (c$, "getJDXSpectrum", 
@@ -70,7 +70,7 @@ source.isView = true;
 for (var i = 0; i < specs.size (); i++) source.addJDXSpectrum (specs.get (i).getFilePath (), specs.get (i), false);
 
 return source;
-}, "JU.List");
+}, "JU.Lst");
 Clazz.defineMethod (c$, "getHeaderRowDataAsArray", 
 function (addDataClass, rowData) {
 if (rowData == null) rowData =  Clazz.newArray (0, 0, null);

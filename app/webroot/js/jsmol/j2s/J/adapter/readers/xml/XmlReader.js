@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.xml");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.xml.XmlReader", ["java.io.BufferedInputStream", "java.util.Hashtable", "JU.Rdr", "J.adapter.smarter.AtomSetCollection", "$.Resolver", "J.api.Interface", "JW.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.xml.XmlReader", ["java.io.BufferedInputStream", "java.util.Hashtable", "JU.Rdr", "J.adapter.smarter.AtomSetCollection", "$.Resolver", "J.api.Interface", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.atom = null;
 this.domAttributes = null;
@@ -43,7 +43,7 @@ var thisReader = null;
 var pt = this.readerName.indexOf ("(");
 var name = (pt < 0 ? this.readerName : this.readerName.substring (0, pt));
 className = J.adapter.smarter.Resolver.getReaderClassBase (name);
-if ((thisReader = J.api.Interface.getInterface (className)) == null) return "File reader was not found: " + className;
+if ((thisReader = this.getInterface (className)) == null) return "File reader was not found: " + className;
 try {
 thisReader.processXml (this, saxReader);
 } catch (e) {
@@ -77,11 +77,11 @@ o = this.reader.lock.lock; if (o.$in) data = o.$in.buf;
 }if (Clazz.instanceOf (o, java.io.BufferedInputStream)) o = JU.Rdr.StreamToUTF8String (JU.Rdr.getBIS (data));
 {
 this.domObj[0] =
-parent.vwr.applet._createDomNode("xmlReader",o);
+parent.vwr.html5Applet._createDomNode("xmlReader",o);
 this.walkDOMTree();
-parent.vwr.applet._createDomNode("xmlReader",null);
+parent.vwr.html5Applet._createDomNode("xmlReader",null);
 }} else {
-var saxHandler = J.api.Interface.getOption ("adapter.readers.xml.XmlHandler");
+var saxHandler = J.api.Interface.getOption ("adapter.readers.xml.XmlHandler", this.vwr, "file");
 saxHandler.parseXML (this, saxReader, this.reader);
 }}, "J.adapter.readers.xml.XmlReader,~O");
 Clazz.overrideMethod (c$, "applySymmetryAndSetTrajectory", 
@@ -92,7 +92,7 @@ if (this.parent == null) this.applySymTrajASCR ();
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 System.out.println ((this.parent == null ? this : this.parent).vwr.isJS ? e : e.getMessage ());
-JW.Logger.error ("applySymmetry failed: " + e);
+JU.Logger.error ("applySymmetry failed: " + e);
 } else {
 throw e;
 }
@@ -100,12 +100,12 @@ throw e;
 });
 Clazz.overrideMethod (c$, "processDOM", 
 function (DOMNode) {
-this.domObj = [DOMNode];
+this.domObj =  Clazz.newArray (-1, [DOMNode]);
 this.setMyError (this.selectReaderAndGo (null));
 }, "~O");
 Clazz.defineMethod (c$, "getDOMAttributes", 
 function () {
-return ["id"];
+return  Clazz.newArray (-1, ["id"]);
 });
 Clazz.defineMethod (c$, "processStartElement", 
 function (localName) {
@@ -163,10 +163,10 @@ if (attValue != null) this.atts.put (name, attValue);
 }, "~A");
 Clazz.defineMethod (c$, "jsObjectCall", 
  function (jsObject, method, args) {
-return this.parent.vwr.getJsObjectInfo (jsObject, method, args == null ? this.nullObj : args);
+return this.parent.vwr.apiPlatform.getJsObjectInfo (jsObject, method, args == null ? this.nullObj : args);
 }, "~A,~S,~A");
 Clazz.defineMethod (c$, "jsObjectGetMember", 
  function (jsObject, name) {
-return this.parent.vwr.getJsObjectInfo (jsObject, name, null);
+return this.parent.vwr.apiPlatform.getJsObjectInfo (jsObject, name, null);
 }, "~A,~S");
 });

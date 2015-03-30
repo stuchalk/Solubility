@@ -1,14 +1,14 @@
 Clazz.declarePackage ("JM");
-Clazz.load (null, "JM.Object2d", ["java.lang.Float", "JW.C", "JV.JC"], function () {
+Clazz.load (null, "JM.Object2d", ["java.lang.Float", "JU.C", "JV.JC"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.isLabelOrHover = false;
-this.gdata = null;
 this.xyz = null;
 this.target = null;
 this.script = null;
 this.colix = 0;
 this.bgcolix = 0;
 this.pointer = 0;
+this.fontScale = 0;
 this.align = 0;
 this.valign = 0;
 this.atomX = 0;
@@ -39,60 +39,26 @@ this.boxXY = null;
 this.scalePixelsPerMicron = 0;
 Clazz.instantialize (this, arguments);
 }, JM, "Object2d");
-Clazz.prepareFields (c$, function () {
-this.boxXY =  Clazz.newFloatArray (5, 0);
-});
-Clazz.defineMethod (c$, "getScalePixelsPerMicron", 
-function () {
-return this.scalePixelsPerMicron;
-});
 Clazz.defineMethod (c$, "setScalePixelsPerMicron", 
 function (scalePixelsPerMicron) {
+this.fontScale = 0;
 this.scalePixelsPerMicron = scalePixelsPerMicron;
 }, "~N");
-Clazz.defineMethod (c$, "setModel", 
-function (modelIndex) {
-this.modelIndex = modelIndex;
-}, "~N");
-Clazz.defineMethod (c$, "setVisibility", 
-function (TF) {
-this.visible = TF;
-}, "~B");
 Clazz.defineMethod (c$, "setXYZ", 
 function (xyz, doAdjust) {
 this.xyz = xyz;
 if (xyz == null) this.zSlab = -2147483648;
 if (doAdjust) {
 this.valign = (xyz == null ? 0 : 4);
-this.setAdjustForWindow (xyz == null);
+this.adjustForWindow = (xyz == null);
 }}, "JU.P3,~B");
-Clazz.defineMethod (c$, "setAdjustForWindow", 
-function (TF) {
-this.adjustForWindow = TF;
-}, "~B");
-Clazz.defineMethod (c$, "setColix", 
-function (colix) {
-this.colix = colix;
-}, "~N");
-Clazz.defineMethod (c$, "setColixO", 
-function (value) {
-this.colix = JW.C.getColixO (value);
-}, "~O");
 Clazz.defineMethod (c$, "setTranslucent", 
 function (level, isBackground) {
 if (isBackground) {
-if (this.bgcolix != 0) this.bgcolix = JW.C.getColixTranslucent3 (this.bgcolix, !Float.isNaN (level), level);
+if (this.bgcolix != 0) this.bgcolix = JU.C.getColixTranslucent3 (this.bgcolix, !Float.isNaN (level), level);
 } else {
-this.colix = JW.C.getColixTranslucent3 (this.colix, !Float.isNaN (level), level);
+this.colix = JU.C.getColixTranslucent3 (this.colix, !Float.isNaN (level), level);
 }}, "~N,~B");
-Clazz.defineMethod (c$, "setBgColix", 
-function (colix) {
-this.bgcolix = colix;
-}, "~N");
-Clazz.defineMethod (c$, "setBgColixO", 
-function (value) {
-this.bgcolix = (value == null ? 0 : JW.C.getColixO (value));
-}, "~O");
 Clazz.defineMethod (c$, "setMovableX", 
  function (x) {
 this.valign = (this.valign == 4 ? 4 : 0);
@@ -138,10 +104,6 @@ Clazz.defineMethod (c$, "setScript",
 function (script) {
 this.script = (script == null || script.length == 0 ? null : script);
 }, "~S");
-Clazz.defineMethod (c$, "getScript", 
-function () {
-return this.script;
-});
 Clazz.defineMethod (c$, "setOffset", 
 function (offset) {
 this.offsetX = JV.JC.getXOffset (offset);
@@ -163,10 +125,6 @@ this.align = align;
 this.recalc ();
 }return true;
 }, "~N");
-Clazz.defineMethod (c$, "setPointer", 
-function (pointer) {
-this.pointer = pointer;
-}, "~N");
 Clazz.defineMethod (c$, "setBoxOffsetsInWindow", 
 function (margin, vMargin, vTop) {
 var bw = this.boxWidth + margin;
@@ -184,7 +142,7 @@ Clazz.defineMethod (c$, "setWindow",
 function (width, height, scalePixelsPerMicron) {
 this.windowWidth = width;
 this.windowHeight = height;
-if (this.pymolOffset == null && this.scalePixelsPerMicron < 0 && scalePixelsPerMicron != 0) this.scalePixelsPerMicron = scalePixelsPerMicron;
+if (this.pymolOffset == null && this.scalePixelsPerMicron < 0 && scalePixelsPerMicron != 0) this.setScalePixelsPerMicron (scalePixelsPerMicron);
 }, "~N,~N,~N");
 Clazz.defineMethod (c$, "checkObjectClicked", 
 function (isAntialiased, x, y, bsVisible) {

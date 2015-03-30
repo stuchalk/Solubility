@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.export");
-Clazz.load (["J.export._VrmlExporter"], "J.export._X3dExporter", ["JU.List", "$.PT", "J.export.UseTable", "JV.Viewer"], function () {
+Clazz.load (["J.export._VrmlExporter"], "J.export._X3dExporter", ["JU.Lst", "$.PT", "J.export.UseTable", "JV.Viewer"], function () {
 c$ = Clazz.declareType (J["export"], "_X3dExporter", J["export"]._VrmlExporter);
 Clazz.makeConstructor (c$, 
 function () {
@@ -12,7 +12,7 @@ this.output ("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n");
 this.output ("<!DOCTYPE X3D PUBLIC \"ISO//Web3D//DTD X3D 3.1//EN\" \"http://www.web3d.org/specifications/x3d-3.1.dtd\">\n");
 this.output ("<X3D profile=\'Immersive\' version=\'3.1\' xmlns:xsd=\'http://www.w3.org/2001/XMLSchema-instance\' xsd:noNamespaceSchemaLocation=\' http://www.web3d.org/specifications/x3d-3.1.xsd \'>\n");
 this.output ("<head>\n");
-this.output ("<meta name='title' content=" + JU.PT.esc (this.vwr.getModelSetName ()).$replace ('<', ' ').$replace ('>', ' ').$replace ('&', ' ') + "/>\n");
+this.output ("<meta name='title' content=" + JU.PT.esc (this.vwr.ms.modelSetName).$replace ('<', ' ').$replace ('>', ' ').$replace ('&', ' ') + "/>\n");
 this.output ("<meta name='description' content='Jmol rendering'/>\n");
 this.output ("<meta name='creator' content=' '/>\n");
 this.output ("<meta name='created' content='" + this.getExportDate () + "'/>\n");
@@ -206,7 +206,7 @@ this.outputIndices (indices, map, nPolygons, bsPolygons, faceVertexMax);
 this.output ("'\n");
 var vNormals = null;
 if (normals != null) {
-vNormals =  new JU.List ();
+vNormals =  new JU.Lst ();
 map = this.getNormalMap (normals, nVertices, null, vNormals);
 this.output ("  solid='false'\n  normalPerVertex='true'\n  normalIndex='\n");
 this.outputIndices (indices, map, nPolygons, bsPolygons, faceVertexMax);
@@ -231,7 +231,7 @@ this.outputColors (colorList);
 this.output ("'/>\n");
 }this.output ("</IndexedFaceSet>\n");
 this.output ("</Shape>\n");
-}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.List,java.util.Map,JU.P3");
+}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.Lst,java.util.Map,JU.P3");
 Clazz.overrideMethod (c$, "outputTriangle", 
 function (pt1, pt2, pt3, colix) {
 this.output ("<Shape>\n");
@@ -247,7 +247,7 @@ this.output ("'/>");
 this.output ("</IndexedFaceSet>\n");
 this.outputAppearance (colix, false);
 this.output ("\n</Shape>\n");
-}, "JU.P3,JU.P3,JU.P3,~N");
+}, "JU.T3,JU.T3,JU.T3,~N");
 Clazz.overrideMethod (c$, "outputTextPixel", 
 function (pt, argb) {
 var color = this.rgbFractionalFromArgb (argb);
@@ -266,13 +266,13 @@ this.output ("</Transform>\n");
 }, "JU.P3,~N");
 Clazz.overrideMethod (c$, "plotText", 
 function (x, y, z, colix, text, font3d) {
-if (z < 3) z = this.vwr.getFrontPlane ();
+if (z < 3) z = Clazz.floatToInt (this.tm.cameraDistance);
 var useFontStyle = font3d.fontStyle.toUpperCase ();
 var preFontFace = font3d.fontFace.toUpperCase ();
 var useFontFace = (preFontFace.equals ("MONOSPACED") ? "TYPEWRITER" : preFontFace.equals ("SERIF") ? "SERIF" : "SANS");
 this.output ("<Transform translation='");
 this.tempP3.set (x, y, z);
-this.vwr.unTransformPoint (this.tempP3, this.tempP1);
+this.tm.unTransformPoint (this.tempP3, this.tempP1);
 this.output (this.tempP1);
 this.output ("'>");
 this.output ("<Billboard ");

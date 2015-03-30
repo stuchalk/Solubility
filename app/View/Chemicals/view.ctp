@@ -1,5 +1,5 @@
 <?php
-//pr($data);pr($type);
+//pr($data);//pr($type);
 if(!is_array($data))
 {
 	echo "<h3>".$data."</h3>";
@@ -58,7 +58,7 @@ else
 	echo $this->Html->link($this->Html->image('jsonld.png',['height'=>'50','alt'=>'JSON-LD']),$base.'chemicals/id/'.$chemical['id'].'/jsonld',['escape'=>false,'target'=>'_blank']);
 	echo "</p>";
 	?>
-	<p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/casNO.aspx',['target'=>'_blank']);?></p>
+	<p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'casNO.aspx',['target'=>'_blank']);?></p>
 <?php
 }
 ?>

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["JU.List", "JSV.api.AnnotationData"], "JSV.common.MeasurementData", ["JU.AU", "$.DF", "JSV.common.Annotation", "$.Parameters"], function () {
+Clazz.load (["JU.Lst", "JSV.api.AnnotationData"], "JSV.common.MeasurementData", ["JU.AU", "$.DF", "JSV.common.Annotation", "$.Parameters"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.type = null;
 this.spec = null;
@@ -9,7 +9,7 @@ this.myParams = null;
 this.isON = true;
 this.key = null;
 Clazz.instantialize (this, arguments);
-}, JSV.common, "MeasurementData", JU.List, JSV.api.AnnotationData);
+}, JSV.common, "MeasurementData", JU.Lst, JSV.api.AnnotationData);
 Clazz.makeConstructor (c$, 
 function (type, spec) {
 Clazz.superConstructor (this, JSV.common.MeasurementData, []);
@@ -35,7 +35,7 @@ this.isON = b;
 }, "~B");
 Clazz.defineMethod (c$, "setMeasurements", 
 function (measurements) {
-}, "JU.List");
+}, "JU.Lst");
 Clazz.overrideMethod (c$, "getParameters", 
 function () {
 return this.myParams;
@@ -51,7 +51,7 @@ var ddata = this.getMeasurementListArrayReal (units);
 var precisionX = (this.spec.isNMR () ? 4 : 2);
 var precisionDX = (this.spec.isHNMR () && units.equals ("ppm") ? 4 : 2);
 var data =  new Array (this.size ());
-for (var i = this.size (); --i >= 0; ) data[i] = ["" + (i + 1), JU.DF.formatDecimalDbl (ddata[i][0], precisionX), JU.DF.formatDecimalDbl (ddata[i][1], precisionX), JU.DF.formatDecimalDbl (ddata[i][2], precisionDX)];
+for (var i = this.size (); --i >= 0; ) data[i] =  Clazz.newArray (-1, ["" + (i + 1), JU.DF.formatDecimalDbl (ddata[i][0], precisionX), JU.DF.formatDecimalDbl (ddata[i][1], precisionX), JU.DF.formatDecimalDbl (ddata[i][2], precisionDX)]);
 
 return data;
 }, "~S");
@@ -62,7 +62,7 @@ var data = JU.AU.newDouble2 (this.size ());
 for (var pt = 0, i = this.size (); --i >= 0; ) {
 var y = this.get (i).getValue ();
 if (toHz) y *= this.spec.observedFreq;
-data[pt++] = [this.get (i).getXVal (), this.get (i).getXVal2 (), y];
+data[pt++] =  Clazz.newDoubleArray (-1, [this.get (i).getXVal (), this.get (i).getXVal2 (), y]);
 }
 return data;
 }, "~S");
@@ -125,5 +125,5 @@ info.put ("header", this.getDataHeader ());
 info.put ("table", this.getMeasurementListArrayReal ("ppm"));
 if (this.units != null) info.put ("units", this.units);
 }, "java.util.Map");
-c$.HEADER = c$.prototype.HEADER = ["", "start", "end", "value"];
+c$.HEADER = c$.prototype.HEADER =  Clazz.newArray (-1, ["", "start", "end", "value"]);
 });

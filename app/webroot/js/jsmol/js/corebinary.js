@@ -1,11 +1,15 @@
 (function(Clazz
+,Clazz_newLongArray
+,Clazz_doubleToByte
 ,Clazz_doubleToInt
+,Clazz_doubleToLong
 ,Clazz_declarePackage
 ,Clazz_instanceOf
 ,Clazz_load
 ,Clazz_instantialize
 ,Clazz_decorateAsClass
 ,Clazz_floatToInt
+,Clazz_floatToLong
 ,Clazz_makeConstructor
 ,Clazz_defineEnumConstant
 ,Clazz_exceptionOf
@@ -372,17 +376,17 @@ c$ = Clazz_declareType (JU, "BC");
 Clazz_makeConstructor (c$, 
 function () {
 });
-Clazz_defineMethod (c$, "bytesToFloat", 
+c$.bytesToFloat = Clazz_defineMethod (c$, "bytesToFloat", 
 function (bytes, j, isBigEndian) {
-return this.intToFloat (this.bytesToInt (bytes, j, isBigEndian));
+return JU.BC.intToFloat (JU.BC.bytesToInt (bytes, j, isBigEndian));
 }, "~A,~N,~B");
-Clazz_defineMethod (c$, "bytesToInt", 
+c$.bytesToInt = Clazz_defineMethod (c$, "bytesToInt", 
 function (bytes, j, isBigEndian) {
 var n = (isBigEndian ? (bytes[j + 3] & 0xff) | (bytes[j + 2] & 0xff) << 8 | (bytes[j + 1] & 0xff) << 16 | (bytes[j] & 0xff) << 24 : (bytes[j++] & 0xff) | (bytes[j++] & 0xff) << 8 | (bytes[j++] & 0xff) << 16 | (bytes[j++] & 0xff) << 24);
 {
 return (n > 0x7FFFFFFF ? n - 0x100000000 : n);
 }}, "~A,~N,~B");
-Clazz_defineMethod (c$, "intToFloat", 
+c$.intToFloat = Clazz_defineMethod (c$, "intToFloat", 
 function (x) {
 {
 if (x == 0) return 0;
@@ -392,7 +396,7 @@ o.setFracIEEE();
 var m = ((x & 0x7F800000) >> 23);
 return ((x & 0x80000000) == 0 ? 1 : -1) * o.shiftIEEE((x & 0x7FFFFF) | 0x800000, m - 149);
 }}, "~N");
-Clazz_defineMethod (c$, "bytesToDoubleToFloat", 
+c$.bytesToDoubleToFloat = Clazz_defineMethod (c$, "bytesToDoubleToFloat", 
 function (bytes, j, isBigEndian) {
 {
 if (JU.BC.fracIEEE == null) JU.BC.setFracIEEE ();
@@ -438,6 +442,7 @@ c$ = Clazz_decorateAsClass (function () {
 this.stream = null;
 this.isRandom = false;
 this.isBigEndian = true;
+this.jzt = null;
 this.t8 = null;
 this.nBytes = 0;
 this.out = null;
@@ -445,10 +450,6 @@ Clazz_instantialize (this, arguments);
 }, JU, "BinaryDocument", JU.BC, javajs.api.GenericBinaryDocument);
 Clazz_prepareFields (c$, function () {
 this.t8 =  Clazz_newByteArray (8, 0);
-});
-Clazz_makeConstructor (c$, 
-function () {
-Clazz_superConstructor (this, JU.BinaryDocument, []);
 });
 Clazz_overrideMethod (c$, "close", 
 function () {
@@ -463,10 +464,11 @@ throw e;
 if (this.out != null) this.out.closeChannel ();
 });
 Clazz_overrideMethod (c$, "setStream", 
-function (bis, isBigEndian) {
+function (jzt, bis, isBigEndian) {
+if (jzt != null) this.jzt = jzt;
 if (bis != null) this.stream =  new java.io.DataInputStream (bis);
 this.isBigEndian = isBigEndian;
-}, "java.io.BufferedInputStream,~B");
+}, "javajs.api.GenericZipTools,java.io.BufferedInputStream,~B");
 Clazz_overrideMethod (c$, "setStreamData", 
 function (stream, isBigEndian) {
 if (stream != null) this.stream = stream;
@@ -490,22 +492,21 @@ return b;
 Clazz_overrideMethod (c$, "readByteArray", 
 function (b, off, len) {
 var n = this.ioRead (b, off, len);
-if (n > 0) this.nBytes += n;
-var nBytesRead = n;
-if (n > 0 && n < len) {
-while (nBytesRead < len && n > 0) {
-n = this.ioRead (b, nBytesRead, len - nBytesRead);
-if (n > 0) {
 this.nBytes += n;
-nBytesRead += n;
-}}
-}return nBytesRead;
+return n;
 }, "~A,~N,~N");
 Clazz_defineMethod (c$, "ioRead", 
  function (b, off, len) {
+var m = 0;
+while (len > 0) {
 var n = this.stream.read (b, off, len);
+m += n;
 if (n > 0 && this.out != null) this.writeBytes (b, off, n);
-return n;
+if (n >= len) break;
+off += n;
+len -= n;
+}
+return m;
 }, "~A,~N,~N");
 Clazz_defineMethod (c$, "writeBytes", 
 function (b, off, n) {
@@ -592,11 +593,11 @@ this.writeInt ((b & 0xFFFFFFFF));
 Clazz_defineMethod (c$, "readLEInt", 
  function () {
 this.ioRead (this.t8, 0, 4);
-return this.bytesToInt (this.t8, 0, false);
+return JU.BC.bytesToInt (this.t8, 0, false);
 });
 Clazz_overrideMethod (c$, "readFloat", 
 function () {
-return this.intToFloat (this.readInt ());
+return JU.BC.intToFloat (this.readInt ());
 });
 Clazz_overrideMethod (c$, "readDouble", 
 function () {
@@ -620,11 +621,15 @@ try {
 if (offset == this.nBytes) return;
 if (offset < this.nBytes) {
 this.stream.reset ();
+if (this.out != null && this.nBytes != 0) this.out.reset ();
 this.nBytes = 0;
 } else {
 offset -= this.nBytes;
-}this.stream.skipBytes (offset);
-this.nBytes += offset;
+}if (this.out == null) {
+this.stream.skipBytes (offset);
+} else {
+this.readByteArray ( Clazz_newByteArray (offset, 0), 0, offset);
+}this.nBytes += offset;
 } catch (e) {
 if (Clazz_exceptionOf (e, Exception)) {
 System.out.println (e.toString ());
@@ -650,13 +655,17 @@ function (replace, string, fileData) {
 }, "~S,~S,java.util.Map");
 });
 })(Clazz
+,Clazz.newLongArray
+,Clazz.doubleToByte
 ,Clazz.doubleToInt
+,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
+,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

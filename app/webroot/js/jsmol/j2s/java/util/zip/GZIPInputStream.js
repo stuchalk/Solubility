@@ -43,7 +43,7 @@ this.$closed = true;
 }});
 Clazz.defineMethod (c$, "readHeader", 
  function (this_in) {
-var $in =  new java.util.zip.CheckedInputStream (this_in, this.crc);
+var $in =  new java.util.zip.CheckedInputStream (this_in).set (this.crc);
 this.crc.reset ();
 if (this.readUShort ($in) != 35615) {
 throw  new java.util.zip.ZipException ("Not in GZIP format");

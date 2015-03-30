@@ -27,7 +27,7 @@ Clazz.overrideMethod (c$, "getAtomSetIndex",
 function () {
 return this.atom.atomSetIndex;
 });
-Clazz.overrideMethod (c$, "getAtomSymmetry", 
+Clazz.overrideMethod (c$, "getSymmetry", 
 function () {
 return this.atom.bsSymmetry;
 });
@@ -67,19 +67,23 @@ Clazz.overrideMethod (c$, "getVib",
 function () {
 return (this.atom.vib == null || Float.isNaN (this.atom.vib.z) ? null : this.atom.vib);
 });
+Clazz.overrideMethod (c$, "getSeqID", 
+function () {
+return (this.atom.vib == null || !Float.isNaN (this.atom.vib.y) || this.atom.vib.z != 1095761940 ? 0 : Clazz.floatToInt (this.atom.vib.x));
+});
 Clazz.overrideMethod (c$, "getBfactor", 
 function () {
-return Float.isNaN (this.atom.bfactor) && this.atom.anisoBorU != null ? this.atom.anisoBorU[7] * 100 : this.atom.bfactor;
+return this.atom.bfactor;
 });
 Clazz.overrideMethod (c$, "getOccupancy", 
 function () {
-return Clazz.floatToInt (this.atom.foccupancy * 100);
+return this.atom.foccupancy * 100;
 });
 Clazz.overrideMethod (c$, "getIsHetero", 
 function () {
 return this.atom.isHetero;
 });
-Clazz.overrideMethod (c$, "getAtomSerial", 
+Clazz.overrideMethod (c$, "getSerial", 
 function () {
 return this.atom.atomSerial;
 });
@@ -87,7 +91,7 @@ Clazz.overrideMethod (c$, "getChainID",
 function () {
 return this.atom.chainID;
 });
-Clazz.overrideMethod (c$, "getAlternateLocationID", 
+Clazz.overrideMethod (c$, "getAltLoc", 
 function () {
 return J.api.JmolAdapter.canonizeAlternateLocationID (this.atom.altLoc);
 });

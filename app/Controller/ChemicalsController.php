@@ -14,6 +14,7 @@ class ChemicalsController extends AppController
 		$this->Chemical->virtualFields['first'] = 'UPPER(SUBSTR(Chemical.name,1,1))';
 		$data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'order'=>['first','name']]);
 		$this->set('data',$data);
+        $this->set('nist',Configure::read('url.base'));
 	}
 
     /**
@@ -32,6 +33,7 @@ class ChemicalsController extends AppController
             if(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
                 $data=$this->Chemical->find('first', ['conditions'=>['Chemical.casrn'=>$id],'recursive'=>2]);
             } elseif(preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/',$id)) {
+                $type="formula";
                 $data=$this->Chemical->find('first', ['fields'=>['id','formula','first'],'order'=>['first','formula'],'conditions'=>['formula'=>$id],'recursive'=>2]);
             } elseif(is_numeric($id)) {
                 $type="integer";
@@ -59,6 +61,7 @@ class ChemicalsController extends AppController
 		$this->set('data',$data);
         $this->set('type',$type);
         $this->set('base',Configure::read('host.base'));
+        $this->set('nist',Configure::read('url.base'));
 	}
 
      /**

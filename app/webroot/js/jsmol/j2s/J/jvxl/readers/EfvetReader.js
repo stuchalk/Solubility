@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.PolygonFileReader"], "J.jvxl.readers.EfvetReader", ["JU.CU", "$.P3", "J.jvxl.data.JvxlCoder", "JW.Logger"], function () {
+Clazz.load (["J.jvxl.readers.PolygonFileReader"], "J.jvxl.readers.EfvetReader", ["JU.CU", "$.P3", "J.jvxl.data.JvxlCoder", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vertexMap = null;
 Clazz.instantialize (this, arguments);
@@ -20,14 +20,14 @@ function () {
 this.getHeader ();
 this.getVertices ();
 this.getTriangles ();
-JW.Logger.info ("efvet file contains " + this.nVertices + " vertices and " + this.nTriangles + " triangles");
+JU.Logger.info ("efvet file contains " + this.nVertices + " vertices and " + this.nTriangles + " triangles");
 });
 Clazz.defineMethod (c$, "getHeader", 
  function () {
 this.skipTo ("<efvet", null);
-while (this.readLine ().length > 0 && this.line.indexOf (">") < 0) this.jvxlFileHeaderBuffer.append ("# " + this.line + "\n");
+while (this.rd ().length > 0 && this.line.indexOf (">") < 0) this.jvxlFileHeaderBuffer.append ("# " + this.line + "\n");
 
-JW.Logger.info (this.jvxlFileHeaderBuffer.toString ());
+JU.Logger.info (this.jvxlFileHeaderBuffer.toString ());
 });
 Clazz.defineMethod (c$, "getVertices", 
  function () {
@@ -45,8 +45,8 @@ this.skipTo ("property=", null);
 this.line = this.line.$replace ('"', ' ');
 var tokens = this.getTokens ();
 var dataIndex = this.params.fileIndex;
-if (dataIndex > 0 && dataIndex < tokens.length) JW.Logger.info ("property " + tokens[dataIndex]);
- else JW.Logger.info (this.line);
+if (dataIndex > 0 && dataIndex < tokens.length) JU.Logger.info ("property " + tokens[dataIndex]);
+ else JU.Logger.info (this.line);
 for (var i = 0; i < this.nVertices; i++) {
 this.skipTo ("<vertex", "image");
 this.parseFloatArray (values, null, ">");
@@ -55,7 +55,7 @@ this.skipTo (null, "property");
 for (var j = 0; j < dataIndex; j++) value = this.parseFloat ();
 
 if (this.isAnisotropic) this.setVertexAnisotropy (pt);
-var v = this.vertexMap[i + 1] = this.addVC (pt, value, i);
+var v = this.vertexMap[i + 1] = this.addVC (pt, value, i, true);
 if (v >= 0 && this.jvxlData.vertexColors != null) {
 this.jvxlData.vertexColors[v] = JU.CU.colorTriadToFFRGB (values[6], values[7], values[8]);
 this.jvxlData.nVertexColors++;

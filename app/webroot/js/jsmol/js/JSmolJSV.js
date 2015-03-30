@@ -118,6 +118,11 @@
 				+ ';syncCallbackFunctionName Jmol._mySyncCallback;';	
 	}
 
+	proto._newApplet = function(viewerOptions) {
+		return (this._isPro ? new JSV.appletjs.JSVAppletPro(viewerOptions) 
+				: new JSV.appletjs.JSVApplet(viewerOptions));
+	}
+
 	proto._create = function(id, Info){
 
 		Jmol._setObject(this, id, Info);
@@ -132,6 +137,14 @@
 
 		Jmol._Applet._createApplet(this, Info, params);
 	}
+
+	proto._cover = function (doCover) {
+		// TODO: cover options here, including Java
+		if (!this._isJava)
+			this._newCanvas(false);
+		this._showInfo(false);
+		this._init();
+	};
 
 	proto._readyCallback = function(id, fullid, isReady, applet) {
 	 if (!isReady)
@@ -149,6 +162,19 @@
 	proto._checkDeferred = function(script) {
 		return false;
 	}	
+
+	proto._scriptLoad = function(file, script, _jsv_scriptLoad) {
+		script || (script = "");
+		var doscript = (this._isJava || !this._noscript);
+		if (!this._isSigned || this._viewSet != null)
+			return false;
+		if (doscript)
+			this._script("load \"" + file + "\";" + script);
+		else
+			this._applet.openFile(file);
+		this._checkDeferred("");
+		return true;
+	}
 
 	proto._clearConsole = Jmol._Applet.prototype._clearConsole;
 	proto._showInfo = Jmol._Applet.prototype._showInfo;
@@ -482,16 +508,17 @@
 	 * @param x2
 	 *        the ending x value
 	 * @param r
-	 *        the red portion of the highlight color
+	 *        the red portion of the highlight color or -1
 	 * @param g
-	 *        the green portion of the highlight color
+	 *        the green portion of the highlight color or -1
 	 * @param b
-	 *        the blue portion of the highlight color
+	 *        the blue portion of the highlight color or -1
 	 * @param a
-	 *        the alpha portion of the highlight color
+	 *        the alpha portion of the highlight color or -1
 	 */
 	Jmol.jsvAddHighlight = function(jsvApplet, x1, x2, r, g, b, a) {
-		jsvApplet._applet.addHighlight(x1, x2, r, g, b, a);
+		if (arguments.length == 7)
+			jsvApplet._applet.addHighlight(x1, x2, r, g, b, a);
 	}
 
 	/**

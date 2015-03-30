@@ -1,15 +1,13 @@
 Clazz.declarePackage ("J.appletjs");
-Clazz.load (["JW.GenericApplet", "java.util.Hashtable"], "J.appletjs.Jmol", ["JU.PT", "JW.Logger", "$.Parser"], function () {
+Clazz.load (["javajs.api.JSInterface", "JU.GenericApplet"], "J.appletjs.Jmol", ["java.util.Hashtable", "JU.PT", "JU.Logger", "$.Parser"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.htParams = null;
 Clazz.instantialize (this, arguments);
-}, J.appletjs, "Jmol", JW.GenericApplet);
-Clazz.prepareFields (c$, function () {
-this.htParams =  new java.util.Hashtable ();
-});
+}, J.appletjs, "Jmol", JU.GenericApplet, javajs.api.JSInterface);
 Clazz.makeConstructor (c$, 
 function (vwrOptions) {
 Clazz.superConstructor (this, J.appletjs.Jmol, []);
+this.htParams =  new java.util.Hashtable ();
 if (vwrOptions == null) vwrOptions =  new java.util.Hashtable ();
 this.vwrOptions = vwrOptions;
 for (var entry, $entry = vwrOptions.entrySet ().iterator (); $entry.hasNext () && ((entry = $entry.next ()) || true);) this.htParams.put (entry.getKey ().toLowerCase (), entry.getValue ());
@@ -63,7 +61,7 @@ var data;
 data = eval(functionName)(this.htmlName, nX, nY);
 }nX = Math.abs (nX);
 var fdata =  Clazz.newFloatArray (nX * nY, 0);
-JW.Parser.parseStringInfestedFloatArray (data, null, fdata);
+JU.Parser.parseStringInfestedFloatArray (data, null, fdata);
 for (var i = 0, ipt = 0; i < nX; i++) {
 for (var j = 0; j < nY; j++, ipt++) {
 fxy[i][j] = fdata[ipt];
@@ -74,7 +72,7 @@ fxy[i][j] = fdata[ipt];
 data = eval(functionName)(this.htmlName, nX, nY, fxy);
 }}} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.error ("Exception " + e + " with nX, nY: " + nX + " " + nY);
+JU.Logger.error ("Exception " + e + " with nX, nY: " + nX + " " + nY);
 } else {
 throw e;
 }
@@ -90,7 +88,7 @@ try {
 eval(functionName)(this.htmlName, nX, nY, nZ, fxyz);
 }} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.error ("Exception " + e + " for " + functionName + " with nX, nY, nZ: " + nX + " " + nY + " " + nZ);
+JU.Logger.error ("Exception " + e + " for " + functionName + " with nX, nY, nZ: " + nX + " " + nY + " " + nZ);
 } else {
 throw e;
 }
@@ -128,7 +126,7 @@ try {
 return "" + eval(strEval);
 }} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.error ("# error evaluating " + strEval + ":" + e.toString ());
+JU.Logger.error ("# error evaluating " + strEval + ":" + e.toString ());
 } else {
 throw e;
 }
@@ -146,4 +144,56 @@ throw e;
 }
 }
 }, "~S");
+Clazz.overrideMethod (c$, "cacheFileByName", 
+function (fileName, isAdd) {
+return this.viewer.cacheFileByName (fileName, isAdd);
+}, "~S,~B");
+Clazz.overrideMethod (c$, "cachePut", 
+function (key, data) {
+this.viewer.cachePut (key, data);
+}, "~S,~O");
+Clazz.overrideMethod (c$, "getGLmolView", 
+function () {
+return this.viewer.getGLmolView ();
+});
+Clazz.overrideMethod (c$, "getFullName", 
+function () {
+return this.fullName;
+});
+Clazz.overrideMethod (c$, "processMouseEvent", 
+function (id, x, y, modifiers, time) {
+return this.viewer.processMouseEvent (id, x, y, modifiers, time);
+}, "~N,~N,~N,~N,~N");
+Clazz.overrideMethod (c$, "setDisplay", 
+function (canvas) {
+this.viewer.setDisplay (canvas);
+}, "~O");
+Clazz.overrideMethod (c$, "setStatusDragDropped", 
+function (mode, x, y, fileName) {
+return this.viewer.setStatusDragDropped (mode, x, y, fileName);
+}, "~N,~N,~N,~S");
+Clazz.overrideMethod (c$, "startHoverWatcher", 
+function (enable) {
+this.viewer.startHoverWatcher (enable);
+}, "~B");
+Clazz.overrideMethod (c$, "update", 
+function () {
+this.viewer.updateJS ();
+});
+Clazz.overrideMethod (c$, "openFile", 
+function (fileName) {
+return this.viewer.openFile (fileName);
+}, "~S");
+Clazz.overrideMethod (c$, "openFileAsyncSpecial", 
+function (fileName, flags) {
+this.viewer.openFileAsyncSpecial (fileName, flags);
+}, "~S,~N");
+Clazz.overrideMethod (c$, "processTwoPointGesture", 
+function (touches) {
+this.viewer.processTwoPointGesture (touches);
+}, "~A");
+Clazz.overrideMethod (c$, "setScreenDimension", 
+function (width, height) {
+this.viewer.setScreenDimension (width, height);
+}, "~N,~N");
 });

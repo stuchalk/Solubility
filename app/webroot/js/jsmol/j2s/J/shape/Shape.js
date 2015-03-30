@@ -1,9 +1,8 @@
 Clazz.declarePackage ("J.shape");
-Clazz.load (null, "J.shape.Shape", ["J.c.PAL", "JW.C", "$.Logger", "JV.JC"], function () {
+Clazz.load (null, "J.shape.Shape", ["J.c.PAL", "JU.C", "$.Logger", "JV.JC"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.ms = null;
-this.gdata = null;
 this.shapeID = 0;
 this.vf = 0;
 this.translucentLevel = 0;
@@ -13,21 +12,16 @@ this.bsSizeSet = null;
 this.bsColixSet = null;
 Clazz.instantialize (this, arguments);
 }, J.shape, "Shape");
-Clazz.defineMethod (c$, "getViewer", 
-function () {
-return this.vwr;
-});
 Clazz.defineMethod (c$, "initializeShape", 
-function (vwr, g3d, modelSet, shapeID) {
+function (vwr, modelSet, shapeID) {
 this.vwr = vwr;
-this.gdata = g3d;
 this.shapeID = shapeID;
 this.vf = JV.JC.getShapeVisibilityFlag (shapeID);
 this.setModelSet (modelSet);
 this.initShape ();
-}, "JV.Viewer,JW.GData,JM.ModelSet,~N");
-Clazz.defineMethod (c$, "setVisibilityFlags", 
-function (bs) {
+}, "JV.Viewer,JM.ModelSet,~N");
+Clazz.defineMethod (c$, "setModelVisibilityFlags", 
+function (bsModels) {
 }, "JU.BS");
 Clazz.defineMethod (c$, "getSize", 
 function (atomIndex) {
@@ -37,6 +31,9 @@ Clazz.defineMethod (c$, "getSizeG",
 function (group) {
 return 0;
 }, "JM.Group");
+Clazz.defineMethod (c$, "replaceGroup", 
+function (g0, g1) {
+}, "JM.Group,JM.Group");
 Clazz.defineMethod (c$, "setModelSet", 
 function (modelSet) {
 this.ms = modelSet;
@@ -73,7 +70,7 @@ return false;
 Clazz.defineMethod (c$, "setPropS", 
 function (propertyName, value, bsSelected) {
 if (propertyName === "setProperties") {
-if (bsSelected == null) bsSelected = this.vwr.getSelectedAtoms ();
+if (bsSelected == null) bsSelected = this.vwr.bsA ();
 var propertyList = value;
 while (propertyList.size () > 0) {
 var data = propertyList.remove (0);
@@ -85,7 +82,7 @@ this.translucentLevel = (value).floatValue ();
 return;
 }if (propertyName === "refreshTrajectories") {
 return;
-}JW.Logger.warn ("unassigned " + JV.JC.shapeClassBases[this.shapeID] + " + shape setProperty:" + propertyName + ":" + value);
+}JU.Logger.warn ("unassigned " + JV.JC.shapeClassBases[this.shapeID] + " + shape setProperty:" + propertyName + ":" + value);
 }, "~S,~O,JU.BS");
 Clazz.defineMethod (c$, "getProperty", 
 function (property, index) {
@@ -105,7 +102,7 @@ function (xMouse, yMouse, closest, bsNot) {
 Clazz.defineMethod (c$, "checkBoundsMinMax", 
 function (pointMin, pointMax) {
 }, "JU.P3,JU.P3");
-Clazz.defineMethod (c$, "setModelClickability", 
+Clazz.defineMethod (c$, "setAtomClickability", 
 function () {
 });
 Clazz.defineMethod (c$, "checkObjectClicked", 
@@ -122,21 +119,21 @@ return false;
 }, "~N,~N,~N,~N,~N,JU.BS");
 Clazz.defineMethod (c$, "coordinateInRange", 
 function (x, y, vertex, dmin2, ptXY) {
-this.vwr.transformPtScr (vertex, ptXY);
+this.vwr.tm.transformPtScr (vertex, ptXY);
 var d2 = (x - ptXY.x) * (x - ptXY.x) + (y - ptXY.y) * (y - ptXY.y);
 return (d2 < dmin2 ? d2 : -1);
-}, "~N,~N,JU.P3,~N,JU.P3i");
+}, "~N,~N,JU.T3,~N,JU.P3i");
 Clazz.defineMethod (c$, "getColixI", 
 function (colix, paletteID, atomIndex) {
 return this.getColixA (colix, paletteID, this.ms.at[atomIndex]);
 }, "~N,~N,~N");
 Clazz.defineMethod (c$, "getColixA", 
 function (colix, paletteID, atom) {
-return (colix == 2 ? this.vwr.getColixAtomPalette (atom, paletteID) : colix);
+return (colix == 2 ? this.vwr.cm.getColixAtomPalette (atom, paletteID) : colix);
 }, "~N,~N,JM.Atom");
 Clazz.defineMethod (c$, "getColixB", 
 function (colix, pid, bond) {
-return (colix == 2 ? this.vwr.getColixBondPalette (bond, pid) : colix);
+return (colix == 2 ? this.vwr.cm.getColixBondPalette (bond, pid) : colix);
 }, "~N,~N,JM.Bond");
 Clazz.defineMethod (c$, "getShapeDetail", 
 function () {
@@ -144,7 +141,7 @@ return null;
 });
 c$.getColix = Clazz.defineMethod (c$, "getColix", 
 function (colixes, i, atom) {
-return JW.C.getColixInherited ((colixes == null || i >= colixes.length ? 0 : colixes[i]), atom.getColix ());
+return JU.C.getColixInherited ((colixes == null || i >= colixes.length ? 0 : colixes[i]), atom.colixAtom);
 }, "~A,~N,JM.Atom");
 c$.getFontCommand = Clazz.defineMethod (c$, "getFontCommand", 
 function (type, font) {
@@ -163,11 +160,11 @@ return "color " + type + " " + s;
 }, "~S,~N,~N,~B");
 c$.encodeColor = Clazz.defineMethod (c$, "encodeColor", 
 function (colix) {
-return (JW.C.isColixColorInherited (colix) ? "none" : JW.C.getHexCode (colix));
+return (JU.C.isColixColorInherited (colix) ? "none" : JU.C.getHexCode (colix));
 }, "~N");
 c$.getTranslucentLabel = Clazz.defineMethod (c$, "getTranslucentLabel", 
 function (colix) {
-return (JW.C.isColixTranslucent (colix) ? "translucent " + JW.C.getColixTranslucencyFractional (colix) : "opaque");
+return (JU.C.isColixTranslucent (colix) ? JU.C.getColixTranslucencyLabel (colix) : "opaque");
 }, "~N");
 c$.appendCmd = Clazz.defineMethod (c$, "appendCmd", 
 function (s, cmd) {

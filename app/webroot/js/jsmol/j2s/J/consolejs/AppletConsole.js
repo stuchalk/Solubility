@@ -13,7 +13,7 @@ function (vwr) {
 this.setViewer (vwr);
 this.setLabels ();
 this.displayConsole ();
-}, "J.api.JmolViewer");
+}, "JV.Viewer");
 Clazz.overrideMethod (c$, "layoutWindow", 
 function (enabledButtons) {
 {
@@ -52,4 +52,12 @@ Clazz.overrideMethod (c$, "nextFileName",
 function (stub, nTab) {
 return null;
 }, "~S,~N");
+Clazz.overrideMethod (c$, "newJMenu", 
+function (key) {
+return null;
+}, "~S");
+Clazz.overrideMethod (c$, "newJMenuItem", 
+function (key) {
+return null;
+}, "~S");
 });

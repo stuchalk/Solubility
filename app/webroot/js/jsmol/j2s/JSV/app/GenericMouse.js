@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.app");
-Clazz.load (["javajs.api.GenericMouseInterface", "javajs.awt.event.Event"], "JSV.app.GenericMouse", ["JW.Logger"], function () {
+Clazz.load (["javajs.api.GenericMouseInterface", "javajs.awt.event.Event"], "JSV.app.GenericMouse", ["JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.pd = null;
 this.jsvp = null;
@@ -96,7 +96,7 @@ function (ke) {
 if (this.pd == null) return;
 var ch = ke.getKeyChar ();
 var modifiers = ke.getModifiers ();
-if (JW.Logger.debuggingHigh || true) JW.Logger.info ("MouseManager keyTyped: " + ch + " " + (0 + ch.charCodeAt (0)) + " " + modifiers);
+if (JU.Logger.debuggingHigh || true) JU.Logger.info ("MouseManager keyTyped: " + ch + " " + (0 + ch.charCodeAt (0)) + " " + modifiers);
 if (this.pd.keyTyped (ch.charCodeAt (0), modifiers)) ke.consume ();
 }, "java.awt.event.KeyEvent");
 Clazz.defineMethod (c$, "keyPressed", 

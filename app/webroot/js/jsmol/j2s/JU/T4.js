@@ -1,27 +1,19 @@
 Clazz.declarePackage ("JU");
-Clazz.load (["javajs.api.JSONEncodable"], "JU.T4", ["JU.T3"], function () {
+Clazz.load (["JU.T3"], "JU.T4", null, function () {
 c$ = Clazz.decorateAsClass (function () {
-this.x = 0;
-this.y = 0;
-this.z = 0;
 this.w = 0;
 Clazz.instantialize (this, arguments);
-}, JU, "T4", null, [java.io.Serializable, javajs.api.JSONEncodable]);
-Clazz.makeConstructor (c$, 
-function () {
-});
-Clazz.defineMethod (c$, "set", 
+}, JU, "T4", JU.T3);
+Clazz.defineMethod (c$, "set4", 
 function (x, y, z, w) {
 this.x = x;
 this.y = y;
 this.z = z;
 this.w = w;
 }, "~N,~N,~N,~N");
-Clazz.defineMethod (c$, "scale", 
+Clazz.defineMethod (c$, "scale4", 
 function (s) {
-this.x *= s;
-this.y *= s;
-this.z *= s;
+this.scale (s);
 this.w *= s;
 }, "~N");
 Clazz.overrideMethod (c$, "hashCode", 

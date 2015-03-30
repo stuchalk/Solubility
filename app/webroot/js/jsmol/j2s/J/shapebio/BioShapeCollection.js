@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shapebio");
-Clazz.load (["J.shape.Shape"], "J.shapebio.BioShapeCollection", ["JU.AU", "J.c.PAL", "J.shapebio.BioShape", "JW.BSUtil", "$.C"], function () {
+Clazz.load (["J.shape.Shape"], "J.shapebio.BioShapeCollection", ["JU.AU", "J.c.PAL", "J.shapebio.BioShape", "JU.BSUtil", "$.C"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.atoms = null;
 this.madOn = -2;
@@ -19,16 +19,26 @@ this.initialize ();
 Clazz.overrideMethod (c$, "getSizeG", 
 function (group) {
 var m = group;
-var groupIndex = m.getGroupIndex ();
+var groupIndex = m.groupIndex;
 var leadAtomIndex = m.getLeadAtom ().i;
 for (var i = this.bioShapes.length; --i >= 0; ) {
 var bioShape = this.bioShapes[i];
 for (var j = 0; j < bioShape.monomerCount; j++) {
-if (bioShape.monomers[j].getGroupIndex () == groupIndex && bioShape.monomers[j].getLeadAtom ().i == leadAtomIndex) return bioShape.mads[j];
+if (bioShape.monomers[j].groupIndex == groupIndex && bioShape.monomers[j].getLeadAtom ().i == leadAtomIndex) return bioShape.mads[j];
 }
 }
 return 0;
 }, "JM.Group");
+Clazz.overrideMethod (c$, "replaceGroup", 
+function (g0, g1) {
+for (var i = this.bioShapes.length; --i >= 0; ) {
+var bioShape = this.bioShapes[i];
+for (var j = 0; j < bioShape.monomerCount; j++) if (bioShape.monomers[j] === g0) {
+bioShape.monomers[j] = g1;
+break;
+}
+}
+}, "JM.Group,JM.Group");
 Clazz.overrideMethod (c$, "setShapeSizeRD", 
 function (size, rd, bsSelected) {
 var mad = size;
@@ -66,7 +76,7 @@ return;
 }this.initialize ();
 if ("color" === propertyName) {
 var pid = J.c.PAL.pidOf (value);
-var colix = JW.C.getColixO (value);
+var colix = JU.C.getColixO (value);
 for (var i = this.bioShapes.length; --i >= 0; ) {
 var bioShape = this.bioShapes[i];
 if (bioShape.monomerCount > 0) bioShape.setColixBS (colix, pid, bsSelected);
@@ -82,8 +92,8 @@ for (var i = this.bioShapes.length; --i >= 0; ) this.bioShapes[i].setParams (val
 return;
 }if ("colorPhase" === propertyName) {
 var twoColors = value;
-var colixBack = JW.C.getColixO (twoColors[0]);
-var colix = JW.C.getColixO (twoColors[1]);
+var colixBack = JU.C.getColixO (twoColors[0]);
+var colix = JU.C.getColixO (twoColors[1]);
 for (var i = this.bioShapes.length; --i >= 0; ) {
 var bioShape = this.bioShapes[i];
 if (bioShape.monomerCount > 0) {
@@ -108,10 +118,10 @@ Clazz.defineMethod (c$, "initialize",
 function () {
 var modelCount = this.ms.mc;
 var models = this.ms.am;
-var n = this.ms.getBioPolymerCount ();
+var n = this.ms.getBioPolymerCountInModel (-1);
 var shapes =  new Array (n--);
 for (var i = modelCount; --i >= 0; ) for (var j = this.ms.getBioPolymerCountInModel (i); --j >= 0; n--) {
-var bp = (models[i]).getBioPolymer (j);
+var bp = (models[i]).bioPolymers[j];
 shapes[n] = (this.bioShapes == null || this.bioShapes.length <= n || this.bioShapes[n] == null || this.bioShapes[n].bioPolymer !== bp ?  new J.shapebio.BioShape (this, i, bp) : this.bioShapes[n]);
 }
 
@@ -122,21 +132,20 @@ function (xMouse, yMouse, closest, bsNot) {
 for (var i = this.bioShapes.length; --i >= 0; ) this.bioShapes[i].findNearestAtomIndex (xMouse, yMouse, closest, bsNot);
 
 }, "~N,~N,~A,JU.BS");
-Clazz.overrideMethod (c$, "setVisibilityFlags", 
-function (bs) {
+Clazz.overrideMethod (c$, "setModelVisibilityFlags", 
+function (bsModels) {
 if (this.bioShapes == null) return;
-bs = JW.BSUtil.copy (bs);
-for (var i = this.ms.mc; --i >= 0; ) if (bs.get (i) && this.ms.isTrajectory (i)) bs.set (this.ms.getTrajectoryIndex (i));
-
+bsModels = JU.BSUtil.copy (bsModels);
+if (this.ms.trajectory != null) this.ms.trajectory.setBaseModels (bsModels);
 for (var i = this.bioShapes.length; --i >= 0; ) {
 var b = this.bioShapes[i];
-b.modelVisibilityFlags = (bs.get (b.modelIndex) ? this.vf : 0);
+b.modelVisibilityFlags = (bsModels.get (b.modelIndex) ? this.vf : 0);
 }
 }, "JU.BS");
-Clazz.overrideMethod (c$, "setModelClickability", 
+Clazz.overrideMethod (c$, "setAtomClickability", 
 function () {
 if (this.bioShapes == null) return;
-for (var i = this.bioShapes.length; --i >= 0; ) this.bioShapes[i].setModelClickability ();
+for (var i = this.bioShapes.length; --i >= 0; ) this.bioShapes[i].setAtomClickability ();
 
 });
 Clazz.defineMethod (c$, "getMpsShapeCount", 

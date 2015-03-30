@@ -46,7 +46,7 @@ this.params.fullyLit = true;
 this.point = this.params.point;
 if (Clazz.instanceOf (this.params.func, String)) {
 this.funcType = (this.params.func.equals ("a-b") ? 2 : this.params.func.equals ("a+b") ? 1 : 3);
-} else if (this.params.func == null || this.atomDataServer == null) {
+} else if (this.params.func == null || this.sg.atomDataServer == null) {
 this.funcType = 2;
 } else {
 this.func = this.params.func;
@@ -117,13 +117,13 @@ return (va > vb ? va : vb);
 default:
 this.values[0] = va;
 this.values[1] = vb;
-return this.atomDataServer.evalFunctionFloat (this.func[0], this.func[1], this.values);
+return this.sg.atomDataServer.evalFunctionFloat (this.func[0], this.func[1], this.values);
 }
 }, "~N,~N");
 Clazz.overrideMethod (c$, "getValueAtPoint", 
 function (pt, getSource) {
 return this.getValueAB (this.getValueAtPoint2 (pt, this.myBsA), this.getValueAtPoint2 (pt, this.myBsB));
-}, "JU.P3,~B");
+}, "JU.T3,~B");
 Clazz.defineMethod (c$, "getValueAtPoint2", 
  function (pt, bs) {
 var value = 3.4028235E38;
@@ -132,7 +132,7 @@ var r = pt.distance (this.atomXyz[iAtom]) - this.atomRadius[iAtom];
 if (r < value) value = r;
 }
 return (value == 3.4028235E38 ? NaN : value);
-}, "JU.P3,JU.BS");
+}, "JU.T3,JU.BS");
 Clazz.defineStatics (c$,
 "TYPE_FUNCTION", 0,
 "TYPE_SUM", 1,

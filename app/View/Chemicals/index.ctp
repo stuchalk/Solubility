@@ -25,4 +25,4 @@ foreach($data as $char=>$iarray)
 	echo "</ul></div>";
 }
 ?>
-<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sys_category.aspx',['target'=>'_blank']);?></p>
+<p>&nbsp;<br /><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'sys_category.aspx',['target'=>'_blank']);?></p>

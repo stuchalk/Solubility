@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.app");
-Clazz.load (["JSV.api.JSVAppInterface", "$.PanelListener"], "JSV.app.JSVApp", ["java.lang.Double", "JU.List", "$.PT", "JSV.common.Coordinate", "$.JSVFileManager", "$.JSViewer", "$.PeakPickEvent", "$.ScriptToken", "$.SubSpecChangeEvent", "$.ZoomEvent", "JW.Logger"], function () {
+Clazz.load (["JSV.api.JSVAppInterface", "$.PanelListener"], "JSV.app.JSVApp", ["java.lang.Double", "JU.Lst", "$.PT", "JSV.common.Coordinate", "$.JSVFileManager", "$.JSViewer", "$.PeakPickEvent", "$.ScriptToken", "$.SubSpecChangeEvent", "$.ZoomEvent", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.appletFrame = null;
 this.isNewWindow = false;
@@ -97,28 +97,27 @@ this.toggle (JSV.common.ScriptToken.INTEGRATE);
 });
 Clazz.defineMethod (c$, "toggle", 
  function (st) {
-var jsvp = this.vwr.selectedPanel;
-if (jsvp != null) this.runScript (st + " TOGGLE");
+if (this.vwr.selectedPanel != null) this.runScript (st + " TOGGLE");
 }, "JSV.common.ScriptToken");
 Clazz.overrideMethod (c$, "addHighlight", 
 function (x1, x2, r, g, b, a) {
-this.vwr.addHighLight (x1, x2, r, g, b, a);
+this.runScript ("HIGHLIGHT " + x1 + " " + x2 + " " + r + " " + g + " " + b + " " + a);
 }, "~N,~N,~N,~N,~N,~N");
-Clazz.overrideMethod (c$, "removeAllHighlights", 
-function () {
-this.vwr.removeAllHighlights ();
-});
 Clazz.overrideMethod (c$, "removeHighlight", 
 function (x1, x2) {
-this.vwr.removeHighlight (x1, x2);
+this.runScript ("HIGHLIGHT " + x1 + " " + x2 + " OFF");
 }, "~N,~N");
+Clazz.overrideMethod (c$, "removeAllHighlights", 
+function () {
+this.runScript ("HIGHLIGHT OFF");
+});
 Clazz.overrideMethod (c$, "syncScript", 
 function (peakScript) {
 this.vwr.syncScript (peakScript);
 }, "~S");
 Clazz.overrideMethod (c$, "writeStatus", 
 function (msg) {
-JW.Logger.info (msg);
+JU.Logger.info (msg);
 }, "~S");
 Clazz.defineMethod (c$, "initParams", 
 function (params) {
@@ -131,12 +130,12 @@ this.vwr.closeSource (null);
 }, "~S");
 Clazz.defineMethod (c$, "newAppletPanel", 
  function () {
-JW.Logger.info ("newAppletPanel");
+JU.Logger.info ("newAppletPanel");
 this.appletFrame.createMainPanel (this.vwr);
 });
 Clazz.overrideMethod (c$, "repaint", 
 function () {
-var applet = (this.vwr == null ? null : this.vwr.applet);
+var applet = (this.vwr == null ? null : this.vwr.html5Applet);
 {
 applet && self.Jmol && Jmol._repaint &&(Jmol._repaint(applet,true));
 }});
@@ -154,8 +153,8 @@ var coord =  new JSV.common.Coordinate ();
 var actualCoord = (this.peakCallbackFunctionName == null ? null :  new JSV.common.Coordinate ());
 if (!this.vwr.pd ().getPickedCoordinates (coord, actualCoord)) return;
 var iSpec = this.vwr.mainPanel.getCurrentPanelIndex ();
-if (actualCoord == null) this.appletFrame.callToJavaScript (this.coordCallbackFunctionName, [Double.$valueOf (coord.getXVal ()), Double.$valueOf (coord.getYVal ()), Integer.$valueOf (iSpec + 1)]);
- else this.appletFrame.callToJavaScript (this.peakCallbackFunctionName, [Double.$valueOf (coord.getXVal ()), Double.$valueOf (coord.getYVal ()), Double.$valueOf (actualCoord.getXVal ()), Double.$valueOf (actualCoord.getYVal ()), Integer.$valueOf (iSpec + 1)]);
+if (actualCoord == null) this.appletFrame.callToJavaScript (this.coordCallbackFunctionName,  Clazz.newArray (-1, [Double.$valueOf (coord.getXVal ()), Double.$valueOf (coord.getYVal ()), Integer.$valueOf (iSpec + 1)]));
+ else this.appletFrame.callToJavaScript (this.peakCallbackFunctionName,  Clazz.newArray (-1, [Double.$valueOf (coord.getXVal ()), Double.$valueOf (coord.getYVal ()), Double.$valueOf (actualCoord.getXVal ()), Double.$valueOf (actualCoord.getYVal ()), Integer.$valueOf (iSpec + 1)]));
 });
 Clazz.defineMethod (c$, "doAdvanced", 
 function (filePath) {
@@ -173,7 +172,7 @@ return this.vwr.getSolutionColorStr (true);
 });
 Clazz.defineMethod (c$, "updateJSView", 
  function (msg) {
-var applet = this.vwr.applet;
+var applet = this.vwr.html5Applet;
 var panel = (applet == null ? null : this.vwr.selectedPanel);
 {
 applet && applet._viewSet != null && applet._updateView(panel, msg);
@@ -182,8 +181,8 @@ Clazz.overrideMethod (c$, "syncToJmol",
 function (msg) {
 this.updateJSView (msg);
 if (this.syncCallbackFunctionName == null) return;
-JW.Logger.info ("JSVApp.syncToJmol JSV>Jmol " + msg);
-this.appletFrame.callToJavaScript (this.syncCallbackFunctionName, [this.vwr.fullName, msg]);
+JU.Logger.info ("JSVApp.syncToJmol JSV>Jmol " + msg);
+this.appletFrame.callToJavaScript (this.syncCallbackFunctionName,  Clazz.newArray (-1, [this.vwr.fullName, msg]));
 }, "~S");
 Clazz.overrideMethod (c$, "setVisible", 
 function (b) {
@@ -221,15 +220,15 @@ this.appletFrame.newWindow (isSelected);
 }}, "~B,~B");
 Clazz.overrideMethod (c$, "siValidateAndRepaint", 
 function (isAll) {
-var pd;
-if (this.vwr.selectedPanel != null && (pd = this.vwr.pd ()) != null) pd.taintedAll = true;
+var pd = this.vwr.pd ();
+if (pd != null) pd.taintedAll = true;
 this.appletFrame.validate ();
 this.repaint ();
 }, "~B");
 Clazz.overrideMethod (c$, "siSyncLoad", 
 function (filePath) {
 this.newAppletPanel ();
-JW.Logger.info ("JSVP syncLoad reading " + filePath);
+JU.Logger.info ("JSVP syncLoad reading " + filePath);
 this.siOpenDataOrFile (null, null, null, filePath, -1, -1, false, null, null);
 this.appletFrame.validateContent (3);
 }, "~S");
@@ -246,8 +245,8 @@ this.siSetSelectedPanel (null);
 return;
 }
 if (this.vwr.jsvpPopupMenu != null) this.vwr.jsvpPopupMenu.setCompoundMenu (this.vwr.panelNodes, this.vwr.allowCompoundMenu);
-JW.Logger.info (this.appletFrame.getAppletInfo () + " File " + this.vwr.currentSource.getFilePath () + " Loaded Successfully");
-}, "~O,~S,JU.List,~S,~N,~N,~B,~S,~S");
+JU.Logger.info (this.appletFrame.getAppletInfo () + " File " + this.vwr.currentSource.getFilePath () + " Loaded Successfully");
+}, "~O,~S,JU.Lst,~S,~N,~N,~B,~S,~S");
 Clazz.overrideMethod (c$, "siProcessCommand", 
 function (scriptItem) {
 this.vwr.runScriptNow (scriptItem);
@@ -287,7 +286,7 @@ break;
 }, "JSV.common.ScriptToken,~S");
 Clazz.overrideMethod (c$, "siLoaded", 
 function (value) {
-if (this.loadFileCallbackFunctionName != null) this.appletFrame.callToJavaScript (this.loadFileCallbackFunctionName, [this.vwr.appletID, value]);
+if (this.loadFileCallbackFunctionName != null) this.appletFrame.callToJavaScript (this.loadFileCallbackFunctionName,  Clazz.newArray (-1, [this.vwr.appletName, value]));
 this.updateJSView (null);
 return null;
 }, "~S");
@@ -319,7 +318,7 @@ function (spec) {
 if (spec == null) {
 this.vwr.initialEndIndex = this.vwr.initialStartIndex = -1;
 return null;
-}var specs =  new JU.List ();
+}var specs =  new JU.Lst ();
 specs.addLast (spec);
 var jsvp = this.appletFrame.getJSVPanel (this.vwr, specs);
 jsvp.getPanelData ().addListener (this);
@@ -336,7 +335,7 @@ this.vwr.initialEndIndex = this.vwr.initialStartIndex = -1;
 jsvp.getPanelData ().addListener (this);
 this.vwr.parameters.setFor (jsvp, null, true);
 return jsvp;
-}, "JU.List");
+}, "JU.Lst");
 Clazz.overrideMethod (c$, "siSetPropertiesFromPreferences", 
 function (jsvp, includeMeasures) {
 this.vwr.checkAutoIntegrate ();

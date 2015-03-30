@@ -8,16 +8,19 @@ if (!window["java.registered"])
 
 (function (ClazzLoader) {
 
-if (window["java.packaged"]) return;
-window["java.packaged"] = true;
+	if (window["java.packaged"]) return;
+	window["java.packaged"] = true;
 
-var	base = ClazzLoader.fastGetJ2SLibBase() + "core/";
-
-for (var i = 0; i < Jmol._coreFiles.length; i++)
-  ClazzLoader.loadZJar (Jmol._coreFiles[i], ClazzLoader.runtimeKeyClass);
-
+	//if (!Jmol._isAsync) {
+		for (var i = 0; i < Jmol._coreFiles.length; i++)
+		  ClazzLoader.loadZJar(Jmol._coreFiles[i], ClazzLoader.runtimeKeyClass);
+	//}
+		
   if (Jmol._debugCode)
     return;
+
+	var	base = ClazzLoader.getJ2SLibBase() + "core/";
+
 
 // note - we don't need to list ALL the classes -- only the ones that are entry points.
 // several more classe are in each of these files -- see build_03_tojs.xml
@@ -42,7 +45,7 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
     "J.api.JmolScriptManager", 
     "$.JmolScriptEvaluator",
     "$.JmolScriptFunction",
-    "J.script.ScriptError", 
+    "JS.ScriptError", 
     "$.ScriptParam", 
     "$.ScriptExpr", 
     "$.ScriptEval", 
@@ -59,21 +62,21 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 	]);
 	
 	ClazzLoader.jarClasspath (base + "corescriptcmd.z.js",	[  
-	"J.scriptext.CmdExt"
+	"JS.CmdExt"
 	]);
 	                                                 	
 	ClazzLoader.jarClasspath (base + "corescriptmath.z.js",	[  
-	"J.scriptext.MathExt"
+	"JS.MathExt"
 	]);
 	                                                 	
 	ClazzLoader.jarClasspath (base + "corestate.z.js",	[  
     "J.api.JmolStateCreator", 
-    "JW.StateCreator" 
+    "JU.StateCreator" 
 	]);
 	
 	ClazzLoader.jarClasspath (base + "coreprop.z.js",	[  
     "J.api.JmolPropertyManager", 
-    "JW.PropertyManager" 
+    "JU.PropertyManager" 
 	]);  
   
 	ClazzLoader.jarClasspath (base + "coreconsole.z.js",	[
@@ -92,7 +95,7 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 	ClazzLoader.jarClasspath (base + "corebinary.z.js",	[
     "java.io.DataInputStream",
     "$.PushbackInputStream",
-    "javajs.api.GenericBinaryDocument",
+    "JS.api.GenericBinaryDocument",
     "JU.BC",
     "$.BinaryDocument"
 	]);
@@ -110,14 +113,14 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 
 	ClazzLoader.jarClasspath (base + "coremin.z.js",	[
 		"J.api.MinimizerInterface", // -- required by J.minimize.Minimizer
-		"J.minimize.Minimizer",
+		"JM.Minimizer",
 		"$.MinObject", // -- required by $.MinAngle
 		"$.MinAngle",
 		"$.MinAtom",
 		"$.MinBond",
 		"$.MinTorsion",
 		"$.Util",
-		"J.minimize.forcefield.AtomType",
+		"JM.FF.AtomType",
 		"$.Calculation", // -- required by $.CalculationsMMFF
 		"$.Calculations", // -- required by $.CalculationsMMFF
 		"$.CalculationsMMFF",
@@ -146,6 +149,7 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 
 
 	ClazzLoader.jarClasspath (base + "coresurface.z.js",	[
+		"JS.IsoExt",
 		"J.api.VolumeDataInterface",
 		"J.jvxl.api.VertexDataServer",
 		"$.MeshDataServer",
@@ -173,7 +177,7 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 	ClazzLoader.jarClasspath (base + "coresym.z.js",	[
     "J.adapter.smarter.XtalSymmetry",
 		"J.api.SymmetryInterface",
-		"J.symmetry.Symmetry",
+		"JS.Symmetry",
 		"$.PointGroup",
 		"$.SpaceGroup",
 		"$.HallInfo",
@@ -187,8 +191,8 @@ for (var i = 0; i < Jmol._coreFiles.length; i++)
 
 	ClazzLoader.jarClasspath (base + "coresmiles.z.js",	[
     "J.api.SmilesMatcherInterface",
-    "J.scriptext.SmilesExt",
-    "J.smiles.VTemp",
+    "JS.SmilesExt",
+    "$.VTemp",
     "$.SmilesMatcher",
     "$.InvalidSmilesException",
     "$.SmilesSearch",

@@ -16,7 +16,7 @@ function (center, distance) {
 this.center = center;
 this.distance = distance;
 this.set (0);
-}, "JU.P3,~N");
+}, "JU.T3,~N");
 Clazz.defineMethod (c$, "set", 
  function (iModel) {
 if ((this.modelIndex = this.bsModels.nextSetBit (iModel)) < 0 || (this.cubeIterator = this.bspf.getCubeIterator (this.modelIndex)) == null) return false;

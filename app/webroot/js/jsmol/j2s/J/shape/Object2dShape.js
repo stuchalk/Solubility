@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shape");
-Clazz.load (["J.shape.Shape", "java.util.Hashtable"], "J.shape.Object2dShape", ["JU.P3", "JW.Logger", "$.Txt"], function () {
+Clazz.load (["J.shape.Shape", "java.util.Hashtable"], "J.shape.Object2dShape", ["JU.P3", "$.PT", "JU.C", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.objects = null;
 this.currentObject = null;
@@ -29,7 +29,7 @@ if (this.isAll || this.thisID != null) {
 var e = this.objects.values ().iterator ();
 while (e.hasNext ()) {
 var text = e.next ();
-if (this.isAll || JW.Txt.isMatch (text.target.toUpperCase (), this.thisID, true, true)) {
+if (this.isAll || JU.PT.isMatch (text.target.toUpperCase (), this.thisID, true, true)) {
 e.remove ();
 }}
 }return;
@@ -49,10 +49,10 @@ return;
 }if ("model" === propertyName) {
 var modelIndex = (value).intValue ();
 if (this.currentObject == null) {
-if (this.isAll) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) t.setModel (modelIndex);
+if (this.isAll) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) t.modelIndex = modelIndex;
 
 return;
-}this.currentObject.setModel (modelIndex);
+}this.currentObject.modelIndex = modelIndex;
 return;
 }if ("align" === propertyName) {
 var align = value;
@@ -60,7 +60,7 @@ if (this.currentObject == null) {
 if (this.isAll) for (var obj, $obj = this.objects.values ().iterator (); $obj.hasNext () && ((obj = $obj.next ()) || true);) obj.setAlignmentLCR (align);
 
 return;
-}if (!this.currentObject.setAlignmentLCR (align)) JW.Logger.error ("unrecognized align:" + align);
+}if (!this.currentObject.setAlignmentLCR (align)) JU.Logger.error ("unrecognized align:" + align);
 return;
 }if ("bgcolor" === propertyName) {
 this.currentBgColor = value;
@@ -68,10 +68,10 @@ if (this.currentObject == null) {
 if (this.isAll) {
 var e = this.objects.values ().iterator ();
 while (e.hasNext ()) {
-e.next ().setBgColixO (value);
+e.next ().colix = JU.C.getColixO (value);
 }
 }return;
-}this.currentObject.setBgColixO (value);
+}this.currentObject.bgcolix = JU.C.getColixO (value);
 return;
 }if ("color" === propertyName) {
 this.currentColor = value;
@@ -80,11 +80,11 @@ if (this.isAll || this.thisID != null) {
 var e = this.objects.values ().iterator ();
 while (e.hasNext ()) {
 var text = e.next ();
-if (this.isAll || JW.Txt.isMatch (text.target.toUpperCase (), this.thisID, true, true)) {
-text.setColixO (value);
+if (this.isAll || JU.PT.isMatch (text.target.toUpperCase (), this.thisID, true, true)) {
+text.colix = JU.C.getColixO (value);
 }}
 }return;
-}this.currentObject.setColixO (value);
+}this.currentObject.colix = JU.C.getColixO (value);
 return;
 }if ("target" === propertyName) {
 var target = value;
@@ -124,21 +124,19 @@ function () {
 this.currentObject = null;
 this.isAll = false;
 });
-Clazz.overrideMethod (c$, "setVisibilityFlags", 
-function (bs) {
-if (!this.isHover) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) t.setVisibility (t.modelIndex < 0 || bs.get (t.modelIndex));
+Clazz.overrideMethod (c$, "setModelVisibilityFlags", 
+function (bsModels) {
+if (!this.isHover) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) t.visible = (t.modelIndex < 0 || bsModels.get (t.modelIndex));
 
 }, "JU.BS");
 Clazz.overrideMethod (c$, "checkObjectClicked", 
 function (x, y, modifiers, bsVisible, drawPicking) {
 if (this.isHover || modifiers == 0) return null;
-var isAntialiased = this.vwr.isAntialiased ();
+var isAntialiased = this.vwr.antialiased;
 for (var obj, $obj = this.objects.values ().iterator (); $obj.hasNext () && ((obj = $obj.next ()) || true);) {
 if (obj.checkObjectClicked (isAntialiased, x, y, bsVisible)) {
-var s = obj.getScript ();
-if (s != null) {
-this.vwr.evalStringQuiet (s);
-}var map =  new java.util.Hashtable ();
+if (obj.script != null) this.vwr.evalStringQuiet (obj.script);
+var map =  new java.util.Hashtable ();
 map.put ("pt", (obj.xyz == null ?  new JU.P3 () : obj.xyz));
 var modelIndex = obj.modelIndex;
 if (modelIndex < 0) modelIndex = 0;
@@ -154,10 +152,9 @@ Clazz.overrideMethod (c$, "checkObjectHovered",
 function (x, y, bsVisible) {
 if (this.isHover) return false;
 var haveScripts = false;
-var isAntialiased = this.vwr.isAntialiased ();
+var isAntialiased = this.vwr.antialiased;
 for (var obj, $obj = this.objects.values ().iterator (); $obj.hasNext () && ((obj = $obj.next ()) || true);) {
-var s = obj.getScript ();
-if (s != null) {
+if (obj.script != null) {
 haveScripts = true;
 if (obj.checkObjectClicked (isAntialiased, x, y, bsVisible)) {
 this.vwr.setCursor (12);

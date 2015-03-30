@@ -1,5 +1,7 @@
 // JSmolControls.js
 //
+// BH 5/29/2014 8:14:06 AM added default command for command input box
+// BH 5/15/2014 -- removed script check prior to execution
 // BH 12/3/2013 12:39:48 PM added up/down arrow key-driven command history for commandInput (changed keypress to keydown)
 // BH 5/16/2013 8:14:47 AM fix for checkbox groups and default radio names
 // BH 8:36 AM 7/27/2012  adds name/id for cmd button 
@@ -118,7 +120,7 @@
 	switch (keycode) {
 	case 13:
 		var v = d.value;
-		if (c.__checkScript(applet, d) && (c._scriptExecute(d, [appId, v]) || 1)) {
+		if ((c._scriptExecute(d, [appId, v]) || 1)) {
 			 if (!d._cmds){
 				 d._cmds = [];
 				 d._cmddir = 0;
@@ -335,7 +337,7 @@
 		return Jmol._documentWrite(t);
 	}
 
-	c._getCommandInput = function(appletOrId, label, size, id, title) {
+	c._getCommandInput = function(appletOrId, label, size, id, title, cmd0) {
 		var appId = c._getIdForControl(appletOrId, "x");
 		if (appId == null)
 			return "";
@@ -343,9 +345,10 @@
 		id != undefined && id != null || (id = "jmolCmd" + c._cmdCount);
 		label != undefined && label != null || (label = "Execute");
 		size != undefined && !isNaN(size) || (size = 60);
+		cmd0 != undefined || (cmd0 = "help");
 		++c._cmdCount;
 		var t = "<span id=\"span_"+id+"\""+(title ? " title=\"" + title + "\"":"")+"><input name='" + id + "' id='" + id +
-						"' size='"+size+"' onkeydown='return Jmol.controls._commandKeyPress(event,\""+id+"\",\"" + appId + "\")' /><input " +
+						"' size='"+size+"' onkeydown='return Jmol.controls._commandKeyPress(event,\""+id+"\",\"" + appId + "\")' value='" + cmd0 + "'/><input " +
 						" type='button' name='" + id + "Btn' id='" + id + "Btn' value = '"+label+"' onclick='Jmol.controls._commandKeyPress(13,\""+id+"\",\"" + appId + "\")' /></span>";
 		if (Jmol._debugAlert)
 			alert(t);

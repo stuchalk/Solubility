@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["java.util.Hashtable"], "JSV.common.JSVFileManager", ["java.io.BufferedInputStream", "$.BufferedReader", "$.InputStreamReader", "$.StringReader", "java.net.URL", "JU.AU", "$.Encoding", "$.PT", "$.SB", "JSV.common.JSVersion", "$.JSViewer", "JSV.exception.JSVException", "JW.Logger"], function () {
+Clazz.load (["java.util.Hashtable"], "JSV.common.JSVFileManager", ["java.io.BufferedInputStream", "$.BufferedReader", "$.InputStreamReader", "$.StringReader", "java.net.URL", "JU.AU", "$.Encoding", "$.PT", "$.SB", "JSV.common.JSVersion", "$.JSViewer", "JSV.exception.JSVException", "JU.Logger"], function () {
 c$ = Clazz.declareType (JSV.common, "JSVFileManager");
 Clazz.defineMethod (c$, "isApplet", 
 function () {
@@ -46,9 +46,9 @@ return (data == null ? null :  new java.io.BufferedReader ( new java.io.StringRe
 c$.getBufferedReaderFromName = Clazz.defineMethod (c$, "getBufferedReaderFromName", 
 function (name, startCode) {
 if (name == null) throw  new JSV.exception.JSVException ("Cannot find " + name);
-JW.Logger.info ("JSVFileManager getBufferedReaderFromName " + name);
+JU.Logger.info ("JSVFileManager getBufferedReaderFromName " + name);
 var path = JSV.common.JSVFileManager.getFullPathName (name);
-if (!path.equals (name)) JW.Logger.info ("JSVFileManager getBufferedReaderFromName " + path);
+if (!path.equals (name)) JU.Logger.info ("JSVFileManager getBufferedReaderFromName " + path);
 return JSV.common.JSVFileManager.getUnzippedBufferedReaderFromName (path, startCode);
 }, "~S,~S");
 c$.getFullPathName = Clazz.defineMethod (c$, "getFullPathName", 
@@ -264,7 +264,7 @@ break;
 return s;
 } catch (e) {
 if (Clazz.exceptionOf (e, java.io.IOException)) {
-JW.Logger.error ("fixUTF error " + e);
+JU.Logger.error ("fixUTF error " + e);
 } else {
 throw e;
 }
@@ -292,10 +292,10 @@ throw  new JSV.exception.JSVException ("Cannot read " + name);
 throw e;
 }
 }
-JW.Logger.info ("JSVFileManager opening URL " + url + (post == null ? "" : " with POST of " + post.length + " bytes"));
-$in = JSV.common.JSVFileManager.viewer.apiPlatform.getBufferedURLInputStream (url, postBytes, post);
+JU.Logger.info ("JSVFileManager opening URL " + url + (post == null ? "" : " with POST of " + post.length + " bytes"));
+$in = JSV.common.JSVFileManager.viewer.apiPlatform.getURLContents (url, postBytes, post, false);
 } else {
-if (showMsg) JW.Logger.info ("JSVFileManager opening file " + name);
+if (showMsg) JU.Logger.info ("JSVFileManager opening file " + name);
 $in = JSV.common.JSVFileManager.viewer.apiPlatform.getBufferedFileInputStream (name);
 }if (Clazz.instanceOf ($in, String)) throw  new JSV.exception.JSVException ($in);
 return $in;
@@ -308,10 +308,10 @@ if (jcamp != null) return jcamp;
 var isInline = name.startsWith ("MOL=");
 var molFile;
 var src = (isInline ? null : JU.PT.rep (JSV.common.JSVFileManager.nciResolver, "%FILE", JU.PT.escapeUrl (name)));
-if ((molFile = (isInline ? JU.PT.rep (name.substring (4), "\\n", "\n") : JSV.common.JSVFileManager.getFileAsString (src))) == null) JW.Logger.info ("no data returned");
+if ((molFile = (isInline ? JU.PT.rep (name.substring (4), "\\n", "\n") : JSV.common.JSVFileManager.getFileAsString (src))) == null) JU.Logger.info ("no data returned");
 var json = JSV.common.JSVFileManager.getFileAsString (JSV.common.JSVFileManager.nmrdbServer + molFile);
 JSV.common.JSVFileManager.htCorrelationCache.put ("json", json);
-JW.Logger.debug (json);
+JU.Logger.debug (json);
 if (json.indexOf ("\"error\":") >= 0) return null;
 json = JU.PT.rep (json, "\\r\\n", "\n");
 json = JU.PT.rep (json, "\\t", "\t");
@@ -330,7 +330,7 @@ jcamp = JSV.common.JSVFileManager.getQuotedJSONAttribute (json, "jcamp", null);
 jcamp = "##TITLE=" + (isInline ? "JMOL SIMULATION" : name) + "\n" + jcamp.substring (jcamp.indexOf ("\n##") + 1);
 var pt = molFile.indexOf ("\n");
 pt = molFile.indexOf ("\n", pt + 1);
-if (pt > 0 && pt == molFile.indexOf ("\n \n")) molFile = molFile.substring (0, pt + 1) + "Created " + JSV.common.JSVFileManager.viewer.apiPlatform.getDateFormat (true) + " by JSpecView " + JSV.common.JSVersion.VERSION + molFile.substring (pt + 1);
+if (pt > 0 && pt == molFile.indexOf ("\n \n")) molFile = molFile.substring (0, pt + 1) + "Created " + JSV.common.JSVFileManager.viewer.apiPlatform.getDateFormat ("8824") + " by JSpecView " + JSV.common.JSVersion.VERSION + molFile.substring (pt + 1);
 pt = 0;
 pt = jcamp.indexOf ("##.");
 var id = JSV.common.JSVFileManager.getAbbreviatedSimulationName (name, false);
@@ -429,7 +429,7 @@ Clazz.defineStatics (c$,
 "viewer", null,
 "jsDocumentBase", "");
 c$.htCorrelationCache = c$.prototype.htCorrelationCache =  new java.util.Hashtable ();
-c$.urlPrefixes = c$.prototype.urlPrefixes = ["http:", "https:", "ftp:", "http://SIMULATION/", "file:"];
+c$.urlPrefixes = c$.prototype.urlPrefixes =  Clazz.newArray (-1, ["http:", "https:", "ftp:", "http://SIMULATION/", "file:"]);
 Clazz.defineStatics (c$,
 "URL_LOCAL", 4,
 "nciResolver", "http://cactus.nci.nih.gov/chemical/structure/%FILE/file?format=sdf&get3d=True",
