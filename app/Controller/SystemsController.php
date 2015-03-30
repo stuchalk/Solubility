@@ -29,7 +29,11 @@ class SystemsController extends AppController
 	{
         $data=$this->System->find('first', ['conditions'=>['System.sysID'=>$sysID],'recursive'=>1]);
         $citation=$this->Citation->find('first', ['conditions'=>['Citation.id'=>$data['Citation']['id']]]);
-        $data['Author']=$citation['Author'];
+        if(isset($citation['Author'])&&$citation['Author']!="") {
+            $data['Author']=$citation['Author'];
+        } else {
+            $data['Author']="No authors given";
+        }
         if($format!="") { $this->export($data,$format); }
         $this->set('data',$data);
         $this->set('sysID',$sysID);

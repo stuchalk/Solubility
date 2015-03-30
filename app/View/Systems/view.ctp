@@ -75,7 +75,7 @@ echo "<div class='floatreset'></div></div>";
 // Data analysis (text)
 if($system['data']!="") { echo "<h3>Data Analysis</h3><p style='width: 900px;font-size: 12px;text-align: justify;'>".$system['data']."</p>"; }
 // Tables
-echo $this->element('tables',array('tables'=>$tables));
+if(!empty($tables)) { echo $this->element('tables',array('tables'=>$tables)); }
 // Data table notes
 if($system['datanotes']!="")
 {

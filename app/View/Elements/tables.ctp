@@ -8,7 +8,8 @@ if(isset($tables)&&!empty($tables))
 	foreach($tables as $table)
 	{
 		$t=json_decode($table['content']);
-		//pr($t);
+        //echo "<p>".$table['content']."</p>";
+		//pr($table);pr($t);
 		echo "<table>";
 		$header=$t[0];
 		echo "<tr>";

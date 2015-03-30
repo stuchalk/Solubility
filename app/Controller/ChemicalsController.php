@@ -58,7 +58,7 @@ class ChemicalsController extends AppController
             }
         }
         //echo "<pre>";print_r($data);echo '</pre>';exit;
-        if(!isset($data['Chemical'])) {
+        if(!isset($data['Chemical'])&&count($data)>1) {
             $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>[$type=>$id],'order'=>['first','name']]);
             $this->set('data',$data);
             $this->set('nist',Configure::read('url.base'));
