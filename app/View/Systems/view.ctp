@@ -124,5 +124,12 @@ if($system['refs']!="")
 	echo "</p>";
 }
 ?>
-<?php //pr($system); ?>
-<p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/sol_detail.aspx?sysID='.$system['sysID'],array('target'=>'_blank'));?></p>
+<?php
+    //pr($system);// Download
+    echo "<h3>Download This Data As</h3>\n";
+    echo "<p>";
+    echo $this->Html->link($this->Html->image('xml.png',['height'=>'50','alt'=>'XML']),$base.'systems/view/'.$sysID.'/xml',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
+    echo $this->Html->link($this->Html->image('json.png',['height'=>'50','alt'=>'JSON']),$base.'systems/view/'.$sysID.'/json',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
+    echo "</p>";
+?>
+<p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'sol_detail.aspx?sysID='.$system['sysID'],array('target'=>'_blank'));?></p>

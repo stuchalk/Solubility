@@ -1,22 +1,24 @@
 <?php
-
 App::uses('AppModel', 'Model');
+
+/**
+ * Class System
+ */
 class System extends AppModel
 {
-
-	public $belongsTo = array('Citation','Systemtype');
+	public $belongsTo = ['Citation','Systemtype','Volume'];
 	
-	public $hasAndBelongsToMany = array(
+	public $hasAndBelongsToMany = [
 		'Chemical' =>
-			array(
+			[
 				'className' => 'Chemical',
 				'joinTable' => 'chemicals_systems',
 				'foreignKey' => 'system_id',
 				'associationForeignKey' => 'chemical_id',
 				'unique' => true
-				)
-		);
+				]
+		];
 		
-	public $hasMany = array('Variable','Table');
+	public $hasMany = ['Variable','Table'];
 	
 }

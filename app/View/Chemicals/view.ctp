@@ -49,13 +49,13 @@ else
 		echo "</ul></div>";
 	}
 	// Tables
-	if(!empty($tables)) { echo $this->element('tables',['tables'=>$tables,'links'=>true]); }
+	//if(!empty($tables)) { echo $this->element('tables',['tables'=>$tables,'links'=>true]); }
 	// Download
 	echo "<h3>Download This Data As</h3>\n";
 	echo "<p>";
-	echo $this->Html->link($this->Html->image('xml.png',['height'=>'50','alt'=>'XML']),$base.'chemicals/id/'.$chemical['id'].'/xml',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
-	echo $this->Html->link($this->Html->image('json.png',['height'=>'50','alt'=>'JSON']),$base.'chemicals/id/'.$chemical['id'].'/json',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
-	echo $this->Html->link($this->Html->image('jsonld.png',['height'=>'50','alt'=>'JSON-LD']),$base.'chemicals/id/'.$chemical['id'].'/jsonld',['escape'=>false,'target'=>'_blank']);
+	echo $this->Html->link($this->Html->image('xml.png',['height'=>'50','alt'=>'XML']),$base.'chemicals/view/'.$chemical['id'].'/xml',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
+	echo $this->Html->link($this->Html->image('json.png',['height'=>'50','alt'=>'JSON']),$base.'chemicals/view/'.$chemical['id'].'/json',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
+	echo $this->Html->link($this->Html->image('jsonld.png',['height'=>'50','alt'=>'JSON-LD']),$base.'chemicals/view/'.$chemical['id'].'/jsonld',['escape'=>false,'target'=>'_blank']);
 	echo "</p>";
 	?>
 	<p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'casNO.aspx',['target'=>'_blank']);?></p>
