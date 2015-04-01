@@ -28,7 +28,7 @@
 			<?php echo $this->fetch('content'); ?>
 		</div>
 		<div id="footer">
-			<?php echo "Scraped by Stuart Chalk @ ".$this->Html->link("University of North Florida",'http://www.unf.edu/',array('target' =>'_blank'))." © 2014"; ?>
+			<?php echo "Scraped by Stuart Chalk @ ".$this->Html->link("University of North Florida",'http://www.unf.edu/',['target' =>'_blank'])." © 2014-2015"; ?>
 		</div>
 	</div>
 	<?php //echo $this->element('sql_dump'); ?>

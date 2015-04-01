@@ -1,10 +1,9 @@
-<h2>Volumes</h2>
+<h2>Volumes Found</h2>
 <div>
     <ul>
         <?php
-        foreach($data as $volume) {
-            $vol=$volume['Volume'];
-            echo '<li>'.html_entity_decode($this->Html->link($vol['title'],'/volumes/view/'.$vol['vol'])).'</li>';
+        foreach($data as $vol=>$title) {
+            echo '<li>'.html_entity_decode($this->Html->link($title,'/volumes/view/'.$vol)).'</li>';
         }
         ?>
     </ul>

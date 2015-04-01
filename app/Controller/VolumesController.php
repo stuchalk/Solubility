@@ -1,22 +1,63 @@
 <?php
 
+/**
+ * Class VolumesController
+ */
 class VolumesController extends AppController
 {
 
-	function index()
+    /**
+     * Show all volumes
+     */
+	public function index()
 	{
-		//$this->Citation->virtualFields['first'] = 'UPPER(SUBSTR(Citation.journal,1,1))';
-		//$this->Citation->virtualFields['cite'] = 'CONCAT(Citation.journal," ",Citation.year,", ",Citation.volume,", ",Citation.firstpage)';
-		$data=$this->Volume->find('all', array('fields'=>array('id','vol','title','url'),'order'=>array('vol'),'recursive'=>0));
-		$this->set('data',$data);
+		$data=$this->Volume->find('all', ['fields'=>['id','vol','title','url'],'order'=>['vol'],'recursive'=>0]);
+        $this->set('base',Configure::read('host.base'));
+        $this->set('data',$data);
 	}
 
-	function view($vol,$format="")
+    /**
+     * View a volume (by volume #)
+     * @param $vol
+     * @param string $format
+     */
+    public function view($vol,$format="")
 	{
-		$data=$this->Volume->find('first', array('conditions'=>array('Volume.vol'=>$vol)));
+		$data=$this->Volume->find('first', ['conditions'=>['Volume.vol'=>$vol]]);
 		if($format=="json") { echo json_encode($data);exit; }
-		$this->set('data',$data);
+        $this->set('base',Configure::read('host.base'));
+        $this->set('data',$data);
 	}
 
+    /** Get the volume data */
+    public function scrape()
+    {
+        // Define the URL of the dataSeries page
+        $volpath="http://srdata.nist.gov/solubility/dataSeries.aspx";
+
+        // Import the content of the webpage into an array
+        $volfile=file($volpath);
+
+        // Look into each line of the file (array element) and keep lines that contain 'sol_sys.aspx'
+        // The loop needs to count down as the unset function resets the array keys
+        for($x=count($volfile)-1;$x>-1;$x--) {
+            if(!stristr($volfile[$x],'sol_sys.aspx')) { unset($volfile[$x]); }
+        }
+
+        // Separate out the volume # and title using the explode() function and save to the database
+        $data=[];
+        foreach($volfile as $line) {
+            list(,$voltitle)=explode("Volume ",$line);
+            list($voltitle,)=explode("<",$voltitle);
+            list($vol,$title)=explode(". ",$voltitle);
+            $data[$vol]=$title;
+            // Save to database
+            //$this->Volume->create();
+            //$this->Volume->save(['Volume'=>['vol'=>$vol,'title'=>'title']]);
+            //$this->Volume->clear();
+        }
+        $this->set('base',Configure::read('host.base'));
+        $this->set('data',$data);
+    }
 }
 ?>
