@@ -1,9 +1,9 @@
-<h2>Volumes Found</h2>
+<h2>System Types Found</h2>
 <div>
     <ul>
         <?php
-        foreach($data as $vol=>$title) {
-            echo '<li>'.html_entity_decode($this->Html->link($vol.") ".$title,'/volumes/view/'.$vol)).'</li>';
+        foreach($data as $sys=>$title) {
+            echo '<li>'.html_entity_decode($this->Html->link($sys.") ".$title,'/systemtypes/view/'.$sys)).'</li>';
         }
         ?>
     </ul>

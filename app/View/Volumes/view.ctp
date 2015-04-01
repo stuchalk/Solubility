@@ -40,5 +40,5 @@
 ?>
 </div>
 <p>
-    <?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','sol_sys.aspx?nm_dataSeries='.$volume['nistid'],['target'=>'_blank']);?>
+    <?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$base.'sol_sys.aspx?nm_dataSeries='.$volume['nistid'],['target'=>'_blank']);?>
 </p>

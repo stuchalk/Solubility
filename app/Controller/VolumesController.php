@@ -52,9 +52,9 @@ class VolumesController extends AppController
             list($vol,$title)=explode(". ",$voltitle);
             $data[$vol]=$title;
             // Save to database
-            //$this->Volume->create();
-            //$this->Volume->save(['Volume'=>['vol'=>$vol,'title'=>'title']]);
-            //$this->Volume->clear();
+            $this->Volume->create();
+            $this->Volume->save(['Volume'=>['vol'=>$vol,'title'=>$title]]);
+            $this->Volume->clear();
         }
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
