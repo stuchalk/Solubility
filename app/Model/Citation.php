@@ -7,9 +7,11 @@ App::uses('AppModel', 'Model');
  */
 class Citation extends AppModel
 {
-	public $hasMany='System';
-	
-	public $hasAndBelongsToMany = [
+    // Link to tables via a one-to-many relationship
+    public $hasMany='System';
+
+    // Link to tables via a many-to-many relationship
+    public $hasAndBelongsToMany = [
 		'Author' =>
 			[
 				'className' => 'Author',
@@ -20,9 +22,10 @@ class Citation extends AppModel
 				]
 		];
 
-	public $virtualFields = [
+    // Create virtual fields to return to views
+    public $virtualFields = [
         'cite'  => 'CONCAT(Citation.journal," ",Citation.year,", ",Citation.volume,", ",Citation.firstpage)',
         'first' => 'UPPER(SUBSTR(Citation.journal,1,1))'
-        ];
+    ];
 	
 }

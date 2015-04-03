@@ -1,8 +1,13 @@
 <?php
-
 App::uses('AppModel', 'Model');
+
+/**
+ * Class Chemical
+ * Model for the chemicals table
+ */
 class Chemical extends AppModel
 {
+    // Link to tables via a many-to-many relationship
 	public $hasAndBelongsToMany = [
 		'System' =>
 			[
@@ -15,6 +20,7 @@ class Chemical extends AppModel
 				]
 		];
 
+    // Create virtual fields to return to views
     public $virtualFields=['first' => 'UPPER(SUBSTR(Chemical.name,1,1))'];
 
 }

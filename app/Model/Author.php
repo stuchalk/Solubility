@@ -1,18 +1,27 @@
 <?php
-
 App::uses('AppModel', 'Model');
+
+/**
+ * Class Author
+ * Model for the authors table
+ */
 class Author extends AppModel
 {
-	
-	public $hasAndBelongsToMany = array(
+    // Link to tables via a many-to-many relationship
+    public $hasAndBelongsToMany = [
 		'Citation' =>
-			array(
+			[
 				'className' => 'Citation',
 				'joinTable' => 'authors_citations',
 				'foreignKey' => 'author_id',
 				'associationForeignKey' => 'citation_id',
 				'unique' => true
-				)
-		);
+				]
+		];
 
+    // Create virtual fields to return to views
+    public $virtualFields=[
+        'first'=>'UPPER(SUBSTR(Author.lastname,1,1))',
+        'name'=>'CONCAT(Author.firstname," ",Author.lastname)'
+    ];
 }
