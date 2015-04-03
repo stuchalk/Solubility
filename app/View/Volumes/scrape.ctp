@@ -2,8 +2,8 @@
 <div>
     <ul>
         <?php
-        foreach($data as $vol=>$title) {
-            echo '<li>'.html_entity_decode($this->Html->link($vol.") ".$title,'/volumes/view/'.$vol)).'</li>';
+        foreach($data as $v) {
+            echo '<li>'.$v['volume'].') '.$v['title'].' ('.$v['nistid'].')</li>';
         }
         ?>
     </ul>

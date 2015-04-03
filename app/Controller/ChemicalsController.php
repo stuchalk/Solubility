@@ -6,7 +6,7 @@
  */
 class ChemicalsController extends AppController
 {
-	/**
+    /**
      * Return all chemicals in the database
      */
 	public function index()
@@ -28,9 +28,13 @@ class ChemicalsController extends AppController
         $inchi=get_headers("http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi",true);
         //echo "<pre>";print_r($inchi);echo "</pre>";exit;
         if(stristr($inchi[0],"OK")) {
+            $type="viainchi";
             $data=$this->Chemical->find('first', ['conditions'=>['Chemical.inchi'=>$inchi],'recursive'=>2]);
         } else {
-            if(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
+            if(preg_match('/([A-Z]{14})-([AZ]{9})-[AZ]/',$id)) {
+                $type="inchikey";
+                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
+            } elseif(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
                 $type="casrn";
                 $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
             } elseif(preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/',$id)) {
@@ -57,7 +61,8 @@ class ChemicalsController extends AppController
                 $this->Chemical->save($data);
             }
         }
-        //echo "<pre>";print_r($data);echo '</pre>';exit;
+        // Work out how to present data in view based on # hits on chemical 'id'
+        // This is needed as formula, casrn, and inchikey can potential return multiple hits
         if(!isset($data['Chemical'])&&count($data)>1) {
             $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>[$type=>$id],'order'=>['first','name']]);
             $this->set('data',$data);
@@ -81,55 +86,23 @@ class ChemicalsController extends AppController
 	public function export($data,$format="xml")
 	{
 		$path=Configure::read('host.base');
-		// Make data
-		$input=$data['Chemical'];
-		$input['url']=$path."chemicals/view/".$input['id'];unset($input['id']);
-		$input['systems']=[];
+		// Make output data
+		$output=$data['Chemical'];
+        $output['url']=$path."chemicals/view/".$output['id'];unset($output['id']);
+        // Add system data
+        $output['systems']=[];
 		foreach($data['System'] as $s)
 		{
-			$input['systems'][]=['sysID'=>$s['sysID'],'title'=>$s['title'],'url'=>$path.'systems/view/'.$s['sysID']];
+            $output['systems'][]=['sysID'=>$s['sysID'],'title'=>$s['title'],'url'=>$path.'systems/view/'.$s['sysID']];
 		}
+        // Output data
 		if($format=="xml")
 		{
-			$output="<?xml version='1.0'?>\n";
-			$output.="<chemical>\n";
-			foreach($input as $k1=>$v1)
-			{
-				$output.="<".$k1.">";
-				if(is_array($v1))
-				{
-					foreach($v1 as $k2=>$v2)
-					{
-						if(is_numeric($k2)) { $k2="instance"; }
-						$output.="<".$k2.">";
-						if(is_array($v2))
-						{
-							foreach($v2 as $k3=>$v3)
-							{
-								$output.="<".$k3.">".$v3."</".$k3.">";
-							}
-						}
-						$output.="</".$k2.">\n";
-					}
-				}
-				else
-				{
-					$output.=$v1;
-				}
-				$output.="</".$k1.">\n";
-			}
-			$output.="</chemical>";
-            $output=str_replace("&","&amp;",$output);
-			// Output
-			header('Content-type: text/xml');
-			echo $output;exit;
+            $this->Export->xml($output['name'],"chemical",$output);
 		}
 		elseif($format=="json")
 		{
-			$output=json_encode($input);
-			// Output
-			header('Content-type: application/json');
-			echo $output;exit;
+            $this->Export->json($output['name'],"chemical",$output);
 		}
 		elseif($format=="jsonld")
 		{
@@ -145,7 +118,7 @@ class ChemicalsController extends AppController
 				"casrn"=>[
 					"@id"=>"http://edamontology.org/data_1002",
 					"@type"=>"http://www.w3c.org/2001/XMLSchema#string"
-				,
+				],
 				"inchikey"=>[
 					"@id"=>"http://purl.obolibrary.org/obo/ERO_0001044",
 					"@type"=>"http://www.w3c.org/2001/XMLSchema#string"
@@ -172,12 +145,8 @@ class ChemicalsController extends AppController
 						"@type"=>"@id"
 					]
 				]
-			]];
-			$input=['@context'=>$context]+$input;
-			$output=json_encode($input);
-			// Output
-			header('Content-type: application/ld+json');
-			echo $output;exit;
+			];
+            $this->Export->jsonld($output['name'],"chemical",$output,$context);
 		}
 		else
 		{

@@ -5,13 +5,12 @@
  */
 class SystemtypesController extends AppController
 {
-
     /**
      * Show all system types
      */
 	function index()
 	{
-		$data=$this->Systemtype->find('list', ['fields'=>['id','title','first'],'order'=>['first','title']]);
+		$data=$this->Systemtype->find('list',['fields'=>['id','title','first'],'order'=>['first','title']]);
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
 	}
@@ -23,7 +22,7 @@ class SystemtypesController extends AppController
      */
 	function view($id)
 	{
-		$data=$this->Systemtype->find('first', ['conditions'=>['Systemtype.id'=>$id],'recursive'=>2]);
+		$data=$this->Systemtype->find('first',['conditions'=>['Systemtype.id'=>$id],'recursive'=>2]);
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
 		if($this->request->is('requested')) { return $data; }
@@ -43,7 +42,6 @@ class SystemtypesController extends AppController
         for($x=count($systypefile)-1;$x>-1;$x--) {
             if(!stristr($systypefile[$x],'<option')) { unset($systypefile[$x]); }
         }
-        //echo '<pre>';print_r($systypefile);echo "</pre>";exit;
 
         // Separate out the volume # and title using the explode() function and save to the database
         $data=[];
@@ -61,4 +59,3 @@ class SystemtypesController extends AppController
         $this->set('data',$data);
     }
 }
-?>

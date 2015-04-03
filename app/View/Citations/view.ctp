@@ -1,5 +1,5 @@
 <?php
-pr($data);exit;
+//pr($data);exit;
 $citation=$data['Citation'];
 if(isset($data['System']))		{ $systems=$data['System']; }
 if(isset($data['Author']))		{ $authors=$data['Author']; }
@@ -18,7 +18,7 @@ if(isset($citation))
 		($citation['issue']!="") ? $bib.="(".$citation['issue']."), " : $bib.=", ";
 		$bib.=$citation['firstpage'];
 		($citation['lastpage']!="") ? $bib.="-".$citation['lastpage']."." : $bib.=".";
-		if($citation['url']!=""):	echo "<h4>".$this->Html->link($bib,$citation['url'],array('target'=>'_blank'))."</h4>";
+		if($citation['url']!=""):	echo "<h4>".$this->Html->link($bib,$citation['url'],['target'=>'_blank'])."</h4>";
 		else:						echo "<h4>".$bib."</h4>";
 		endif;
 	}
@@ -37,4 +37,4 @@ if(isset($systems))
 }
 ?>
 <p>&nbsp;<br />
-<?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database','http://srdata.nist.gov/solubility/citation_detail.aspx?REF_NO='.$citation['refno'],array('target'=>'_blank'));?></p>
+<?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$base.'citation.aspx',['target'=>'_blank']);?></p>

@@ -10,6 +10,9 @@ class System extends AppModel
     // Link to tables via a one-to-one relationship
     public $belongsTo = ['Citation','Systemtype','Volume'];
 
+    // Link to tables via a one-to-many relationship
+    public $hasMany = ['Variable','Table'];
+
     // Link to tables via a many-to-many relationship
     public $hasAndBelongsToMany = [
 		'Chemical' =>
@@ -22,7 +25,7 @@ class System extends AppModel
 				]
 		];
 
-    // Link to tables via a one-to-many relationship
-    public $hasMany = ['Variable','Table'];
-	
+    // Create virtual fields to return to views
+    public $virtualFields=['first' => 'UPPER(SUBSTR(System.title,1,1))'];
+
 }

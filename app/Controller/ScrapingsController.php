@@ -10,13 +10,17 @@ class ScrapingsController extends AppController
     /**
      * Ingest the systems
      */
-    function getsystems()
+    public function getsystems()
     {
-        $types = $this->Systemtype->find('list', ['fields' => ['Systemtype.id', 'Systemtype.sysID'], 'order' => ['Systemtype.sysID'], 'limit' => 600, 'offset' => 2000]);
+        // Get the systems by searching through the systems (done 100 systemtypes at a time - change offset to do next set)
+        $types = $this->Systemtype->find('list', ['fields' => ['Systemtype.id', 'Systemtype.sysID'], 'order' => ['Systemtype.sysID'], 'limit' => 100, 'offset' => 0]);
+        // Get the base URL
         $url = Configure::read('url.system.list');
+        // For each systemtype get its page and find the systems listed
         foreach ($types as $id => $systypeID) {
             $types[$id] = ['url' => str_replace("*systypeID*", $systypeID, $url)];
             $page = file_get_contents($types[$id]['url']);
+            // Regex finds all sysIDs using (.{4,6}) and puts them in $sysIDs array
             preg_match_all("/goBack=Y&amp;sysID=(.{4,6})\">/", $page, $sysIDs);
             $types[$id]['sysIDs'] = $sysIDs[1];
             foreach ($sysIDs[1] as $sysID) {
@@ -32,8 +36,9 @@ class ScrapingsController extends AppController
     /**
      * Scrap the details of a system into the database
      */
-    function getdetails()
+    public function getdetails()
     {
+        // Go through each of the systems (five at time)
         $systems = $this->System->find('list', ['fields' => ['System.id', 'System.sysID'], 'order' => ['System.sysID'], 'conditions' => ['title' => ''], 'limit' => 5]);
 
         $feedback = [];
@@ -41,6 +46,7 @@ class ScrapingsController extends AppController
             $system = ['System' => ['id' => $id]];
             $url = str_replace("*sysID*", $sysID, Configure::read('url.system.detail'));
 
+            // Get system page contents and clean up HTML
             $page = file_get_contents($url);
             list(, $page) = explode("NIST Standard Reference Database 106", $page);
             $page = str_replace([" style=\"color:#663300;font-size:12pt;\"", "&nbsp;"], "", $page);
@@ -91,7 +97,7 @@ class ScrapingsController extends AppController
             preg_match_all($match, $page, $data);
             (isset($data[1][0])) ? $system['System']['remarks'] = $this->clean($data[1][0]) : $system['System']['remarks'] = "";
 
-            // For experimental data  match MainContentPlaceHolder_lbl_ExpDValue
+            // For experimental data match MainContentPlaceHolder_lbl_ExpDValue
             $match = '/MainContentPlaceHolder_lbl_ExpDValue">(.*)<span id=\"MainContentPlaceHolder_lbl_EvalEDate/is';
             preg_match_all($match, $page, $data);
             (isset($data[1][0])) ? $system['System']['data'] = str_replace(["\r", "\n\n\n\n", "\n\n\n", "\n\n", "\n"], ["", "<br />\n", "<br />\n", "<br />\n", "<br />\n"], strip_tags($data[1][0])) : $system['System']['data'] = ""; // needed becuase of \n characters
@@ -252,7 +258,7 @@ class ScrapingsController extends AppController
                 }
 
                 // Add citation if it does not already exist
-                $existing = false;
+                $existing = false;$cid="";
                 if (isset($citation['doi'])) {
                     $result = $this->Citation->find('first', ['fields' => ['id'], 'conditions' => ['doi' => $citation['doi']]]);
                     if (empty($result)) {
@@ -263,7 +269,6 @@ class ScrapingsController extends AppController
                             $cid = $this->Citation->id;
                         } else {
                             $feedback[] = 'Error adding citation => ' . debug($this->Citation->validationErrors);
-                            //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                         }
                     } else {
                         $existing = true;
@@ -282,7 +287,6 @@ class ScrapingsController extends AppController
                             $cid = $this->Citation->id;
                         } else {
                             $feedback[] = 'Error adding citation => ' . debug($this->Citation->validationErrors);
-                            //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                         }
                     } else {
                         $existing = true;
@@ -291,7 +295,7 @@ class ScrapingsController extends AppController
                 }
 
                 // Add authors if the citation is new and they don't already exist
-                $aid=$cid="";
+                $aid="";
                 if (!$existing) {
                     foreach ($authors as $author) {
                         // Does author already exist?
@@ -304,7 +308,6 @@ class ScrapingsController extends AppController
                                 $aid = $this->Author->id;
                             } else {
                                 $feedback[] = 'Error adding author => ' . debug($this->Author->validationErrors);
-                                //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                             }
                         } else {
                             $aid = $result['Author']['id'];
@@ -316,7 +319,6 @@ class ScrapingsController extends AppController
                             $feedback[] = 'Author/Citation join for system ' . $id . ' added';
                         } else {
                             $feedback[] = 'Error adding Author/Citation join => ' . debug($this->AuthorsCitation->validationErrors);
-                            //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                         }
                     }
                 }
@@ -329,7 +331,6 @@ class ScrapingsController extends AppController
                 $feedback[] = 'System ' . $id . ' updated';
             } else {
                 $feedback[] = 'Error updating system => ' . debug($this->System->validationErrors);
-                //echo "<pre>";print_r($feedback);echo "</pre>";exit;
             }
 
             // Chemicals
@@ -442,7 +443,7 @@ class ScrapingsController extends AppController
      * @param $string
      * @return string
      */
-    function clean($string)
+    private function clean($string)
     {
         $string = str_replace("<sup>", "^", $string); // Preserve superscripts
         $string = str_replace("<sub>", "_", $string); // Preserve superscripts
@@ -454,7 +455,7 @@ class ScrapingsController extends AppController
      * @param $table
      * @return string
      */
-    function table2json($table)
+    private function table2json($table)
     {
         $tidy_config = ['clean' => true, 'output-xhtml' => true, 'show-body-only' => true, 'wrap' => 0];
         $tidy = new tidy();
@@ -478,7 +479,7 @@ class ScrapingsController extends AppController
      * @param $response
      * @return array
      */
-    function xmlToArray($response)
+    private function xmlToArray($response)
     {
         $array = Xml::toArray(Xml::build($response));
         return $array;

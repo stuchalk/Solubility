@@ -5,7 +5,6 @@
  */
 class VolumesController extends AppController
 {
-
     /**
      * Show all volumes
      */
@@ -29,31 +28,30 @@ class VolumesController extends AppController
         $this->set('data',$data);
 	}
 
-    /** Get the volume data */
+    /** Scrape the volume data */
     public function scrape()
     {
         // Define the URL of the dataSeries page
         $volpath="http://srdata.nist.gov/solubility/dataSeries.aspx";
-
         // Import the content of the webpage into an array
         $volfile=file($volpath);
-
         // Look into each line of the file (array element) and keep lines that contain 'sol_sys.aspx'
         // The loop needs to count down as the unset function resets the array keys
         for($x=count($volfile)-1;$x>-1;$x--) {
             if(!stristr($volfile[$x],'sol_sys.aspx')) { unset($volfile[$x]); }
         }
-
+        //echo '<pre>';print_r($volfile);echo "</pre>";exit;
         // Separate out the volume # and title using the explode() function and save to the database
         $data=[];
         foreach($volfile as $line) {
-            list(,$voltitle)=explode("Volume ",$line);
-            list($voltitle,)=explode("<",$voltitle);
+            list(,$idvoltitle)=explode("nm_dataSeries=",$line);
+            list($nistid,$voltitle)=explode("\">Volume ",$idvoltitle);
+            list($voltitle,)=explode("</a",$voltitle);
             list($vol,$title)=explode(". ",$voltitle);
-            $data[$vol]=$title;
+            $data[]=['nistid'=>$nistid,'volume'=>$vol,'title'=>$title];
             // Save to database
             $this->Volume->create();
-            $this->Volume->save(['Volume'=>['vol'=>$vol,'title'=>$title]]);
+            $this->Volume->save(['Volume'=>['nistid'=>$nistid,'vol'=>$vol,'title'=>$title]]);
             $this->Volume->clear();
         }
         $this->set('base',Configure::read('host.base'));
