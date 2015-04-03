@@ -57,7 +57,7 @@ class ChemicalsController extends AppController
             $test=get_headers($strpath,true);
             if(stristr($test[0],"OK")) {
                 $data['Chemical']['inchi']=file_get_contents($strpath);
-                $data['Chemical']['inchikey']=file_get_contents($keypath);
+                $data['Chemical']['inchikey']=str_replace("InChIKey=","",file_get_contents($keypath));
                 $this->Chemical->save($data);
             }
         }
