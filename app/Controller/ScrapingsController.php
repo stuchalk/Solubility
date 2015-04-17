@@ -220,21 +220,11 @@ class ScrapingsController extends AppController
                 $HttpSocket = new HttpSocket();
                 $get = ['pid' => 'schalk@unf.edu', 'noredirect' => 'true'];
                 $get['aulast'] = str_replace([",", "."], "", $authors[0]);
-                if (isset($citation['journal'])) {
-                    $get['title'] = $citation['journal'];
-                }
-                if (isset($citation['volume'])) {
-                    $get['volume'] = $citation['volume'];
-                }
-                if (isset($citation['issue'])) {
-                    $get['issue'] = $citation['issue'];
-                }
-                if (isset($citation['firstpage'])) {
-                    $get['spage'] = $citation['firstpage'];
-                }
-                if (isset($citation['year'])) {
-                    $get['date'] = $citation['year'];
-                }
+                if (isset($citation['journal']))        { $get['title'] = $citation['journal']; }
+                if (isset($citation['volume']))         { $get['volume'] = $citation['volume']; }
+                if (isset($citation['issue']))          { $get['issue'] = $citation['issue']; }
+                if (isset($citation['firstpage']))      { $get['spage'] = $citation['firstpage']; }
+                if (isset($citation['year']))           { $get['date'] = $citation['year']; }
                 $response = $HttpSocket->get("http://www.crossref.org/openurl", $get);
                 $meta = $this->xmlToArray($response['body']);
                 $meta = $meta['crossref_result']['query_result']['body']['query'];
@@ -243,15 +233,12 @@ class ScrapingsController extends AppController
                     $citation['doi'] = $meta['doi']['@'];
                     $citation["url"] = "http://doi.dx.org/" . $meta['doi']['@'];
                 }
-                if (isset($meta['journal_title']['@'])) {
-                    $citation['journal'] = $meta['journal_title']['@'];
-                }
-                if (isset($meta['article_title'])) {
-                    $citation['title'] = $meta['article_title'];
-                }
+                if (isset($meta['journal_title']['@'])) { $citation['journal'] = $meta['journal_title']['@']; }
+                if (isset($meta['article_title']))      { $citation['title'] = $meta['article_title']; }
                 if (isset($meta['contributors']['contributor'])) {
                     $authors = []; // Deletes out authors obtained from citation
-                    (!isset($meta['contributors']['contributor'][0])) ? $aus = [$meta['contributors']['contributor']] : $aus = $meta['contributors']['contributor'];
+                    $aus=$meta['contributors']['contributor'];
+                    if(!isset($aus[0])) { $aus = [$aus]; }
                     foreach ($aus as $au) {
                         $authors[] = ['firstname' => $au['given_name'], 'lastname' => $au['surname']];
                     }
@@ -381,7 +368,6 @@ class ScrapingsController extends AppController
                         $cid = $this->Chemical->id;
                     } else {
                         $feedback[] = 'Error adding chemical => ' . debug($this->Chemical->validationErrors);
-                        //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                     }
                 } else {
                     $cid = $result['Chemical']['id'];
@@ -394,7 +380,6 @@ class ScrapingsController extends AppController
                     $feedback[] = $data;
                 } else {
                     $feedback[] = 'Error adding Chemical/System join => ' . debug($this->ChemicalsSystem->validationErrors);
-                    //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                 }
             }
 
@@ -409,7 +394,6 @@ class ScrapingsController extends AppController
                     $feedback[] = $data;
                 } else {
                     $feedback[] = 'Error adding variable => ' . debug($this->Variable->validationErrors);
-                    //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                 }
             }
 
@@ -426,7 +410,6 @@ class ScrapingsController extends AppController
                     $feedback[] = $data;
                 } else {
                     $feedback[] = 'Error adding table => ' . debug($this->Table->validationErrors);
-                    //echo "<pre>";print_r($feedback);echo "</pre>";exit;
                 }
             }
 

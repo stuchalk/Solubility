@@ -10,7 +10,7 @@ class VolumesController extends AppController
      */
 	public function index()
 	{
-		$data=$this->Volume->find('all', ['fields'=>['id','vol','title','url'],'order'=>['vol'],'recursive'=>0]);
+		$data=$this->Volume->find('all',['fields'=>['id','vol','title','url'],'order'=>['vol'],'recursive'=>0]);
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
 	}
@@ -59,3 +59,4 @@ class VolumesController extends AppController
     }
 }
 ?>
+
