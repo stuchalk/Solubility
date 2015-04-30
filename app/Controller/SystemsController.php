@@ -107,27 +107,27 @@ class SystemsController extends AppController
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "remarks"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/remarks",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/remarks",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "data"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/data",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/data",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "datanotes"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/notes",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/notes",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "method"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/method",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/method",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "source"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/source",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/source",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "errors"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/error",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/error",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ],
                     "refs"=>[
@@ -260,12 +260,12 @@ class SystemsController extends AppController
                             "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                         ],
                         "formula"=>[
-                            "@id"=>"http://eureka.coas.unf.edc/solubility/formula",
+                            "@id"=>"http://chalk.coas.unf.edc/solubility/formula",
                             "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                         ]
                     ],
                     "tables"=>["content"=>[
-                        "@id"=>"http://eureka.coas.unf.edc/solubility/table",
+                        "@id"=>"http://chalk.coas.unf.edc/solubility/table",
                         "@type"=>"http://www.w3c.org/2001/XMLSchema#string"
                     ]]
             ];

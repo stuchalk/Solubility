@@ -1,7 +1,7 @@
 <?php
 
 // The base URL for the REST based website
-$config['host']['base']="https://eureka.coas.unf.edu/solubility/";
+$config['host']['base']="https://chalk.coas.unf.edu/solubility/";
 
 // The base URL of the NIST Solubility website
 $config['url']['base']="http://srdata.nist.gov/solubility/";
