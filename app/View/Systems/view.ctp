@@ -1,5 +1,5 @@
 <?php
-//pr($data);
+//pr($data);exit;
 $system=$data['System'];
 if(isset($data['Citation']))	{ $citation=$data['Citation']; }
 if(isset($data['Variable']))	{ $variables=$data['Variable']; }
@@ -34,13 +34,18 @@ if($system['remarks']!="") { echo "<h4 style='width: 900px;'>Remarks: ".$system[
 echo "<div id='varschems' style='width: 900px;margin-bottom: 15px;margin-top: 10px;'>\n";
 if(isset($variables))
 {
-	echo "<div id='variables' class='variables'>";
+	echo "<div id='variables' class='variables' style='width: 290px;'>";
 	echo "<h3>Variables</h3>\n";
 	if(!empty($variables))
 	{
+        $dups=[];
 		foreach($variables as $var)
 		{
-			echo "<p>".$var['name']." = ".$var['bounds']."</p>";
+            $unique=$var['name'].$var['bounds'];
+            if(!in_array($unique,$dups)) {
+                echo "<p>".$var['name']." = ".$var['bounds']."</p>";
+                $dups[]=$unique;
+            }
 		}
 	}
 	else
@@ -61,7 +66,7 @@ if(isset($chemicals))
 		echo "<div id='chemical".$x."' class='chemical'>";
 		//echo $this->Html->image('http://cactus.nci.nih.gov/chemical/structure/'.$chem['inchi'].'/image?format=png&linewidth=2',array('alt'=>$chem['name']));
 		echo "<script type='text/javascript'>\n";
-		echo "  var Info".$x." = { color: '#000000', height: 190, width: 200, use: 'HTML5', defaultModel: '$".$chem['inchikey']."', j2sPath: '/sol/js/jsmol/j2s' };\n";
+		echo "  var Info".$x." = { color: '#000000', height: 190, width: 190, use: 'HTML5', defaultModel: '$".$chem['inchikey']."', j2sPath: '/sol/js/jsmol/j2s' };\n";
 		echo "  Jmol.getTMApplet('chem".$x."', Info".$x.");\n";
 		echo "</script>\n";
 		echo "<p>".$chem['name']."<br />\n";
@@ -139,6 +144,7 @@ if($system['refs']!="")
     echo "<p>";
     echo $this->Html->link($this->Html->image('xml.png',['height'=>'50','alt'=>'XML']),$base.'systems/view/'.$sysID.'/xml',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
     echo $this->Html->link($this->Html->image('json.png',['height'=>'50','alt'=>'JSON']),$base.'systems/view/'.$sysID.'/json',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
+    echo $this->Html->link($this->Html->image('jsonld.png',['height'=>'50','alt'=>'JSON-LD']),$base.'systems/view/'.$sysID.'/jsonld',['escape'=>false,'target'=>'_blank'])."&nbsp;&nbsp;&nbsp;";
     echo "</p>";
 ?>
 <p><?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'sol_detail.aspx?sysID='.$system['sysID'],['target'=>'_blank']);?></p>

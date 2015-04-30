@@ -135,7 +135,7 @@ class ExportComponent extends Component
         $output=json_encode($input);
         // Output
         header('Content-type: application/ld+json');
-        header('Content-Disposition: inline; filename="'.strtolower($name).'.json"');
+        header('Content-Disposition: inline; filename="'.strtolower($name).'.jsonld"');
         echo $output;exit;
 
     }

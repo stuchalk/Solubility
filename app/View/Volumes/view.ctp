@@ -12,7 +12,7 @@
     }
 ?>
 
-<h3>System Types (Click name for systems)</h3>
+<h3>System Types (Click name to show a list of systems(datasets))</h3>
 <?php
     $grouped=[];
     foreach($systems as $system) {
@@ -22,13 +22,14 @@
     }
 ?>
 
-<div id="left" style="width: 450px;">
+<div id="left" style="width: 800px;">
 <?php
     echo "<ul style='font-size: 12px;'>";
     foreach($grouped as $id=>$group)  {
 	    $type=$this->requestAction('/systemtypes/view/'.$id);
-        echo "<li onclick=\"copydiv('left".$id."','right')\" style='cursor: pointer;'>".$type['Systemtype']['title']."</li>";
+        echo "<li onclick=\"copydiv('left".$id."','right')\" style='cursor: pointer;'>".$type['Systemtype']['title']." (".count($group).")</li>";
 	    echo "<div id='left".$id."' style='display: none;'>";
+        echo "<h4>Systems(Datasets)</h4>";
 	    echo "<ul style='list-style-type: square;font-size: 12px;'>";
 	    foreach($group as $sys) {
 		    echo "<li>".$this->Html->link($sys['title'],'/systems/view/'.$sys['sysID'])."</li>";
@@ -39,6 +40,7 @@
     echo "</ul>";
 ?>
 </div>
+<div id="right" style="position: fixed;top: 250px;right: 20px;"></div>
 <p>
-    <?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$base.'sol_sys.aspx?nm_dataSeries='.$volume['nistid'],['target'=>'_blank']);?>
+    &nbsp;<?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$base.'sol_sys.aspx?nm_dataSeries='.$volume['nistid'],['target'=>'_blank']);?>
 </p>
