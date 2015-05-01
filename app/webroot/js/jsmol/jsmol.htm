@@ -7,6 +7,8 @@
 
 <script type="text/javascript">
 
+Jmol._isAsync = false;
+
 // last update 2/18/2014 2:10:06 PM
 
 var jmolApplet0; // set up in HTML table, below
@@ -25,7 +27,7 @@ var s = document.location.search;
 Jmol._debugCode = (s.indexOf("debugcode") >= 0);
 
 jmol_isReady = function(applet) {
-	document.title = (applet._id + " - Jmol " + ___JmolVersion)
+	document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion)
 	Jmol._getElement(applet, "appletdiv").style.border="1px solid blue"
 }		
 
@@ -72,7 +74,7 @@ Jzlib written by <b>Atsuhiko Yamanaka</b>.
 <div id="appdiv"></div>
 <br>
 <a href="javascript:Jmol.script(jmolApplet0,'console')">console</a>
-<a href="javascript:Jmol.script(jmolApplet0,'write PNGJ jmol.png')">image</a>
+<a href="javascript:Jmol.script(jmolApplet0,'image')">image</a>
 display
 <a href="javascript:Jmol.script(jmolApplet0,'set antialiasDisplay false')">faster</a>
 <a href="javascript:Jmol.script(jmolApplet0,'set antialiasDisplay true')">sharper</a>

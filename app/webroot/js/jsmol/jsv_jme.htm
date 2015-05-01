@@ -4,24 +4,24 @@
 <title>JSpecView/JSME/nmrdb/NIH-Resolver Demo II</title>
 <meta charset="utf-8" />
 
-<!-- for debugging only
-<script type="text/javascript" src="JSmol.min.js"></script>
+<script src="JSmol.min.js"></script>
+<!-- for debugging only, replace above JSmol.min.js call with these:
+<script src="jquery/jquery.js"></script>
+<script src="js/JSmoljQueryExt.js"></script>
+<script src="js/JSmolCore.js"></script>
+<script src="js/JSmolApplet.js"></script>
+<script src="js/JSmolApi.js"></script>
+<script src="js/JSmolControls.js"></script>
+<script src="js/j2sjmol.js"></script>
+<script src="js/JSmol.js"></script>
+<script src="js/JSmolConsole.js"></script>
+<script src="js/JSmolMenu.js"></script>
 -->
-<script type="text/javascript" src="jquery/jquery.js"></script>
-<script type="text/javascript" src="js/JSmoljQueryExt.js"></script>
-<script type="text/javascript" src="js/JSmolCore.js"></script>
-<script type="text/javascript" src="js/JSmolApplet.js"></script>
-<script type="text/javascript" src="js/JSmolApi.js"></script>
-<script type="text/javascript" src="js/JSmolControls.js"></script>
-<script type="text/javascript" src="js/j2sjmol.js"></script>
-<script type="text/javascript" src="js/JSmol.js"></script>
-<script type="text/javascript" src="js/JSmolConsole.js"></script>
-<script type="text/javascript" src="js/JSmolMenu.js"></script>
-<script type="text/javascript" src="js/JSmolJSV.js"></script>
-<script type="text/javascript" src="js/JSmolJME.js"></script>
-<script type="text/javascript" language="javascript" src="jsme/jsme/jsme.nocache.js"></script>
+<script src="js/JSmolJSV.js"></script>
+<script src="js/JSmolJME.js"></script>
+<script src="jsme/jsme/jsme.nocache.js"></script>
 
-<script type="text/javascript">
+<script>
 
 function predictSpectrum(isJmol) {
   unhideJSV();
@@ -58,8 +58,8 @@ function unhideJSV() {
 var JMEInfo = {     
   viewSet: 1,
 	use: "HTML5",
-  divId: "jmediv",
-  options : "autoez",
+  divId: "jmediv", // note: width and height are set by a style attribute in this div
+  options : "autoez;nocanonize",
   editOptions: "editDisabled;",
   addSelectionOptions: true,
   structureChangedCallback: "testCallback" // Jmol will handle this
@@ -123,7 +123,7 @@ function nameIt() {
 <td title="Draw a simple (known!) structure and click here for a list of names." style="text-align:right"><a href="javascript:nameIt()">Name It!</a>
 <a href="javascript:Jmol.saveImage(jme)">Capture Image</a> 
 </span></td></tr></table>
-<div id="jmediv" style="position:relative;width:350px;height:300px;"></div>
+<div id="jmediv" style="position:relative;width:350px;height:320px;"></div>
 <script>
 Jmol.getJMEApplet("jme", JMEInfo);
 </script>
