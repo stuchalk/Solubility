@@ -1,11 +1,15 @@
 (function(Clazz
+,Clazz_newLongArray
+,Clazz_doubleToByte
 ,Clazz_doubleToInt
+,Clazz_doubleToLong
 ,Clazz_declarePackage
 ,Clazz_instanceOf
 ,Clazz_load
 ,Clazz_instantialize
 ,Clazz_decorateAsClass
 ,Clazz_floatToInt
+,Clazz_floatToLong
 ,Clazz_makeConstructor
 ,Clazz_defineEnumConstant
 ,Clazz_exceptionOf
@@ -189,7 +193,7 @@ function () {
 });
 });
 Clazz_declarePackage ("javajs.awt");
-Clazz_load (["javajs.awt.Component"], "javajs.awt.Container", ["JU.List"], function () {
+Clazz_load (["javajs.awt.Component"], "javajs.awt.Container", ["JU.Lst"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.list = null;
 this.cList = null;
@@ -216,7 +220,7 @@ return this.addComponent (component);
 }, "javajs.awt.Component");
 Clazz_defineMethod (c$, "addComponent", 
 function (component) {
-if (this.list == null) this.list =  new JU.List ();
+if (this.list == null) this.list =  new JU.Lst ();
 this.list.addLast (component);
 this.cList = null;
 component.parent = this;
@@ -1096,7 +1100,7 @@ Clazz_declareInterface (javajs.swing, "TableCellRenderer");
 Clazz_declarePackage ("javajs.swing");
 Clazz_declareInterface (javajs.swing, "TableColumn");
 Clazz_declarePackage ("J.popup");
-Clazz_load (["javajs.api.GenericMenuInterface", "java.util.Hashtable", "JU.List"], "J.popup.GenericSwingPopup", ["java.util.StringTokenizer", "JU.PT", "$.SB", "JW.Logger"], function () {
+Clazz_load (["javajs.api.GenericMenuInterface", "java.util.Hashtable", "JU.Lst"], "J.popup.GenericSwingPopup", ["java.util.StringTokenizer", "JU.PT", "$.SB", "JU.Logger"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.helper = null;
 this.strMenuStructure = null;
@@ -1121,7 +1125,7 @@ Clazz_instantialize (this, arguments);
 Clazz_prepareFields (c$, function () {
 this.htCheckbox =  new java.util.Hashtable ();
 this.htMenus =  new java.util.Hashtable ();
-this.SignedOnly =  new JU.List ();
+this.SignedOnly =  new JU.Lst ();
 });
 Clazz_defineMethod (c$, "initSwing", 
 function (title, bundle, applet, isJS, isSigned, isWebGL) {
@@ -1148,7 +1152,7 @@ Clazz_defineMethod (c$, "addMenuItems",
 function (parentId, key, menu, popupResourceBundle) {
 var id = parentId + "." + key;
 var value = popupResourceBundle.getStructure (key);
-if (JW.Logger.debugging) JW.Logger.debug (id + " --- " + value);
+if (JU.Logger.debugging) JU.Logger.debug (id + " --- " + value);
 if (value == null) {
 this.menuCreateItem (menu, "#" + key, "", "");
 return;
@@ -1215,7 +1219,7 @@ this.htCheckbox.put (key + "::" + this.htCheckbox.size (), checkboxMenuItem);
 }, "~S,javajs.api.SC");
 Clazz_defineMethod (c$, "updateButton", 
 function (b, entry, script) {
-var ret = [entry];
+var ret =  Clazz_newArray (-1, [entry]);
 var icon = this.getEntryIcon (ret);
 entry = ret[0];
 b.init (entry, icon, script, this.thisPopup);
@@ -1278,7 +1282,7 @@ if (!item.isEnabled ()) return;
 if (what.indexOf ("##") < 0) {
 var pt = what.indexOf (":");
 if (pt < 0) {
-JW.Logger.error ("check box " + item + " IS " + what);
+JU.Logger.error ("check box " + item + " IS " + what);
 return;
 }var basename = what.substring (0, pt);
 if (this.appIsSpecialCheckBox (item, basename, what, TF)) return;
@@ -1633,13 +1637,17 @@ return this.buttonGroup;
 Clazz_declarePackage ("J.popup");
 Clazz_declareInterface (J.popup, "PopupHelper");
 })(Clazz
+,Clazz.newLongArray
+,Clazz.doubleToByte
 ,Clazz.doubleToInt
+,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
+,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

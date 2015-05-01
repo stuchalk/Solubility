@@ -1,11 +1,15 @@
 (function(Clazz
+,Clazz_newLongArray
+,Clazz_doubleToByte
 ,Clazz_doubleToInt
+,Clazz_doubleToLong
 ,Clazz_declarePackage
 ,Clazz_instanceOf
 ,Clazz_load
 ,Clazz_instantialize
 ,Clazz_decorateAsClass
 ,Clazz_floatToInt
+,Clazz_floatToLong
 ,Clazz_makeConstructor
 ,Clazz_defineEnumConstant
 ,Clazz_exceptionOf
@@ -229,11 +233,12 @@ c$ = Clazz_decorateAsClass (function () {
 this.cksum = null;
 Clazz_instantialize (this, arguments);
 }, java.util.zip, "CheckedInputStream", java.io.FilterInputStream);
-Clazz_makeConstructor (c$, 
-function ($in, cksum) {
-Clazz_superConstructor (this, java.util.zip.CheckedInputStream, [$in]);
+Clazz_defineMethod (c$, "set", 
+function (cksum) {
+this.$in = this.$in;
 this.cksum = cksum;
-}, "java.io.InputStream,JZ.Checksum");
+return this;
+}, "JU.Checksum");
 Clazz_overrideMethod (c$, "readByteAsInt", 
 function () {
 var b = this.$in.readByteAsInt ();
@@ -267,8 +272,8 @@ return this.cksum;
 });
 });
 Clazz_declarePackage ("java.util.zip");
-Clazz_load (["JZ.Inflater"], "java.util.zip.Inflater", null, function () {
-c$ = Clazz_declareType (java.util.zip, "Inflater", JZ.Inflater);
+Clazz_load (["JU.Inflater"], "java.util.zip.Inflater", null, function () {
+c$ = Clazz_declareType (java.util.zip, "Inflater", JU.Inflater);
 Clazz_defineMethod (c$, "initialize", 
 function (nowrap) {
 return this.init (0, nowrap);
@@ -503,7 +508,7 @@ Clazz_instantialize (this, arguments);
 Clazz_prepareFields (c$, function () {
 this.crc =  new java.util.zip.CRC32 ();
 this.tmpbuf =  Clazz_newByteArray (512, 0);
-this.byteTest = [0x20];
+this.byteTest =  Clazz_newByteArray (-1, [0x20]);
 this.$b =  Clazz_newByteArray (256, 0);
 });
 Clazz_defineMethod (c$, "ensureOpen", 
@@ -757,15 +762,15 @@ Clazz_defineStatics (c$,
 "DEFLATED", 8);
 });
 Clazz_declarePackage ("java.util.zip");
-Clazz_load (["JZ.CRC32"], "java.util.zip.CRC32", null, function () {
-c$ = Clazz_declareType (java.util.zip, "CRC32", JZ.CRC32);
+Clazz_load (["JU.CRC32"], "java.util.zip.CRC32", null, function () {
+c$ = Clazz_declareType (java.util.zip, "CRC32", JU.CRC32);
 });
 Clazz_declarePackage ("java.util.zip");
-Clazz_load (["JZ.InflaterInputStream"], "java.util.zip.InflaterInputStream", null, function () {
+Clazz_load (["JU.InflaterInputStream"], "java.util.zip.InflaterInputStream", null, function () {
 c$ = Clazz_decorateAsClass (function () {
 this.inf = null;
 Clazz_instantialize (this, arguments);
-}, java.util.zip, "InflaterInputStream", JZ.InflaterInputStream);
+}, java.util.zip, "InflaterInputStream", JU.InflaterInputStream);
 Clazz_makeConstructor (c$, 
 function ($in, inflater, size) {
 Clazz_superConstructor (this, java.util.zip.InflaterInputStream, [$in, inflater, size, true]);
@@ -817,7 +822,7 @@ this.$closed = true;
 }});
 Clazz_defineMethod (c$, "readHeader", 
  function (this_in) {
-var $in =  new java.util.zip.CheckedInputStream (this_in, this.crc);
+var $in =  new java.util.zip.CheckedInputStream (this_in).set (this.crc);
 this.crc.reset ();
 if (this.readUShort ($in) != 35615) {
 throw  new java.util.zip.ZipException ("Not in GZIP format");
@@ -885,7 +890,7 @@ Clazz_load (["java.util.zip.ZipInputStream", "javajs.api.ZInputStream"], "javajs
 c$ = Clazz_declareType (javajs.api, "GenericZipInputStream", java.util.zip.ZipInputStream, javajs.api.ZInputStream);
 });
 Clazz_declarePackage ("JU");
-Clazz_load (["javajs.api.GenericZipTools"], "JU.ZipTools", ["java.io.BufferedInputStream", "java.lang.Boolean", "java.util.zip.CRC32", "$.GZIPInputStream", "$.ZipEntry", "$.ZipInputStream", "javajs.api.GenericZipInputStream", "$.ZInputStream", "JU.BArray", "$.List", "$.PT", "$.Rdr", "$.SB"], function () {
+Clazz_load (["javajs.api.GenericZipTools"], "JU.ZipTools", ["java.io.BufferedInputStream", "$.IOException", "java.lang.Boolean", "java.util.zip.CRC32", "$.GZIPInputStream", "$.ZipEntry", "$.ZipInputStream", "javajs.api.GenericZipInputStream", "$.ZInputStream", "JU.BArray", "$.Lst", "$.PT", "$.Rdr", "$.SB"], function () {
 c$ = Clazz_declareType (JU, "ZipTools", null, javajs.api.GenericZipTools);
 Clazz_makeConstructor (c$, 
 function () {
@@ -942,7 +947,7 @@ for (var i = 0; i < bytes.length; i++) ret.append (Integer.toHexString (bytes[i]
 return ret.toString ();
 }, "~A");
 Clazz_overrideMethod (c$, "getZipFileDirectory", 
-function (bis, list, listPtr, asBufferedInputStream) {
+function (jzt, bis, list, listPtr, asBufferedInputStream) {
 var ret;
 if (list == null || listPtr >= list.length) return this.getZipDirectoryAsStringAndClose (bis);
 bis = JU.Rdr.getPngZipStream (bis, true);
@@ -969,14 +974,15 @@ var bytes = (ze == null ? null : JU.Rdr.getLimitedStreamBytes (zis, ze.getSize (
 ze = null;
 zis.close ();
 if (bytes == null) return "";
-if (JU.Rdr.isZipB (bytes) || JU.Rdr.isPngZipB (bytes)) return this.getZipFileDirectory (JU.Rdr.getBIS (bytes), list, ++listPtr, asBufferedInputStream);
+if (JU.Rdr.isZipB (bytes) || JU.Rdr.isPngZipB (bytes)) return this.getZipFileDirectory (jzt, JU.Rdr.getBIS (bytes), list, ++listPtr, asBufferedInputStream);
 if (asBufferedInputStream) return JU.Rdr.getBIS (bytes);
 if (asBinaryString) {
 ret =  new JU.SB ();
 for (var i = 0; i < bytes.length; i++) ret.append (Integer.toHexString (bytes[i] & 0xFF)).appendC (' ');
 
 return ret.toString ();
-}return JU.Rdr.fixUTF (bytes);
+}if (JU.Rdr.isGzipB (bytes)) bytes = JU.Rdr.getLimitedStreamBytes (this.getUnGzippedInputStream (bytes), -1);
+return JU.Rdr.fixUTF (bytes);
 } catch (e) {
 if (Clazz_exceptionOf (e, Exception)) {
 return "";
@@ -984,7 +990,7 @@ return "";
 throw e;
 }
 }
-}, "java.io.BufferedInputStream,~A,~N,~B");
+}, "javajs.api.GenericZipTools,java.io.BufferedInputStream,~A,~N,~B");
 Clazz_overrideMethod (c$, "getZipFileContentsAsBytes", 
 function (bis, list, listPtr) {
 var ret =  Clazz_newByteArray (0, 0);
@@ -1043,7 +1049,7 @@ return s;
 Clazz_defineMethod (c$, "getZipDirectoryOrErrorAndClose", 
  function (bis, manifestID) {
 bis = JU.Rdr.getPngZipStream (bis, true);
-var v =  new JU.List ();
+var v =  new JU.Lst ();
 var zis =  new java.util.zip.ZipInputStream (bis);
 var ze;
 var manifest = null;
@@ -1060,50 +1066,14 @@ c$.getStreamAsString = Clazz_defineMethod (c$, "getStreamAsString",
 function (is) {
 return JU.Rdr.fixUTF (JU.Rdr.getLimitedStreamBytes (is, -1));
 }, "java.io.InputStream");
-c$.cacheZipContents = Clazz_defineMethod (c$, "cacheZipContents", 
-function (bis, fileName, cache, asByteArray) {
-var zis = JU.ZipTools.newZIS (bis);
-var ze;
-var listing =  new JU.SB ();
-var n = 0;
-try {
-while ((ze = zis.getNextEntry ()) != null) {
-var name = ze.getName ();
-if (fileName != null) listing.append (name).appendC ('\n');
-var nBytes = ze.getSize ();
-var bytes = JU.Rdr.getLimitedStreamBytes (zis, nBytes);
-n += bytes.length;
-var o = (asByteArray ?  new JU.BArray (bytes) : bytes);
-cache.put ((fileName == null ? "" : fileName + "|") + name, o);
-}
-zis.close ();
-} catch (e) {
-if (Clazz_exceptionOf (e, Exception)) {
-try {
-zis.close ();
-} catch (e1) {
-if (Clazz_exceptionOf (e1, java.io.IOException)) {
-} else {
-throw e1;
-}
-}
-return null;
-} else {
-throw e;
-}
-}
-if (n == 0 || fileName == null) return null;
-System.out.println ("ZipTools cached " + n + " bytes from " + fileName);
-return listing.toString ();
-}, "java.io.BufferedInputStream,~S,java.util.Map,~B");
 Clazz_overrideMethod (c$, "newGZIPInputStream", 
 function (is) {
 return  new java.io.BufferedInputStream ( new java.util.zip.GZIPInputStream (is, 512));
 }, "java.io.InputStream");
-c$.getUnGzippedInputStream = Clazz_defineMethod (c$, "getUnGzippedInputStream", 
+Clazz_overrideMethod (c$, "getUnGzippedInputStream", 
 function (bytes) {
 try {
-return JU.Rdr.getUnzippedInputStream (JU.Rdr.getBIS (bytes));
+return JU.Rdr.getUnzippedInputStream (this, JU.Rdr.getBIS (bytes));
 } catch (e) {
 if (Clazz_exceptionOf (e, Exception)) {
 return null;
@@ -1133,15 +1103,20 @@ crc.update (bytes, 0, bytes.length);
 return crc.getValue ();
 }, "~A");
 Clazz_overrideMethod (c$, "readFileAsMap", 
-function (bis, bdata) {
+function (bis, bdata, name) {
+var pt = (name == null ? -1 : name.indexOf ("|"));
+name = (pt >= 0 ? name.substring (pt + 1) : null);
 try {
 if (JU.Rdr.isPngZipStream (bis)) {
-bdata.put ("_IMAGE_",  new JU.BArray (JU.ZipTools.getPngImageBytes (bis)));
-JU.ZipTools.cacheZipContents (bis, null, bdata, true);
+var isImage = "_IMAGE_".equals (name);
+if (name == null || isImage) bdata.put ((isImage ? "_DATA_" : "_IMAGE_"),  new JU.BArray (JU.ZipTools.getPngImageBytes (bis)));
+if (!isImage) this.cacheZipContents (bis, name, bdata, true);
 } else if (JU.Rdr.isZipS (bis)) {
-JU.ZipTools.cacheZipContents (bis, null, bdata, true);
-} else {
+this.cacheZipContents (bis, name, bdata, true);
+} else if (name == null) {
 bdata.put ("_DATA_",  new JU.BArray (JU.Rdr.getLimitedStreamBytes (bis, -1)));
+} else {
+throw  new java.io.IOException ("ZIP file " + name + " not found");
 }bdata.put ("$_BINARY_$", Boolean.TRUE);
 } catch (e) {
 if (Clazz_exceptionOf (e, java.io.IOException)) {
@@ -1151,7 +1126,55 @@ bdata.put ("_ERROR_", e.getMessage ());
 throw e;
 }
 }
-}, "java.io.BufferedInputStream,java.util.Map");
+}, "java.io.BufferedInputStream,java.util.Map,~S");
+Clazz_overrideMethod (c$, "cacheZipContents", 
+function (bis, fileName, cache, asByteArray) {
+var zis = JU.ZipTools.newZIS (bis);
+var ze;
+var listing =  new JU.SB ();
+var n = 0;
+var oneFile = (asByteArray && fileName != null);
+var pt = (oneFile ? fileName.indexOf ("|") : -1);
+var file0 = (pt >= 0 ? fileName : null);
+if (pt >= 0) fileName = fileName.substring (0, pt);
+try {
+while ((ze = zis.getNextEntry ()) != null) {
+var name = ze.getName ();
+if (fileName != null) {
+if (oneFile) {
+if (!name.equalsIgnoreCase (fileName)) continue;
+} else {
+listing.append (name).appendC ('\n');
+}}var nBytes = ze.getSize ();
+var bytes = JU.Rdr.getLimitedStreamBytes (zis, nBytes);
+if (file0 != null) {
+this.readFileAsMap (JU.Rdr.getBIS (bytes), cache, file0);
+return null;
+}n += bytes.length;
+var o = (asByteArray ?  new JU.BArray (bytes) : bytes);
+cache.put ((oneFile ? "_DATA_" : (fileName == null ? "" : fileName + "|") + name), o);
+if (oneFile) break;
+}
+zis.close ();
+} catch (e) {
+if (Clazz_exceptionOf (e, Exception)) {
+try {
+zis.close ();
+} catch (e1) {
+if (Clazz_exceptionOf (e1, java.io.IOException)) {
+} else {
+throw e1;
+}
+}
+return null;
+} else {
+throw e;
+}
+}
+if (n == 0 || fileName == null) return null;
+System.out.println ("ZipTools cached " + n + " bytes from " + fileName);
+return listing.toString ();
+}, "java.io.BufferedInputStream,~S,java.util.Map,~B");
 c$.getPngImageBytes = Clazz_defineMethod (c$, "getPngImageBytes", 
  function (bis) {
 try {
@@ -1174,22 +1197,22 @@ if (JU.Rdr.isPngZipB (bytes)) bytes[51] = 32;
 return bytes;
 }, "~A");
 });
-Clazz_declarePackage ("JZ");
-Clazz_declareInterface (JZ, "Checksum");
-Clazz_declarePackage ("JZ");
-Clazz_load (["JZ.Checksum"], "JZ.CRC32", null, function () {
+Clazz_declarePackage ("JU");
+Clazz_declareInterface (JU, "Checksum");
+Clazz_declarePackage ("JU");
+Clazz_load (["JU.Checksum"], "JU.CRC32", null, function () {
 c$ = Clazz_decorateAsClass (function () {
 this.crc = 0;
 this.b1 = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "CRC32", null, JZ.Checksum);
+}, JU, "CRC32", null, JU.Checksum);
 Clazz_prepareFields (c$, function () {
 this.b1 =  Clazz_newByteArray (1, 0);
 });
 Clazz_overrideMethod (c$, "update", 
 function (buf, index, len) {
 var c = ~this.crc;
-while (--len >= 0) c = JZ.CRC32.crc_table[(c ^ buf[index++]) & 0xff] ^ (c >>> 8);
+while (--len >= 0) c = JU.CRC32.crc_table[(c ^ buf[index++]) & 0xff] ^ (c >>> 8);
 
 this.crc = ~c;
 }, "~A,~N,~N");
@@ -1211,10 +1234,10 @@ this.b1[0] = b;
 this.update (this.b1, 0, 1);
 }, "~N");
 Clazz_defineStatics (c$,
-"crc_table", [0, 1996959894, -301047508, -1727442502, 124634137, 1886057615, -379345611, -1637575261, 249268274, 2044508324, -522852066, -1747789432, 162941995, 2125561021, -407360249, -1866523247, 498536548, 1789927666, -205950648, -2067906082, 450548861, 1843258603, -187386543, -2083289657, 325883990, 1684777152, -43845254, -1973040660, 335633487, 1661365465, -99664541, -1928851979, 997073096, 1281953886, -715111964, -1570279054, 1006888145, 1258607687, -770865667, -1526024853, 901097722, 1119000684, -608450090, -1396901568, 853044451, 1172266101, -589951537, -1412350631, 651767980, 1373503546, -925412992, -1076862698, 565507253, 1454621731, -809855591, -1195530993, 671266974, 1594198024, -972236366, -1324619484, 795835527, 1483230225, -1050600021, -1234817731, 1994146192, 31158534, -1731059524, -271249366, 1907459465, 112637215, -1614814043, -390540237, 2013776290, 251722036, -1777751922, -519137256, 2137656763, 141376813, -1855689577, -429695999, 1802195444, 476864866, -2056965928, -228458418, 1812370925, 453092731, -2113342271, -183516073, 1706088902, 314042704, -1950435094, -54949764, 1658658271, 366619977, -1932296973, -69972891, 1303535960, 984961486, -1547960204, -725929758, 1256170817, 1037604311, -1529756563, -740887301, 1131014506, 879679996, -1385723834, -631195440, 1141124467, 855842277, -1442165665, -586318647, 1342533948, 654459306, -1106571248, -921952122, 1466479909, 544179635, -1184443383, -832445281, 1591671054, 702138776, -1328506846, -942167884, 1504918807, 783551873, -1212326853, -1061524307, -306674912, -1698712650, 62317068, 1957810842, -355121351, -1647151185, 81470997, 1943803523, -480048366, -1805370492, 225274430, 2053790376, -468791541, -1828061283, 167816743, 2097651377, -267414716, -2029476910, 503444072, 1762050814, -144550051, -2140837941, 426522225, 1852507879, -19653770, -1982649376, 282753626, 1742555852, -105259153, -1900089351, 397917763, 1622183637, -690576408, -1580100738, 953729732, 1340076626, -776247311, -1497606297, 1068828381, 1219638859, -670225446, -1358292148, 906185462, 1090812512, -547295293, -1469587627, 829329135, 1181335161, -882789492, -1134132454, 628085408, 1382605366, -871598187, -1156888829, 570562233, 1426400815, -977650754, -1296233688, 733239954, 1555261956, -1026031705, -1244606671, 752459403, 1541320221, -1687895376, -328994266, 1969922972, 40735498, -1677130071, -351390145, 1913087877, 83908371, -1782625662, -491226604, 2075208622, 213261112, -1831694693, -438977011, 2094854071, 198958881, -2032938284, -237706686, 1759359992, 534414190, -2118248755, -155638181, 1873836001, 414664567, -2012718362, -15766928, 1711684554, 285281116, -1889165569, -127750551, 1634467795, 376229701, -1609899400, -686959890, 1308918612, 956543938, -1486412191, -799009033, 1231636301, 1047427035, -1362007478, -640263460, 1088359270, 936918000, -1447252397, -558129467, 1202900863, 817233897, -1111625188, -893730166, 1404277552, 615818150, -1160759803, -841546093, 1423857449, 601450431, -1285129682, -1000256840, 1567103746, 711928724, -1274298825, -1022587231, 1510334235, 755167117]);
+"crc_table",  Clazz_newIntArray (-1, [0, 1996959894, -301047508, -1727442502, 124634137, 1886057615, -379345611, -1637575261, 249268274, 2044508324, -522852066, -1747789432, 162941995, 2125561021, -407360249, -1866523247, 498536548, 1789927666, -205950648, -2067906082, 450548861, 1843258603, -187386543, -2083289657, 325883990, 1684777152, -43845254, -1973040660, 335633487, 1661365465, -99664541, -1928851979, 997073096, 1281953886, -715111964, -1570279054, 1006888145, 1258607687, -770865667, -1526024853, 901097722, 1119000684, -608450090, -1396901568, 853044451, 1172266101, -589951537, -1412350631, 651767980, 1373503546, -925412992, -1076862698, 565507253, 1454621731, -809855591, -1195530993, 671266974, 1594198024, -972236366, -1324619484, 795835527, 1483230225, -1050600021, -1234817731, 1994146192, 31158534, -1731059524, -271249366, 1907459465, 112637215, -1614814043, -390540237, 2013776290, 251722036, -1777751922, -519137256, 2137656763, 141376813, -1855689577, -429695999, 1802195444, 476864866, -2056965928, -228458418, 1812370925, 453092731, -2113342271, -183516073, 1706088902, 314042704, -1950435094, -54949764, 1658658271, 366619977, -1932296973, -69972891, 1303535960, 984961486, -1547960204, -725929758, 1256170817, 1037604311, -1529756563, -740887301, 1131014506, 879679996, -1385723834, -631195440, 1141124467, 855842277, -1442165665, -586318647, 1342533948, 654459306, -1106571248, -921952122, 1466479909, 544179635, -1184443383, -832445281, 1591671054, 702138776, -1328506846, -942167884, 1504918807, 783551873, -1212326853, -1061524307, -306674912, -1698712650, 62317068, 1957810842, -355121351, -1647151185, 81470997, 1943803523, -480048366, -1805370492, 225274430, 2053790376, -468791541, -1828061283, 167816743, 2097651377, -267414716, -2029476910, 503444072, 1762050814, -144550051, -2140837941, 426522225, 1852507879, -19653770, -1982649376, 282753626, 1742555852, -105259153, -1900089351, 397917763, 1622183637, -690576408, -1580100738, 953729732, 1340076626, -776247311, -1497606297, 1068828381, 1219638859, -670225446, -1358292148, 906185462, 1090812512, -547295293, -1469587627, 829329135, 1181335161, -882789492, -1134132454, 628085408, 1382605366, -871598187, -1156888829, 570562233, 1426400815, -977650754, -1296233688, 733239954, 1555261956, -1026031705, -1244606671, 752459403, 1541320221, -1687895376, -328994266, 1969922972, 40735498, -1677130071, -351390145, 1913087877, 83908371, -1782625662, -491226604, 2075208622, 213261112, -1831694693, -438977011, 2094854071, 198958881, -2032938284, -237706686, 1759359992, 534414190, -2118248755, -155638181, 1873836001, 414664567, -2012718362, -15766928, 1711684554, 285281116, -1889165569, -127750551, 1634467795, 376229701, -1609899400, -686959890, 1308918612, 956543938, -1486412191, -799009033, 1231636301, 1047427035, -1362007478, -640263460, 1088359270, 936918000, -1447252397, -558129467, 1202900863, 817233897, -1111625188, -893730166, 1404277552, 615818150, -1160759803, -841546093, 1423857449, 601450431, -1285129682, -1000256840, 1567103746, 711928724, -1274298825, -1022587231, 1510334235, 755167117]));
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (["java.io.FilterInputStream"], "JZ.InflaterInputStream", ["java.io.EOFException", "$.IOException", "java.lang.IllegalArgumentException", "$.IndexOutOfBoundsException", "$.NullPointerException"], function () {
+Clazz_declarePackage ("JU");
+Clazz_load (["java.io.FilterInputStream"], "JU.InflaterInputStream", ["java.io.EOFException", "$.IOException", "java.lang.IllegalArgumentException", "$.IndexOutOfBoundsException", "$.NullPointerException"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.inflater = null;
 this.buf = null;
@@ -1226,18 +1249,18 @@ this.myinflater = false;
 this.byte1 = null;
 this.b = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "InflaterInputStream", java.io.FilterInputStream);
+}, JU, "InflaterInputStream", java.io.FilterInputStream);
 Clazz_prepareFields (c$, function () {
 this.byte1 =  Clazz_newByteArray (1, 0);
 this.b =  Clazz_newByteArray (512, 0);
 });
 Clazz_makeConstructor (c$, 
 function ($in, inflater, size, close_in) {
-Clazz_superConstructor (this, JZ.InflaterInputStream, [$in]);
+Clazz_superConstructor (this, JU.InflaterInputStream, [$in]);
 this.inflater = inflater;
 this.buf =  Clazz_newByteArray (size, 0);
 this.close_in = close_in;
-}, "java.io.InputStream,JZ.Inflater,~N,~B");
+}, "java.io.InputStream,JU.Inflater,~N,~B");
 Clazz_overrideMethod (c$, "readByteAsInt", 
 function () {
 if (this.closed) {
@@ -1379,8 +1402,8 @@ return this.inflater;
 Clazz_defineStatics (c$,
 "DEFAULT_BUFSIZE", 512);
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (null, "JZ.ZStream", ["JZ.Adler32"], function () {
+Clazz_declarePackage ("JU");
+Clazz_load (null, "JU.ZStream", ["JU.Adler32"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.next_in = null;
 this.next_in_index = 0;
@@ -1396,10 +1419,10 @@ this.istate = null;
 this.data_type = 0;
 this.checksum = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "ZStream");
+}, JU, "ZStream");
 Clazz_defineMethod (c$, "setAdler32", 
 function () {
-this.checksum =  new JZ.Adler32 ();
+this.checksum =  new JU.Adler32 ();
 });
 Clazz_defineMethod (c$, "inflate", 
 function (f) {
@@ -1506,14 +1529,14 @@ return (Int32Array != Array ? new Int32Array(x) : x);
 Clazz_defineStatics (c$,
 "Z_STREAM_ERROR", -2);
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (["JZ.ZStream"], "JZ.Inflater", ["JZ.Inflate"], function () {
-c$ = Clazz_declareType (JZ, "Inflater", JZ.ZStream);
+Clazz_declarePackage ("JU");
+Clazz_load (["JU.ZStream"], "JU.Inflater", ["JU.Inflate"], function () {
+c$ = Clazz_declareType (JU, "Inflater", JU.ZStream);
 Clazz_defineMethod (c$, "init", 
 function (w, nowrap) {
 this.setAdler32 ();
 if (w == 0) w = 15;
-this.istate =  new JZ.Inflate (this);
+this.istate =  new JU.Inflate (this);
 this.istate.inflateInit (nowrap ? -w : w);
 return this;
 }, "~N,~B");
@@ -1558,14 +1581,14 @@ Clazz_defineStatics (c$,
 "DEF_WBITS", 15,
 "$Z_STREAM_ERROR", -2);
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (["JZ.Checksum"], "JZ.Adler32", null, function () {
+Clazz_declarePackage ("JU");
+Clazz_load (["JU.Checksum"], "JU.Adler32", null, function () {
 c$ = Clazz_decorateAsClass (function () {
 this.s1 = 1;
 this.s2 = 0;
 this.b1 = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "Adler32", null, JZ.Checksum);
+}, JU, "Adler32", null, JU.Checksum);
 Clazz_prepareFields (c$, function () {
 this.b1 =  Clazz_newByteArray (1, 0);
 });
@@ -1621,16 +1644,16 @@ Clazz_defineStatics (c$,
 "BASE", 65521,
 "NMAX", 5552);
 });
-Clazz_declarePackage ("JZ");
+Clazz_declarePackage ("JU");
 c$ = Clazz_decorateAsClass (function () {
 this.dyn_tree = null;
 this.max_code = 0;
 this.stat_desc = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "Tree");
+}, JU, "Tree");
 c$.d_code = Clazz_defineMethod (c$, "d_code", 
 function (dist) {
-return ((dist) < 256 ? JZ.Tree._dist_code[dist] : JZ.Tree._dist_code[256 + ((dist) >>> 7)]);
+return ((dist) < 256 ? JU.Tree._dist_code[dist] : JU.Tree._dist_code[256 + ((dist) >>> 7)]);
 }, "~N");
 Clazz_defineMethod (c$, "gen_bitlen", 
 function (s) {
@@ -1685,7 +1708,7 @@ tree[m * 2 + 1] = bits;
 }n--;
 }
 }
-}, "JZ.Deflate");
+}, "JU.Deflate");
 Clazz_defineMethod (c$, "build_tree", 
 function (s) {
 var tree = this.dyn_tree;
@@ -1730,21 +1753,21 @@ s.pqdownheap (tree, 1);
 } while (s.heap_len >= 2);
 s.heap[--s.heap_max] = s.heap[1];
 this.gen_bitlen (s);
-JZ.Tree.gen_codes (tree, max_code, s.bl_count);
-}, "JZ.Deflate");
+JU.Tree.gen_codes (tree, max_code, s.bl_count);
+}, "JU.Deflate");
 c$.gen_codes = Clazz_defineMethod (c$, "gen_codes", 
 function (tree, max_code, bl_count) {
 var code = 0;
 var bits;
 var n;
-JZ.Tree.next_code[0] = 0;
+JU.Tree.next_code[0] = 0;
 for (bits = 1; bits <= 15; bits++) {
-JZ.Tree.next_code[bits] = code = ((code + bl_count[bits - 1]) << 1);
+JU.Tree.next_code[bits] = code = ((code + bl_count[bits - 1]) << 1);
 }
 for (n = 0; n <= max_code; n++) {
 var len = tree[n * 2 + 1];
 if (len == 0) continue;
-tree[n * 2] = (JZ.Tree.bi_reverse (JZ.Tree.next_code[len]++, len));
+tree[n * 2] = (JU.Tree.bi_reverse (JU.Tree.next_code[len]++, len));
 }
 }, "~A,~N,~A");
 c$.bi_reverse = Clazz_defineMethod (c$, "bi_reverse", 
@@ -1768,19 +1791,19 @@ Clazz_defineStatics (c$,
 "REP_3_6", 16,
 "REPZ_3_10", 17,
 "REPZ_11_138", 18,
-"extra_lbits", [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0],
-"extra_dbits", [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13],
-"extra_blbits", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7],
-"bl_order", [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15],
+"extra_lbits",  Clazz_newIntArray (-1, [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0]),
+"extra_dbits",  Clazz_newIntArray (-1, [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]),
+"extra_blbits",  Clazz_newIntArray (-1, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7]),
+"bl_order",  Clazz_newByteArray (-1, [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]),
 "Buf_size", 16,
 "DIST_CODE_LEN", 512,
-"_dist_code", [0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 0, 0, 16, 17, 18, 18, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29],
-"_length_code", [0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28],
-"base_length", [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 0],
-"base_dist", [0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576],
+"_dist_code",  Clazz_newByteArray (-1, [0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 0, 0, 16, 17, 18, 18, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29]),
+"_length_code",  Clazz_newByteArray (-1, [0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28]),
+"base_length",  Clazz_newIntArray (-1, [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 0]),
+"base_dist",  Clazz_newIntArray (-1, [0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576]),
 "next_code",  Clazz_newShortArray (16, 0));
-Clazz_declarePackage ("JZ");
-Clazz_load (["JZ.Tree"], "JZ.StaticTree", null, function () {
+Clazz_declarePackage ("JU");
+Clazz_load (["JU.Tree"], "JU.StaticTree", null, function () {
 c$ = Clazz_decorateAsClass (function () {
 this.static_tree = null;
 this.extra_bits = null;
@@ -1788,7 +1811,7 @@ this.extra_base = 0;
 this.elems = 0;
 this.max_length = 0;
 Clazz_instantialize (this, arguments);
-}, JZ, "StaticTree");
+}, JU, "StaticTree");
 Clazz_makeConstructor (c$, 
  function (static_tree, extra_bits, extra_base, elems, max_length) {
 this.static_tree = static_tree;
@@ -1805,14 +1828,14 @@ Clazz_defineStatics (c$,
 "LENGTH_CODES", 29,
 "L_CODES", (286),
 "MAX_BL_BITS", 7,
-"static_ltree", [12, 8, 140, 8, 76, 8, 204, 8, 44, 8, 172, 8, 108, 8, 236, 8, 28, 8, 156, 8, 92, 8, 220, 8, 60, 8, 188, 8, 124, 8, 252, 8, 2, 8, 130, 8, 66, 8, 194, 8, 34, 8, 162, 8, 98, 8, 226, 8, 18, 8, 146, 8, 82, 8, 210, 8, 50, 8, 178, 8, 114, 8, 242, 8, 10, 8, 138, 8, 74, 8, 202, 8, 42, 8, 170, 8, 106, 8, 234, 8, 26, 8, 154, 8, 90, 8, 218, 8, 58, 8, 186, 8, 122, 8, 250, 8, 6, 8, 134, 8, 70, 8, 198, 8, 38, 8, 166, 8, 102, 8, 230, 8, 22, 8, 150, 8, 86, 8, 214, 8, 54, 8, 182, 8, 118, 8, 246, 8, 14, 8, 142, 8, 78, 8, 206, 8, 46, 8, 174, 8, 110, 8, 238, 8, 30, 8, 158, 8, 94, 8, 222, 8, 62, 8, 190, 8, 126, 8, 254, 8, 1, 8, 129, 8, 65, 8, 193, 8, 33, 8, 161, 8, 97, 8, 225, 8, 17, 8, 145, 8, 81, 8, 209, 8, 49, 8, 177, 8, 113, 8, 241, 8, 9, 8, 137, 8, 73, 8, 201, 8, 41, 8, 169, 8, 105, 8, 233, 8, 25, 8, 153, 8, 89, 8, 217, 8, 57, 8, 185, 8, 121, 8, 249, 8, 5, 8, 133, 8, 69, 8, 197, 8, 37, 8, 165, 8, 101, 8, 229, 8, 21, 8, 149, 8, 85, 8, 213, 8, 53, 8, 181, 8, 117, 8, 245, 8, 13, 8, 141, 8, 77, 8, 205, 8, 45, 8, 173, 8, 109, 8, 237, 8, 29, 8, 157, 8, 93, 8, 221, 8, 61, 8, 189, 8, 125, 8, 253, 8, 19, 9, 275, 9, 147, 9, 403, 9, 83, 9, 339, 9, 211, 9, 467, 9, 51, 9, 307, 9, 179, 9, 435, 9, 115, 9, 371, 9, 243, 9, 499, 9, 11, 9, 267, 9, 139, 9, 395, 9, 75, 9, 331, 9, 203, 9, 459, 9, 43, 9, 299, 9, 171, 9, 427, 9, 107, 9, 363, 9, 235, 9, 491, 9, 27, 9, 283, 9, 155, 9, 411, 9, 91, 9, 347, 9, 219, 9, 475, 9, 59, 9, 315, 9, 187, 9, 443, 9, 123, 9, 379, 9, 251, 9, 507, 9, 7, 9, 263, 9, 135, 9, 391, 9, 71, 9, 327, 9, 199, 9, 455, 9, 39, 9, 295, 9, 167, 9, 423, 9, 103, 9, 359, 9, 231, 9, 487, 9, 23, 9, 279, 9, 151, 9, 407, 9, 87, 9, 343, 9, 215, 9, 471, 9, 55, 9, 311, 9, 183, 9, 439, 9, 119, 9, 375, 9, 247, 9, 503, 9, 15, 9, 271, 9, 143, 9, 399, 9, 79, 9, 335, 9, 207, 9, 463, 9, 47, 9, 303, 9, 175, 9, 431, 9, 111, 9, 367, 9, 239, 9, 495, 9, 31, 9, 287, 9, 159, 9, 415, 9, 95, 9, 351, 9, 223, 9, 479, 9, 63, 9, 319, 9, 191, 9, 447, 9, 127, 9, 383, 9, 255, 9, 511, 9, 0, 7, 64, 7, 32, 7, 96, 7, 16, 7, 80, 7, 48, 7, 112, 7, 8, 7, 72, 7, 40, 7, 104, 7, 24, 7, 88, 7, 56, 7, 120, 7, 4, 7, 68, 7, 36, 7, 100, 7, 20, 7, 84, 7, 52, 7, 116, 7, 3, 8, 131, 8, 67, 8, 195, 8, 35, 8, 163, 8, 99, 8, 227, 8],
-"static_dtree", [0, 5, 16, 5, 8, 5, 24, 5, 4, 5, 20, 5, 12, 5, 28, 5, 2, 5, 18, 5, 10, 5, 26, 5, 6, 5, 22, 5, 14, 5, 30, 5, 1, 5, 17, 5, 9, 5, 25, 5, 5, 5, 21, 5, 13, 5, 29, 5, 3, 5, 19, 5, 11, 5, 27, 5, 7, 5, 23, 5]);
-c$.static_l_desc = c$.prototype.static_l_desc =  new JZ.StaticTree (JZ.StaticTree.static_ltree, JZ.Tree.extra_lbits, 257, 286, 15);
-c$.static_d_desc = c$.prototype.static_d_desc =  new JZ.StaticTree (JZ.StaticTree.static_dtree, JZ.Tree.extra_dbits, 0, 30, 15);
-c$.static_bl_desc = c$.prototype.static_bl_desc =  new JZ.StaticTree (null, JZ.Tree.extra_blbits, 0, 19, 7);
+"static_ltree",  Clazz_newShortArray (-1, [12, 8, 140, 8, 76, 8, 204, 8, 44, 8, 172, 8, 108, 8, 236, 8, 28, 8, 156, 8, 92, 8, 220, 8, 60, 8, 188, 8, 124, 8, 252, 8, 2, 8, 130, 8, 66, 8, 194, 8, 34, 8, 162, 8, 98, 8, 226, 8, 18, 8, 146, 8, 82, 8, 210, 8, 50, 8, 178, 8, 114, 8, 242, 8, 10, 8, 138, 8, 74, 8, 202, 8, 42, 8, 170, 8, 106, 8, 234, 8, 26, 8, 154, 8, 90, 8, 218, 8, 58, 8, 186, 8, 122, 8, 250, 8, 6, 8, 134, 8, 70, 8, 198, 8, 38, 8, 166, 8, 102, 8, 230, 8, 22, 8, 150, 8, 86, 8, 214, 8, 54, 8, 182, 8, 118, 8, 246, 8, 14, 8, 142, 8, 78, 8, 206, 8, 46, 8, 174, 8, 110, 8, 238, 8, 30, 8, 158, 8, 94, 8, 222, 8, 62, 8, 190, 8, 126, 8, 254, 8, 1, 8, 129, 8, 65, 8, 193, 8, 33, 8, 161, 8, 97, 8, 225, 8, 17, 8, 145, 8, 81, 8, 209, 8, 49, 8, 177, 8, 113, 8, 241, 8, 9, 8, 137, 8, 73, 8, 201, 8, 41, 8, 169, 8, 105, 8, 233, 8, 25, 8, 153, 8, 89, 8, 217, 8, 57, 8, 185, 8, 121, 8, 249, 8, 5, 8, 133, 8, 69, 8, 197, 8, 37, 8, 165, 8, 101, 8, 229, 8, 21, 8, 149, 8, 85, 8, 213, 8, 53, 8, 181, 8, 117, 8, 245, 8, 13, 8, 141, 8, 77, 8, 205, 8, 45, 8, 173, 8, 109, 8, 237, 8, 29, 8, 157, 8, 93, 8, 221, 8, 61, 8, 189, 8, 125, 8, 253, 8, 19, 9, 275, 9, 147, 9, 403, 9, 83, 9, 339, 9, 211, 9, 467, 9, 51, 9, 307, 9, 179, 9, 435, 9, 115, 9, 371, 9, 243, 9, 499, 9, 11, 9, 267, 9, 139, 9, 395, 9, 75, 9, 331, 9, 203, 9, 459, 9, 43, 9, 299, 9, 171, 9, 427, 9, 107, 9, 363, 9, 235, 9, 491, 9, 27, 9, 283, 9, 155, 9, 411, 9, 91, 9, 347, 9, 219, 9, 475, 9, 59, 9, 315, 9, 187, 9, 443, 9, 123, 9, 379, 9, 251, 9, 507, 9, 7, 9, 263, 9, 135, 9, 391, 9, 71, 9, 327, 9, 199, 9, 455, 9, 39, 9, 295, 9, 167, 9, 423, 9, 103, 9, 359, 9, 231, 9, 487, 9, 23, 9, 279, 9, 151, 9, 407, 9, 87, 9, 343, 9, 215, 9, 471, 9, 55, 9, 311, 9, 183, 9, 439, 9, 119, 9, 375, 9, 247, 9, 503, 9, 15, 9, 271, 9, 143, 9, 399, 9, 79, 9, 335, 9, 207, 9, 463, 9, 47, 9, 303, 9, 175, 9, 431, 9, 111, 9, 367, 9, 239, 9, 495, 9, 31, 9, 287, 9, 159, 9, 415, 9, 95, 9, 351, 9, 223, 9, 479, 9, 63, 9, 319, 9, 191, 9, 447, 9, 127, 9, 383, 9, 255, 9, 511, 9, 0, 7, 64, 7, 32, 7, 96, 7, 16, 7, 80, 7, 48, 7, 112, 7, 8, 7, 72, 7, 40, 7, 104, 7, 24, 7, 88, 7, 56, 7, 120, 7, 4, 7, 68, 7, 36, 7, 100, 7, 20, 7, 84, 7, 52, 7, 116, 7, 3, 8, 131, 8, 67, 8, 195, 8, 35, 8, 163, 8, 99, 8, 227, 8]),
+"static_dtree",  Clazz_newShortArray (-1, [0, 5, 16, 5, 8, 5, 24, 5, 4, 5, 20, 5, 12, 5, 28, 5, 2, 5, 18, 5, 10, 5, 26, 5, 6, 5, 22, 5, 14, 5, 30, 5, 1, 5, 17, 5, 9, 5, 25, 5, 5, 5, 21, 5, 13, 5, 29, 5, 3, 5, 19, 5, 11, 5, 27, 5, 7, 5, 23, 5]));
+c$.static_l_desc = c$.prototype.static_l_desc =  new JU.StaticTree (JU.StaticTree.static_ltree, JU.Tree.extra_lbits, 257, 286, 15);
+c$.static_d_desc = c$.prototype.static_d_desc =  new JU.StaticTree (JU.StaticTree.static_dtree, JU.Tree.extra_dbits, 0, 30, 15);
+c$.static_bl_desc = c$.prototype.static_bl_desc =  new JU.StaticTree (null, JU.Tree.extra_blbits, 0, 19, 7);
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (null, "JZ.GZIPHeader", ["JZ.ZStream", "java.lang.IllegalArgumentException", "$.InternalError"], function () {
+Clazz_declarePackage ("JU");
+Clazz_load (null, "JU.GZIPHeader", ["JU.ZStream", "java.lang.IllegalArgumentException", "$.InternalError"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.text = false;
 this.fhcrc = false;
@@ -1827,7 +1850,7 @@ this.crc = 0;
 this.done = false;
 this.mtime = 0;
 Clazz_instantialize (this, arguments);
-}, JZ, "GZIPHeader", null, Cloneable);
+}, JU, "GZIPHeader", null, Cloneable);
 Clazz_defineMethod (c$, "setModifiedTime", 
 function (mtime) {
 this.mtime = mtime;
@@ -1847,7 +1870,7 @@ return this.os;
 });
 Clazz_defineMethod (c$, "setName", 
 function (name) {
-this.name = JZ.ZStream.getBytes (name);
+this.name = JU.ZStream.getBytes (name);
 }, "~S");
 Clazz_defineMethod (c$, "getName", 
 function () {
@@ -1864,7 +1887,7 @@ throw e;
 });
 Clazz_defineMethod (c$, "setComment", 
 function (comment) {
-this.comment = JZ.ZStream.getBytes (comment);
+this.comment = JU.ZStream.getBytes (comment);
 }, "~S");
 Clazz_defineMethod (c$, "getComment", 
 function () {
@@ -1924,10 +1947,10 @@ d.put_byteB (0);
 }if (this.comment != null) {
 d.put_byte (this.comment, 0, this.comment.length);
 d.put_byteB (0);
-}}, "JZ.Deflate");
+}}, "JU.Deflate");
 Clazz_defineMethod (c$, "clone", 
 function () {
-var gheader = Clazz_superCall (this, JZ.GZIPHeader, "clone", []);
+var gheader = Clazz_superCall (this, JU.GZIPHeader, "clone", []);
 var tmp;
 if (gheader.extra != null) {
 tmp =  Clazz_newByteArray (gheader.extra.length, 0);
@@ -1960,8 +1983,8 @@ Clazz_defineStatics (c$,
 "OS_RISCOS", 0x0d,
 "OS_UNKNOWN", 0xff);
 });
-Clazz_declarePackage ("JZ");
-Clazz_load (["java.lang.Exception"], "JZ.Inflate", ["JZ.Adler32", "$.CRC32", "$.GZIPHeader", "$.InfBlocks", "java.io.ByteArrayOutputStream"], function () {
+Clazz_declarePackage ("JU");
+Clazz_load (["java.lang.Exception"], "JU.Inflate", ["JU.Adler32", "$.CRC32", "$.GZIPHeader", "$.InfBlocks", "java.io.ByteArrayOutputStream"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.mode = 0;
 this.method = 0;
@@ -1976,12 +1999,12 @@ this.flags = 0;
 this.need_bytes = -1;
 this.crcbuf = null;
 this.gheader = null;
-if (!Clazz_isClassDefined ("JZ.Inflate.Return")) {
-JZ.Inflate.$Inflate$Return$ ();
+if (!Clazz_isClassDefined ("JU.Inflate.Return")) {
+JU.Inflate.$Inflate$Return$ ();
 }
 this.tmp_string = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "Inflate");
+}, JU, "Inflate");
 Clazz_prepareFields (c$, function () {
 this.crcbuf =  Clazz_newByteArray (4, 0);
 });
@@ -2008,7 +2031,7 @@ this.blocks.free ();
 Clazz_makeConstructor (c$, 
 function (z) {
 this.z = z;
-}, "JZ.ZStream");
+}, "JU.ZStream");
 Clazz_defineMethod (c$, "inflateInit", 
 function (w) {
 this.z.msg = null;
@@ -2026,7 +2049,7 @@ return -2;
 this.blocks.free ();
 this.blocks = null;
 }this.wbits = w;
-this.blocks =  new JZ.InfBlocks (this.z, 1 << w);
+this.blocks =  new JU.InfBlocks (this.z, 1 << w);
 this.inflateReset ();
 return 0;
 }, "~N");
@@ -2048,16 +2071,16 @@ break;
 }try {
 r = this.readBytes (2, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
 }
 }
 if ((this.wrap & 2) != 0 && this.need == 0x8b1f) {
-this.z.checksum =  new JZ.CRC32 ();
+this.z.checksum =  new JU.CRC32 ();
 this.checksum (2, this.need);
-if (this.gheader == null) this.gheader =  new JZ.GZIPHeader ();
+if (this.gheader == null) this.gheader =  new JU.GZIPHeader ();
 this.mode = 23;
 break;
 }this.flags = 0;
@@ -2075,7 +2098,7 @@ break;
 this.mode = 13;
 this.z.msg = "invalid window size";
 break;
-}this.z.checksum =  new JZ.Adler32 ();
+}this.z.checksum =  new JU.Adler32 ();
 if ((b & 32) == 0) {
 this.mode = 7;
 break;
@@ -2171,7 +2194,7 @@ if (this.wrap != 0 && this.flags != 0) {
 try {
 r = this.readBytes (4, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2200,7 +2223,7 @@ case 23:
 try {
 r = this.readBytes (2, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2222,7 +2245,7 @@ case 16:
 try {
 r = this.readBytes (4, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2236,7 +2259,7 @@ case 17:
 try {
 r = this.readBytes (2, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2253,7 +2276,7 @@ if ((this.flags & 0x0400) != 0) {
 try {
 r = this.readBytes (2, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2280,7 +2303,7 @@ this.z.msg = "bad extra field length";
 this.mode = 13;
 break;
 }}} catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2297,7 +2320,7 @@ if (this.gheader != null) {
 this.gheader.name = this.tmp_string.toByteArray ();
 }this.tmp_string = null;
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2314,7 +2337,7 @@ if (this.gheader != null) {
 this.gheader.comment = this.tmp_string.toByteArray ();
 }this.tmp_string = null;
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2328,7 +2351,7 @@ if ((this.flags & 0x0200) != 0) {
 try {
 r = this.readBytes (2, r, f);
 } catch (e) {
-if (Clazz_exceptionOf (e, JZ.Inflate.Return)) {
+if (Clazz_exceptionOf (e, JU.Inflate.Return)) {
 return e.r;
 } else {
 throw e;
@@ -2341,7 +2364,7 @@ this.mode = 13;
 this.z.msg = "header crc mismatch";
 this.marker = 5;
 break;
-}}this.z.checksum =  new JZ.CRC32 ();
+}}this.z.checksum =  new JU.CRC32 ();
 this.mode = 7;
 break;
 default:
@@ -2384,7 +2407,7 @@ this.marker = 0;
 p = this.z.next_in_index;
 m = this.marker;
 while (n != 0 && m < 4) {
-if (this.z.next_in[p] == JZ.Inflate.mark[m]) {
+if (this.z.next_in[p] == JU.Inflate.mark[m]) {
 m++;
 } else if (this.z.next_in[p] != 0) {
 m = 0;
@@ -2419,7 +2442,7 @@ this.need_bytes = n;
 this.need = 0;
 }while (this.need_bytes > 0) {
 if (this.z.avail_in == 0) {
-throw Clazz_innerTypeInstance (JZ.Inflate.Return, this, null, r);
+throw Clazz_innerTypeInstance (JU.Inflate.Return, this, null, r);
 }r = f;
 this.z.avail_in--;
 this.z.total_in++;
@@ -2440,7 +2463,7 @@ this.tmp_string =  new java.io.ByteArrayOutputStream ();
 }var b = 0;
 do {
 if (this.z.avail_in == 0) {
-throw Clazz_innerTypeInstance (JZ.Inflate.Return, this, null, r);
+throw Clazz_innerTypeInstance (JU.Inflate.Return, this, null, r);
 }r = f;
 this.z.avail_in--;
 this.z.total_in++;
@@ -2457,7 +2480,7 @@ if (this.tmp_string == null) {
 this.tmp_string =  new java.io.ByteArrayOutputStream ();
 }while (this.need > 0) {
 if (this.z.avail_in == 0) {
-throw Clazz_innerTypeInstance (JZ.Inflate.Return, this, null, r);
+throw Clazz_innerTypeInstance (JU.Inflate.Return, this, null, r);
 }r = f;
 this.z.avail_in--;
 this.z.total_in++;
@@ -2507,10 +2530,10 @@ c$ = Clazz_decorateAsClass (function () {
 Clazz_prepareCallback (this, arguments);
 this.r = 0;
 Clazz_instantialize (this, arguments);
-}, JZ.Inflate, "Return", Exception);
+}, JU.Inflate, "Return", Exception);
 Clazz_makeConstructor (c$, 
 function (a) {
-Clazz_superConstructor (this, JZ.Inflate.Return, []);
+Clazz_superConstructor (this, JU.Inflate.Return, []);
 this.r = a;
 }, "~N");
 c$ = Clazz_p0p ();
@@ -2551,9 +2574,9 @@ Clazz_defineStatics (c$,
 "COMMENT", 21,
 "HCRC", 22,
 "FLAGS", 23,
-"mark", [0, 0, 0xff, 0xff]);
+"mark",  Clazz_newByteArray (-1, [0, 0, 0xff, 0xff]));
 });
-Clazz_declarePackage ("JZ");
+Clazz_declarePackage ("JU");
 c$ = Clazz_decorateAsClass (function () {
 this.hn = null;
 this.v = null;
@@ -2562,7 +2585,7 @@ this.r = null;
 this.u = null;
 this.x = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "InfTree");
+}, JU, "InfTree");
 Clazz_defineMethod (c$, "huft_build", 
  function (b, bindex, n, s, d, e, t, m, hp, hn, v) {
 var a;
@@ -2704,13 +2727,13 @@ z.msg = "oversubscribed dynamic bit lengths tree";
 z.msg = "incomplete dynamic bit lengths tree";
 result = -3;
 }return result;
-}, "~A,~A,~A,~A,JZ.ZStream");
+}, "~A,~A,~A,~A,JU.ZStream");
 Clazz_defineMethod (c$, "inflate_trees_dynamic", 
 function (nl, nd, c, bl, bd, tl, td, hp, z) {
 var result;
 this.initWorkArea (288);
 this.hn[0] = 0;
-result = this.huft_build (c, 0, nl, 257, JZ.InfTree.cplens, JZ.InfTree.cplext, tl, bl, hp, this.hn, this.v);
+result = this.huft_build (c, 0, nl, 257, JU.InfTree.cplens, JU.InfTree.cplext, tl, bl, hp, this.hn, this.v);
 if (result != 0 || bl[0] == 0) {
 if (result == -3) {
 z.msg = "oversubscribed literal/length tree";
@@ -2719,7 +2742,7 @@ z.msg = "incomplete literal/length tree";
 result = -3;
 }return result;
 }this.initWorkArea (288);
-result = this.huft_build (c, nl, nd, 0, JZ.InfTree.cpdist, JZ.InfTree.cpdext, td, bd, hp, this.hn, this.v);
+result = this.huft_build (c, nl, nd, 0, JU.InfTree.cpdist, JU.InfTree.cpdext, td, bd, hp, this.hn, this.v);
 if (result != 0 || (bd[0] == 0 && nl > 257)) {
 if (result == -3) {
 z.msg = "oversubscribed distance tree";
@@ -2731,15 +2754,15 @@ z.msg = "empty distance tree with lengths";
 result = -3;
 }return result;
 }return 0;
-}, "~N,~N,~A,~A,~A,~A,~A,~A,JZ.ZStream");
+}, "~N,~N,~A,~A,~A,~A,~A,~A,JU.ZStream");
 c$.inflate_trees_fixed = Clazz_defineMethod (c$, "inflate_trees_fixed", 
 function (bl, bd, tl, td, z) {
 bl[0] = 9;
 bd[0] = 5;
-tl[0] = JZ.InfTree.fixed_tl;
-td[0] = JZ.InfTree.fixed_td;
+tl[0] = JU.InfTree.fixed_tl;
+td[0] = JU.InfTree.fixed_td;
 return 0;
-}, "~A,~A,~A,~A,JZ.ZStream");
+}, "~A,~A,~A,~A,JU.ZStream");
 Clazz_defineMethod (c$, "initWorkArea", 
  function (vsize) {
 if (this.hn == null) {
@@ -2771,15 +2794,15 @@ Clazz_defineStatics (c$,
 "Z_BUF_ERROR", -5,
 "fixed_bl", 9,
 "fixed_bd", 5,
-"fixed_tl", [96, 7, 256, 0, 8, 80, 0, 8, 16, 84, 8, 115, 82, 7, 31, 0, 8, 112, 0, 8, 48, 0, 9, 192, 80, 7, 10, 0, 8, 96, 0, 8, 32, 0, 9, 160, 0, 8, 0, 0, 8, 128, 0, 8, 64, 0, 9, 224, 80, 7, 6, 0, 8, 88, 0, 8, 24, 0, 9, 144, 83, 7, 59, 0, 8, 120, 0, 8, 56, 0, 9, 208, 81, 7, 17, 0, 8, 104, 0, 8, 40, 0, 9, 176, 0, 8, 8, 0, 8, 136, 0, 8, 72, 0, 9, 240, 80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8, 227, 83, 7, 43, 0, 8, 116, 0, 8, 52, 0, 9, 200, 81, 7, 13, 0, 8, 100, 0, 8, 36, 0, 9, 168, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0, 9, 232, 80, 7, 8, 0, 8, 92, 0, 8, 28, 0, 9, 152, 84, 7, 83, 0, 8, 124, 0, 8, 60, 0, 9, 216, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0, 9, 184, 0, 8, 12, 0, 8, 140, 0, 8, 76, 0, 9, 248, 80, 7, 3, 0, 8, 82, 0, 8, 18, 85, 8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50, 0, 9, 196, 81, 7, 11, 0, 8, 98, 0, 8, 34, 0, 9, 164, 0, 8, 2, 0, 8, 130, 0, 8, 66, 0, 9, 228, 80, 7, 7, 0, 8, 90, 0, 8, 26, 0, 9, 148, 84, 7, 67, 0, 8, 122, 0, 8, 58, 0, 9, 212, 82, 7, 19, 0, 8, 106, 0, 8, 42, 0, 9, 180, 0, 8, 10, 0, 8, 138, 0, 8, 74, 0, 9, 244, 80, 7, 5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7, 51, 0, 8, 118, 0, 8, 54, 0, 9, 204, 81, 7, 15, 0, 8, 102, 0, 8, 38, 0, 9, 172, 0, 8, 6, 0, 8, 134, 0, 8, 70, 0, 9, 236, 80, 7, 9, 0, 8, 94, 0, 8, 30, 0, 9, 156, 84, 7, 99, 0, 8, 126, 0, 8, 62, 0, 9, 220, 82, 7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 188, 0, 8, 14, 0, 8, 142, 0, 8, 78, 0, 9, 252, 96, 7, 256, 0, 8, 81, 0, 8, 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9, 194, 80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 162, 0, 8, 1, 0, 8, 129, 0, 8, 65, 0, 9, 226, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9, 146, 83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 210, 81, 7, 17, 0, 8, 105, 0, 8, 41, 0, 9, 178, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0, 9, 242, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0, 8, 117, 0, 8, 53, 0, 9, 202, 81, 7, 13, 0, 8, 101, 0, 8, 37, 0, 9, 170, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 234, 80, 7, 8, 0, 8, 93, 0, 8, 29, 0, 9, 154, 84, 7, 83, 0, 8, 125, 0, 8, 61, 0, 9, 218, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 186, 0, 8, 13, 0, 8, 141, 0, 8, 77, 0, 9, 250, 80, 7, 3, 0, 8, 83, 0, 8, 19, 85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9, 198, 81, 7, 11, 0, 8, 99, 0, 8, 35, 0, 9, 166, 0, 8, 3, 0, 8, 131, 0, 8, 67, 0, 9, 230, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9, 150, 84, 7, 67, 0, 8, 123, 0, 8, 59, 0, 9, 214, 82, 7, 19, 0, 8, 107, 0, 8, 43, 0, 9, 182, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0, 9, 246, 80, 7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0, 8, 119, 0, 8, 55, 0, 9, 206, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0, 9, 174, 0, 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 238, 80, 7, 9, 0, 8, 95, 0, 8, 31, 0, 9, 158, 84, 7, 99, 0, 8, 127, 0, 8, 63, 0, 9, 222, 82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 190, 0, 8, 15, 0, 8, 143, 0, 8, 79, 0, 9, 254, 96, 7, 256, 0, 8, 80, 0, 8, 16, 84, 8, 115, 82, 7, 31, 0, 8, 112, 0, 8, 48, 0, 9, 193, 80, 7, 10, 0, 8, 96, 0, 8, 32, 0, 9, 161, 0, 8, 0, 0, 8, 128, 0, 8, 64, 0, 9, 225, 80, 7, 6, 0, 8, 88, 0, 8, 24, 0, 9, 145, 83, 7, 59, 0, 8, 120, 0, 8, 56, 0, 9, 209, 81, 7, 17, 0, 8, 104, 0, 8, 40, 0, 9, 177, 0, 8, 8, 0, 8, 136, 0, 8, 72, 0, 9, 241, 80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8, 227, 83, 7, 43, 0, 8, 116, 0, 8, 52, 0, 9, 201, 81, 7, 13, 0, 8, 100, 0, 8, 36, 0, 9, 169, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0, 9, 233, 80, 7, 8, 0, 8, 92, 0, 8, 28, 0, 9, 153, 84, 7, 83, 0, 8, 124, 0, 8, 60, 0, 9, 217, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0, 9, 185, 0, 8, 12, 0, 8, 140, 0, 8, 76, 0, 9, 249, 80, 7, 3, 0, 8, 82, 0, 8, 18, 85, 8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50, 0, 9, 197, 81, 7, 11, 0, 8, 98, 0, 8, 34, 0, 9, 165, 0, 8, 2, 0, 8, 130, 0, 8, 66, 0, 9, 229, 80, 7, 7, 0, 8, 90, 0, 8, 26, 0, 9, 149, 84, 7, 67, 0, 8, 122, 0, 8, 58, 0, 9, 213, 82, 7, 19, 0, 8, 106, 0, 8, 42, 0, 9, 181, 0, 8, 10, 0, 8, 138, 0, 8, 74, 0, 9, 245, 80, 7, 5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7, 51, 0, 8, 118, 0, 8, 54, 0, 9, 205, 81, 7, 15, 0, 8, 102, 0, 8, 38, 0, 9, 173, 0, 8, 6, 0, 8, 134, 0, 8, 70, 0, 9, 237, 80, 7, 9, 0, 8, 94, 0, 8, 30, 0, 9, 157, 84, 7, 99, 0, 8, 126, 0, 8, 62, 0, 9, 221, 82, 7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 189, 0, 8, 14, 0, 8, 142, 0, 8, 78, 0, 9, 253, 96, 7, 256, 0, 8, 81, 0, 8, 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9, 195, 80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 163, 0, 8, 1, 0, 8, 129, 0, 8, 65, 0, 9, 227, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9, 147, 83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 211, 81, 7, 17, 0, 8, 105, 0, 8, 41, 0, 9, 179, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0, 9, 243, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0, 8, 117, 0, 8, 53, 0, 9, 203, 81, 7, 13, 0, 8, 101, 0, 8, 37, 0, 9, 171, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 235, 80, 7, 8, 0, 8, 93, 0, 8, 29, 0, 9, 155, 84, 7, 83, 0, 8, 125, 0, 8, 61, 0, 9, 219, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 187, 0, 8, 13, 0, 8, 141, 0, 8, 77, 0, 9, 251, 80, 7, 3, 0, 8, 83, 0, 8, 19, 85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9, 199, 81, 7, 11, 0, 8, 99, 0, 8, 35, 0, 9, 167, 0, 8, 3, 0, 8, 131, 0, 8, 67, 0, 9, 231, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9, 151, 84, 7, 67, 0, 8, 123, 0, 8, 59, 0, 9, 215, 82, 7, 19, 0, 8, 107, 0, 8, 43, 0, 9, 183, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0, 9, 247, 80, 7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0, 8, 119, 0, 8, 55, 0, 9, 207, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0, 9, 175, 0, 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 239, 80, 7, 9, 0, 8, 95, 0, 8, 31, 0, 9, 159, 84, 7, 99, 0, 8, 127, 0, 8, 63, 0, 9, 223, 82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 191, 0, 8, 15, 0, 8, 143, 0, 8, 79, 0, 9, 255],
-"fixed_td", [80, 5, 1, 87, 5, 257, 83, 5, 17, 91, 5, 4097, 81, 5, 5, 89, 5, 1025, 85, 5, 65, 93, 5, 16385, 80, 5, 3, 88, 5, 513, 84, 5, 33, 92, 5, 8193, 82, 5, 9, 90, 5, 2049, 86, 5, 129, 192, 5, 24577, 80, 5, 2, 87, 5, 385, 83, 5, 25, 91, 5, 6145, 81, 5, 7, 89, 5, 1537, 85, 5, 97, 93, 5, 24577, 80, 5, 4, 88, 5, 769, 84, 5, 49, 92, 5, 12289, 82, 5, 13, 90, 5, 3073, 86, 5, 193, 192, 5, 24577],
-"cplens", [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0],
-"cplext", [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 112, 112],
-"cpdist", [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577],
-"cpdext", [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13],
+"fixed_tl",  Clazz_newIntArray (-1, [96, 7, 256, 0, 8, 80, 0, 8, 16, 84, 8, 115, 82, 7, 31, 0, 8, 112, 0, 8, 48, 0, 9, 192, 80, 7, 10, 0, 8, 96, 0, 8, 32, 0, 9, 160, 0, 8, 0, 0, 8, 128, 0, 8, 64, 0, 9, 224, 80, 7, 6, 0, 8, 88, 0, 8, 24, 0, 9, 144, 83, 7, 59, 0, 8, 120, 0, 8, 56, 0, 9, 208, 81, 7, 17, 0, 8, 104, 0, 8, 40, 0, 9, 176, 0, 8, 8, 0, 8, 136, 0, 8, 72, 0, 9, 240, 80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8, 227, 83, 7, 43, 0, 8, 116, 0, 8, 52, 0, 9, 200, 81, 7, 13, 0, 8, 100, 0, 8, 36, 0, 9, 168, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0, 9, 232, 80, 7, 8, 0, 8, 92, 0, 8, 28, 0, 9, 152, 84, 7, 83, 0, 8, 124, 0, 8, 60, 0, 9, 216, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0, 9, 184, 0, 8, 12, 0, 8, 140, 0, 8, 76, 0, 9, 248, 80, 7, 3, 0, 8, 82, 0, 8, 18, 85, 8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50, 0, 9, 196, 81, 7, 11, 0, 8, 98, 0, 8, 34, 0, 9, 164, 0, 8, 2, 0, 8, 130, 0, 8, 66, 0, 9, 228, 80, 7, 7, 0, 8, 90, 0, 8, 26, 0, 9, 148, 84, 7, 67, 0, 8, 122, 0, 8, 58, 0, 9, 212, 82, 7, 19, 0, 8, 106, 0, 8, 42, 0, 9, 180, 0, 8, 10, 0, 8, 138, 0, 8, 74, 0, 9, 244, 80, 7, 5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7, 51, 0, 8, 118, 0, 8, 54, 0, 9, 204, 81, 7, 15, 0, 8, 102, 0, 8, 38, 0, 9, 172, 0, 8, 6, 0, 8, 134, 0, 8, 70, 0, 9, 236, 80, 7, 9, 0, 8, 94, 0, 8, 30, 0, 9, 156, 84, 7, 99, 0, 8, 126, 0, 8, 62, 0, 9, 220, 82, 7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 188, 0, 8, 14, 0, 8, 142, 0, 8, 78, 0, 9, 252, 96, 7, 256, 0, 8, 81, 0, 8, 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9, 194, 80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 162, 0, 8, 1, 0, 8, 129, 0, 8, 65, 0, 9, 226, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9, 146, 83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 210, 81, 7, 17, 0, 8, 105, 0, 8, 41, 0, 9, 178, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0, 9, 242, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0, 8, 117, 0, 8, 53, 0, 9, 202, 81, 7, 13, 0, 8, 101, 0, 8, 37, 0, 9, 170, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 234, 80, 7, 8, 0, 8, 93, 0, 8, 29, 0, 9, 154, 84, 7, 83, 0, 8, 125, 0, 8, 61, 0, 9, 218, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 186, 0, 8, 13, 0, 8, 141, 0, 8, 77, 0, 9, 250, 80, 7, 3, 0, 8, 83, 0, 8, 19, 85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9, 198, 81, 7, 11, 0, 8, 99, 0, 8, 35, 0, 9, 166, 0, 8, 3, 0, 8, 131, 0, 8, 67, 0, 9, 230, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9, 150, 84, 7, 67, 0, 8, 123, 0, 8, 59, 0, 9, 214, 82, 7, 19, 0, 8, 107, 0, 8, 43, 0, 9, 182, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0, 9, 246, 80, 7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0, 8, 119, 0, 8, 55, 0, 9, 206, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0, 9, 174, 0, 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 238, 80, 7, 9, 0, 8, 95, 0, 8, 31, 0, 9, 158, 84, 7, 99, 0, 8, 127, 0, 8, 63, 0, 9, 222, 82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 190, 0, 8, 15, 0, 8, 143, 0, 8, 79, 0, 9, 254, 96, 7, 256, 0, 8, 80, 0, 8, 16, 84, 8, 115, 82, 7, 31, 0, 8, 112, 0, 8, 48, 0, 9, 193, 80, 7, 10, 0, 8, 96, 0, 8, 32, 0, 9, 161, 0, 8, 0, 0, 8, 128, 0, 8, 64, 0, 9, 225, 80, 7, 6, 0, 8, 88, 0, 8, 24, 0, 9, 145, 83, 7, 59, 0, 8, 120, 0, 8, 56, 0, 9, 209, 81, 7, 17, 0, 8, 104, 0, 8, 40, 0, 9, 177, 0, 8, 8, 0, 8, 136, 0, 8, 72, 0, 9, 241, 80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8, 227, 83, 7, 43, 0, 8, 116, 0, 8, 52, 0, 9, 201, 81, 7, 13, 0, 8, 100, 0, 8, 36, 0, 9, 169, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0, 9, 233, 80, 7, 8, 0, 8, 92, 0, 8, 28, 0, 9, 153, 84, 7, 83, 0, 8, 124, 0, 8, 60, 0, 9, 217, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0, 9, 185, 0, 8, 12, 0, 8, 140, 0, 8, 76, 0, 9, 249, 80, 7, 3, 0, 8, 82, 0, 8, 18, 85, 8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50, 0, 9, 197, 81, 7, 11, 0, 8, 98, 0, 8, 34, 0, 9, 165, 0, 8, 2, 0, 8, 130, 0, 8, 66, 0, 9, 229, 80, 7, 7, 0, 8, 90, 0, 8, 26, 0, 9, 149, 84, 7, 67, 0, 8, 122, 0, 8, 58, 0, 9, 213, 82, 7, 19, 0, 8, 106, 0, 8, 42, 0, 9, 181, 0, 8, 10, 0, 8, 138, 0, 8, 74, 0, 9, 245, 80, 7, 5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7, 51, 0, 8, 118, 0, 8, 54, 0, 9, 205, 81, 7, 15, 0, 8, 102, 0, 8, 38, 0, 9, 173, 0, 8, 6, 0, 8, 134, 0, 8, 70, 0, 9, 237, 80, 7, 9, 0, 8, 94, 0, 8, 30, 0, 9, 157, 84, 7, 99, 0, 8, 126, 0, 8, 62, 0, 9, 221, 82, 7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 189, 0, 8, 14, 0, 8, 142, 0, 8, 78, 0, 9, 253, 96, 7, 256, 0, 8, 81, 0, 8, 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9, 195, 80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 163, 0, 8, 1, 0, 8, 129, 0, 8, 65, 0, 9, 227, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9, 147, 83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 211, 81, 7, 17, 0, 8, 105, 0, 8, 41, 0, 9, 179, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0, 9, 243, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0, 8, 117, 0, 8, 53, 0, 9, 203, 81, 7, 13, 0, 8, 101, 0, 8, 37, 0, 9, 171, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 235, 80, 7, 8, 0, 8, 93, 0, 8, 29, 0, 9, 155, 84, 7, 83, 0, 8, 125, 0, 8, 61, 0, 9, 219, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 187, 0, 8, 13, 0, 8, 141, 0, 8, 77, 0, 9, 251, 80, 7, 3, 0, 8, 83, 0, 8, 19, 85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9, 199, 81, 7, 11, 0, 8, 99, 0, 8, 35, 0, 9, 167, 0, 8, 3, 0, 8, 131, 0, 8, 67, 0, 9, 231, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9, 151, 84, 7, 67, 0, 8, 123, 0, 8, 59, 0, 9, 215, 82, 7, 19, 0, 8, 107, 0, 8, 43, 0, 9, 183, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0, 9, 247, 80, 7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0, 8, 119, 0, 8, 55, 0, 9, 207, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0, 9, 175, 0, 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 239, 80, 7, 9, 0, 8, 95, 0, 8, 31, 0, 9, 159, 84, 7, 99, 0, 8, 127, 0, 8, 63, 0, 9, 223, 82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 191, 0, 8, 15, 0, 8, 143, 0, 8, 79, 0, 9, 255]),
+"fixed_td",  Clazz_newIntArray (-1, [80, 5, 1, 87, 5, 257, 83, 5, 17, 91, 5, 4097, 81, 5, 5, 89, 5, 1025, 85, 5, 65, 93, 5, 16385, 80, 5, 3, 88, 5, 513, 84, 5, 33, 92, 5, 8193, 82, 5, 9, 90, 5, 2049, 86, 5, 129, 192, 5, 24577, 80, 5, 2, 87, 5, 385, 83, 5, 25, 91, 5, 6145, 81, 5, 7, 89, 5, 1537, 85, 5, 97, 93, 5, 24577, 80, 5, 4, 88, 5, 769, 84, 5, 49, 92, 5, 12289, 82, 5, 13, 90, 5, 3073, 86, 5, 193, 192, 5, 24577]),
+"cplens",  Clazz_newIntArray (-1, [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0]),
+"cplext",  Clazz_newIntArray (-1, [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 112, 112]),
+"cpdist",  Clazz_newIntArray (-1, [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577]),
+"cpdext",  Clazz_newIntArray (-1, [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]),
 "BMAX", 15);
-Clazz_declarePackage ("JZ");
-Clazz_load (["JZ.InfTree"], "JZ.InfBlocks", ["JZ.InfCodes"], function () {
+Clazz_declarePackage ("JU");
+Clazz_load (["JU.InfTree"], "JU.InfBlocks", ["JU.InfCodes"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.mode = 0;
 this.left = 0;
@@ -2807,7 +2830,7 @@ this.check = false;
 this.inftree = null;
 this.z = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "InfBlocks");
+}, JU, "InfBlocks");
 Clazz_prepareFields (c$, function () {
 this.bb =  Clazz_newIntArray (1, 0);
 this.tb =  Clazz_newIntArray (1, 0);
@@ -2815,12 +2838,12 @@ this.bl =  Clazz_newIntArray (1, 0);
 this.bd =  Clazz_newIntArray (1, 0);
 this.tli =  Clazz_newIntArray (1, 0);
 this.tdi =  Clazz_newIntArray (1, 0);
-this.inftree =  new JZ.InfTree ();
+this.inftree =  new JU.InfTree ();
 });
 Clazz_makeConstructor (c$, 
 function (z, w) {
 this.z = z;
-this.codes =  new JZ.InfCodes (this.z, this);
+this.codes =  new JU.InfCodes (this.z, this);
 this.hufts =  Clazz_newIntArray (4320, 0);
 this.window =  Clazz_newByteArray (w, 0);
 this.end = w;
@@ -2830,7 +2853,7 @@ this.mode = 0;
 this.tl = Clazz_newArray(1, null);
 this.td = Clazz_newArray(1, null);
 }this.reset ();
-}, "JZ.ZStream,~N");
+}, "JU.ZStream,~N");
 Clazz_defineMethod (c$, "reset", 
 function () {
 if (this.mode == 6) {
@@ -2891,7 +2914,7 @@ k -= (t);
 }this.mode = 1;
 break;
 case 1:
-JZ.InfTree.inflate_trees_fixed (this.bl, this.bd, this.tl, this.td, this.z);
+JU.InfTree.inflate_trees_fixed (this.bl, this.bd, this.tl, this.td, this.z);
 this.codes.init (this.bl[0], this.bd[0], this.tl[0], 0, this.td[0], 0);
 {
 b >>>= (3);
@@ -3049,13 +3072,13 @@ return this.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-this.blens[JZ.InfBlocks.border[this.index++]] = b & 7;
+this.blens[JU.InfBlocks.border[this.index++]] = b & 7;
 {
 b >>>= (3);
 k -= (3);
 }}
 while (this.index < 19) {
-this.blens[JZ.InfBlocks.border[this.index++]] = 0;
+this.blens[JU.InfBlocks.border[this.index++]] = 0;
 }
 this.bb[0] = 7;
 t = this.inftree.inflate_trees_bits (this.blens, this.bb, this.tb, this.hufts, this.z);
@@ -3097,8 +3120,8 @@ return this.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-t = this.hufts[(this.tb[0] + (b & JZ.InfBlocks.inflate_mask[t])) * 3 + 1];
-c = this.hufts[(this.tb[0] + (b & JZ.InfBlocks.inflate_mask[t])) * 3 + 2];
+t = this.hufts[(this.tb[0] + (b & JU.InfBlocks.inflate_mask[t])) * 3 + 1];
+c = this.hufts[(this.tb[0] + (b & JU.InfBlocks.inflate_mask[t])) * 3 + 2];
 if (c < 16) {
 b >>>= (t);
 k -= (t);
@@ -3123,7 +3146,7 @@ k += 8;
 }
 b >>>= (t);
 k -= (t);
-j += (b & JZ.InfBlocks.inflate_mask[i]);
+j += (b & JU.InfBlocks.inflate_mask[i]);
 b >>>= (i);
 k -= (i);
 i = this.index;
@@ -3282,8 +3305,8 @@ return r;
 }, "~N");
 Clazz_defineStatics (c$,
 "MANY", 1440,
-"inflate_mask", [0x00000000, 0x00000001, 0x00000003, 0x00000007, 0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff],
-"border", [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15],
+"inflate_mask",  Clazz_newIntArray (-1, [0x00000000, 0x00000001, 0x00000003, 0x00000007, 0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff]),
+"border",  Clazz_newIntArray (-1, [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]),
 "Z_OK", 0,
 "Z_STREAM_END", 1,
 "Z_STREAM_ERROR", -2,
@@ -3300,7 +3323,7 @@ Clazz_defineStatics (c$,
 "DONE", 8,
 "BAD", 9);
 });
-Clazz_declarePackage ("JZ");
+Clazz_declarePackage ("JU");
 c$ = Clazz_decorateAsClass (function () {
 this.mode = 0;
 this.len = 0;
@@ -3319,12 +3342,12 @@ this.dtree_index = 0;
 this.z = null;
 this.s = null;
 Clazz_instantialize (this, arguments);
-}, JZ, "InfCodes");
+}, JU, "InfCodes");
 Clazz_makeConstructor (c$, 
 function (z, s) {
 this.z = z;
 this.s = s;
-}, "JZ.ZStream,JZ.InfBlocks");
+}, "JU.ZStream,JU.InfBlocks");
 Clazz_defineMethod (c$, "init", 
 function (bl, bd, tl, tl_index, td, td_index) {
 this.mode = 0;
@@ -3394,7 +3417,7 @@ return this.s.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-tindex = (this.tree_index + (b & JZ.InfCodes.inflate_mask[j])) * 3;
+tindex = (this.tree_index + (b & JU.InfCodes.inflate_mask[j])) * 3;
 b >>>= (this.tree[tindex + 1]);
 k -= (this.tree[tindex + 1]);
 e = this.tree[tindex];
@@ -3440,7 +3463,7 @@ return this.s.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-this.len += (b & JZ.InfCodes.inflate_mask[j]);
+this.len += (b & JU.InfCodes.inflate_mask[j]);
 b >>= j;
 k -= j;
 this.need = this.dbits;
@@ -3463,7 +3486,7 @@ return this.s.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-tindex = (this.tree_index + (b & JZ.InfCodes.inflate_mask[j])) * 3;
+tindex = (this.tree_index + (b & JU.InfCodes.inflate_mask[j])) * 3;
 b >>= this.tree[tindex + 1];
 k -= this.tree[tindex + 1];
 e = (this.tree[tindex]);
@@ -3502,7 +3525,7 @@ return this.s.inflate_flush (r);
 b |= (this.z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-this.dist += (b & JZ.InfCodes.inflate_mask[j]);
+this.dist += (b & JU.InfCodes.inflate_mask[j]);
 b >>= j;
 k -= j;
 this.mode = 5;
@@ -3615,7 +3638,7 @@ return this.s.inflate_flush (r);
 }, "~N");
 Clazz_defineMethod (c$, "free", 
 function (z) {
-}, "JZ.ZStream");
+}, "JU.ZStream");
 Clazz_defineMethod (c$, "inflate_fast", 
 function (bl, bd, tl, tl_index, td, td_index, s, z) {
 var t;
@@ -3640,8 +3663,8 @@ b = s.bitb;
 k = s.bitk;
 q = s.write;
 m = q < s.read ? s.read - q - 1 : s.end - q;
-ml = JZ.InfCodes.inflate_mask[bl];
-md = JZ.InfCodes.inflate_mask[bd];
+ml = JU.InfCodes.inflate_mask[bl];
+md = JU.InfCodes.inflate_mask[bd];
 do {
 while (k < (20)) {
 n--;
@@ -3663,7 +3686,7 @@ b >>= (tp[tp_index_t_3 + 1]);
 k -= (tp[tp_index_t_3 + 1]);
 if ((e & 16) != 0) {
 e &= 15;
-c = tp[tp_index_t_3 + 2] + (b & JZ.InfCodes.inflate_mask[e]);
+c = tp[tp_index_t_3 + 2] + (b & JU.InfCodes.inflate_mask[e]);
 b >>= e;
 k -= e;
 while (k < (15)) {
@@ -3686,7 +3709,7 @@ n--;
 b |= (z.next_in[p++] & 0xff) << k;
 k += 8;
 }
-d = tp[tp_index_t_3 + 2] + (b & JZ.InfCodes.inflate_mask[e]);
+d = tp[tp_index_t_3 + 2] + (b & JU.InfCodes.inflate_mask[e]);
 b >>= (e);
 k -= (e);
 m -= c;
@@ -3731,7 +3754,7 @@ c = 0;
 }break;
 } else if ((e & 64) == 0) {
 t += tp[tp_index_t_3 + 2];
-t += (b & JZ.InfCodes.inflate_mask[e]);
+t += (b & JU.InfCodes.inflate_mask[e]);
 tp_index_t_3 = (tp_index + t) * 3;
 e = tp[tp_index_t_3];
 } else {
@@ -3752,7 +3775,7 @@ return -3;
 break;
 }if ((e & 64) == 0) {
 t += tp[tp_index_t_3 + 2];
-t += (b & JZ.InfCodes.inflate_mask[e]);
+t += (b & JU.InfCodes.inflate_mask[e]);
 tp_index_t_3 = (tp_index + t) * 3;
 if ((e = tp[tp_index_t_3]) == 0) {
 b >>= (tp[tp_index_t_3 + 1]);
@@ -3801,9 +3824,9 @@ z.total_in += p - z.next_in_index;
 z.next_in_index = p;
 s.write = q;
 return 0;
-}, "~N,~N,~A,~N,~A,~N,JZ.InfBlocks,JZ.ZStream");
+}, "~N,~N,~A,~N,~A,~N,JU.InfBlocks,JU.ZStream");
 Clazz_defineStatics (c$,
-"inflate_mask", [0x00000000, 0x00000001, 0x00000003, 0x00000007, 0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff],
+"inflate_mask",  Clazz_newIntArray (-1, [0x00000000, 0x00000001, 0x00000003, 0x00000007, 0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff]),
 "Z_OK", 0,
 "Z_STREAM_END", 1,
 "Z_STREAM_ERROR", -2,
@@ -3819,7 +3842,7 @@ Clazz_defineStatics (c$,
 "END", 8,
 "BADCODE", 9);
 Clazz_declarePackage ("J.io");
-Clazz_load (["J.api.JmolZipUtilities"], "J.io.JmolUtil", ["java.io.BufferedInputStream", "$.BufferedReader", "java.lang.Character", "java.util.Hashtable", "$.StringTokenizer", "JU.LimitedLineReader", "$.List", "$.PT", "$.Rdr", "$.SB", "$.ZipTools", "J.adapter.smarter.AtomSetCollection", "J.api.Interface", "J.io.JmolBinary", "JW.Escape", "$.Logger"], function () {
+Clazz_load (["J.api.JmolZipUtilities"], "J.io.JmolUtil", ["java.io.BufferedInputStream", "$.BufferedReader", "java.net.URL", "java.util.Hashtable", "$.StringTokenizer", "JU.LimitedLineReader", "$.Lst", "$.OC", "$.PT", "$.Rdr", "$.SB", "J.adapter.smarter.AtomSetCollection", "J.api.Interface", "J.io.JmolBinary", "JU.Escape", "$.Logger"], function () {
 c$ = Clazz_declareType (J.io, "JmolUtil", null, J.api.JmolZipUtilities);
 Clazz_makeConstructor (c$, 
 function () {
@@ -3834,9 +3857,9 @@ break;
 }}
 if (!isSpartan) return null;
 var data =  new JU.SB ();
-data.append ("Zip File Directory: ").append ("\n").append (JW.Escape.eAS (zipDirectory, true)).append ("\n");
+data.append ("Zip File Directory: ").append ("\n").append (JU.Escape.eAS (zipDirectory, true)).append ("\n");
 var fileData =  new java.util.Hashtable ();
-zpt.getAllZipData (is, [], "", "Molecule", fileData);
+zpt.getAllZipData (is,  Clazz_newArray (-1, []), "", "Molecule", fileData);
 var prefix = "|";
 var outputData = fileData.get (prefix + "output");
 if (outputData == null) outputData = fileData.get ((prefix = "|" + zipDirectory[1]) + "output");
@@ -3852,12 +3875,12 @@ return data;
 c$.checkSpecialInZip = Clazz_defineMethod (c$, "checkSpecialInZip", 
 function (zipDirectory) {
 var name;
-return (zipDirectory.length < 2 ? null : (name = zipDirectory[1]).endsWith (".spardir/") || zipDirectory.length == 2 ? ["", (name.endsWith ("/") ? name.substring (0, name.length - 1) : name)] : null);
+return (zipDirectory.length < 2 ? null : (name = zipDirectory[1]).endsWith (".spardir/") || zipDirectory.length == 2 ?  Clazz_newArray (-1, ["", (name.endsWith ("/") ? name.substring (0, name.length - 1) : name)]) : null);
 }, "~A");
 c$.getSpartanDirs = Clazz_defineMethod (c$, "getSpartanDirs", 
  function (outputFileData) {
-if (outputFileData == null) return [];
-var v =  new JU.List ();
+if (outputFileData == null) return  Clazz_newArray (-1, []);
+var v =  new JU.Lst ();
 var token;
 var lasttoken = "";
 if (!outputFileData.startsWith ("java.io.FileNotFoundException") && !outputFileData.startsWith ("FILE NOT FOUND") && outputFileData.indexOf ("<html") < 0) try {
@@ -3873,7 +3896,7 @@ if (Clazz_exceptionOf (e, Exception)) {
 throw e;
 }
 }
-return (v.size () == 0 ? ["M0001"] : v.toArray ( new Array (v.size ())));
+return (v.size () == 0 ?  Clazz_newArray (-1, ["M0001"]) : v.toArray ( new Array (v.size ())));
 }, "~S");
 c$.getSpartanFileList = Clazz_defineMethod (c$, "getSpartanFileList", 
  function (name, dirNums) {
@@ -3886,7 +3909,7 @@ if (name.endsWith ("/")) name = name.substring (0, name.length - 1);
 var sep = (name.endsWith (".zip") ? "|" : "/");
 for (var i = 0; i < dirNums.length; i++) {
 var path = name + sep;
-path += (Character.isDigit (dirNums[i].charAt (0)) ? "Profile." + dirNums[i] : dirNums[i]) + "/";
+path += (JU.PT.isDigit (dirNums[i].charAt (0)) ? "Profile." + dirNums[i] : dirNums[i]) + "/";
 files[pt++] = path + "#JMOL_MODEL " + dirNums[i];
 files[pt++] = path + "input";
 files[pt++] = path + "archive";
@@ -3912,7 +3935,7 @@ function (jmb, data) {
 data[0] = JU.Rdr.getZipRoot (data[0]);
 var shortName = J.io.JmolUtil.shortSceneFilename (data[0]);
 try {
-data[1] = JU.ZipTools.cacheZipContents (JU.Rdr.getPngZipStream (jmb.fm.getBufferedInputStreamOrErrorMessageFromName (data[0], null, false, false, null, false, true), true), shortName, jmb.pngjCache, false);
+data[1] = jmb.fm.vwr.getJzt ().cacheZipContents (JU.Rdr.getPngZipStream (jmb.fm.getBufferedInputStreamOrErrorMessageFromName (data[0], null, false, false, null, false, true), true), shortName, jmb.pngjCache, false);
 } catch (e) {
 if (Clazz_exceptionOf (e, Exception)) {
 return false;
@@ -3922,6 +3945,7 @@ throw e;
 }
 if (data[1] == null) return false;
 var bytes = data[1].getBytes ();
+System.out.println ("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName (data[0]));
 jmb.pngjCache.put (jmb.fm.getCanonicalName (data[0]), bytes);
 if (shortName.indexOf ("_scene_") >= 0) {
 jmb.pngjCache.put (J.io.JmolUtil.shortSceneFilename (data[0]), bytes);
@@ -3962,6 +3986,7 @@ if (line.indexOf ("ZYX") >= 0) return "Xplor";
 break;
 }
 if (line.indexOf ("Here is your gzipped map") >= 0) return "UPPSALA" + line;
+if (line.startsWith ("4MESHC")) return "Pmesh4";
 if (line.indexOf ("! nspins") >= 0) return "CastepDensity";
 if (line.indexOf ("<jvxl") >= 0 && line.indexOf ("<?xml") >= 0) return "JvxlXml";
 if (line.indexOf ("#JVXL+") >= 0) return "Jvxl+";
@@ -3989,7 +4014,9 @@ if (tokens.length == 3 && JU.PT.parseInt (tokens[0]) != -2147483648 && JU.PT.par
 if (line.startsWith ("v ") && line2.startsWith ("v ") && line3.startsWith ("v ")) return "Obj";
 var nAtoms = JU.PT.parseInt (line3);
 if (nAtoms == -2147483648) return (line3.indexOf ("+") == 0 ? "Jvxl+" : null);
-if (nAtoms >= 0) return "Cube";
+tokens = JU.PT.getTokens (line3);
+if (tokens[0].indexOf (".") > 0) return (line3.length >= 60 || tokens.length != 3 ? null : "VaspChgcar");
+if (nAtoms >= 0) return (tokens.length == 4 ? "Cube" : null);
 nAtoms = -nAtoms;
 for (var i = 4 + nAtoms; --i >= 0; ) if ((line = br.readLineWithNewline ()) == null) return null;
 
@@ -3998,7 +4025,7 @@ if (nSurfaces == -2147483648) return null;
 return (nSurfaces < 0 ? "Jvxl" : "Cube");
 }, "java.io.BufferedReader");
 Clazz_overrideMethod (c$, "getAtomSetCollectionOrBufferedReaderFromZip", 
-function (zpt, adapter, is, fileName, zipDirectory, htParams, subFilePtr, asBufferedReader) {
+function (vwr, adapter, is, fileName, zipDirectory, htParams, subFilePtr, asBufferedReader) {
 var doCombine = (subFilePtr == 1);
 htParams.put ("zipSet", fileName);
 var subFileList = htParams.get ("subFileList");
@@ -4014,7 +4041,7 @@ var useFileManifest = (manifest == null);
 if (useFileManifest) manifest = (zipDirectory.length > 0 ? zipDirectory[0] : "");
 var haveManifest = (manifest.length > 0);
 if (haveManifest) {
-if (JW.Logger.debugging) JW.Logger.debug ("manifest for  " + fileName + ":\n" + manifest);
+if (JU.Logger.debugging) JU.Logger.debug ("manifest for  " + fileName + ":\n" + manifest);
 }var ignoreErrors = (manifest.indexOf ("IGNORE_ERRORS") >= 0);
 var selectAll = (manifest.indexOf ("IGNORE_MANIFEST") >= 0);
 var exceptFiles = (manifest.indexOf ("EXCEPT_FILES") >= 0);
@@ -4022,9 +4049,10 @@ if (selectAll || subFileName != null) haveManifest = false;
 if (useFileManifest && haveManifest) {
 var path = J.io.JmolBinary.getManifestScriptPath (manifest);
 if (path != null) return "NOTE: file recognized as a script file: " + fileName + path + "\n";
-}var vCollections =  new JU.List ();
+}var vCollections =  new JU.Lst ();
 var htCollections = (haveManifest ?  new java.util.Hashtable () : null);
 var nFiles = 0;
+var zpt = vwr.getJzt ();
 var ret = J.io.JmolUtil.checkSpecialData (zpt, is, zipDirectory);
 if (Clazz_instanceOf (ret, String)) return ret;
 var data = ret;
@@ -4043,7 +4071,7 @@ return atomSetCollection.errorMessage;
 }if (ignoreErrors) return null;
 return "unknown reader error";
 }if (Clazz_instanceOf (is, java.io.BufferedInputStream)) is = JU.Rdr.getPngZipStream (is, true);
-var zis = JU.Rdr.newZipInputStream (is);
+var zis = JU.Rdr.newZipInputStream (zpt, is);
 var ze;
 if (haveManifest) manifest = '|' + manifest.$replace ('\r', '|').$replace ('\n', '|') + '|';
 while ((ze = zis.getNextEntry ()) != null && (selectedFile <= 0 || vCollections.size () < selectedFile)) {
@@ -4053,16 +4081,16 @@ if (subFileName != null && !thisEntry.equals (subFileName)) continue;
 if (subFileName != null) htParams.put ("subFileName", subFileName);
 if (thisEntry.startsWith ("JmolManifest") || haveManifest && exceptFiles == manifest.indexOf ("|" + thisEntry + "|") >= 0) continue;
 var bytes = JU.Rdr.getLimitedStreamBytes (zis, ze.getSize ());
-if (JU.Rdr.isGzipB (bytes)) bytes = JU.Rdr.getLimitedStreamBytes (JU.ZipTools.getUnGzippedInputStream (bytes), -1);
+if (JU.Rdr.isGzipB (bytes)) bytes = JU.Rdr.getLimitedStreamBytes (zpt.getUnGzippedInputStream (bytes), -1);
 if (JU.Rdr.isZipB (bytes) || JU.Rdr.isPngZipB (bytes)) {
 var bis = JU.Rdr.getBIS (bytes);
-var zipDir2 = JU.Rdr.getZipDirectoryAndClose (bis, "JmolManifest");
+var zipDir2 = JU.Rdr.getZipDirectoryAndClose (zpt, bis, "JmolManifest");
 bis = JU.Rdr.getBIS (bytes);
-var atomSetCollections = this.getAtomSetCollectionOrBufferedReaderFromZip (zpt, adapter, bis, fileName + "|" + thisEntry, zipDir2, htParams, ++subFilePtr, asBufferedReader);
+var atomSetCollections = this.getAtomSetCollectionOrBufferedReaderFromZip (vwr, adapter, bis, fileName + "|" + thisEntry, zipDir2, htParams, ++subFilePtr, asBufferedReader);
 if (Clazz_instanceOf (atomSetCollections, String)) {
 if (ignoreErrors) continue;
 return atomSetCollections;
-} else if (Clazz_instanceOf (atomSetCollections, J.adapter.smarter.AtomSetCollection) || Clazz_instanceOf (atomSetCollections, JU.List)) {
+} else if (Clazz_instanceOf (atomSetCollections, J.adapter.smarter.AtomSetCollection) || Clazz_instanceOf (atomSetCollections, JU.Lst)) {
 if (haveManifest && !exceptFiles) htCollections.put (thisEntry, atomSetCollections);
  else vCollections.addLast (atomSetCollections);
 } else if (Clazz_instanceOf (atomSetCollections, java.io.BufferedReader)) {
@@ -4079,8 +4107,8 @@ return bis;
 } else {
 var sData;
 if (JU.Rdr.isCompoundDocumentB (bytes)) {
-var jd = J.api.Interface.getInterface ("JU.CompoundDocument");
-jd.setStream (JU.Rdr.getBIS (bytes), true);
+var jd = J.api.Interface.getInterface ("JU.CompoundDocument", vwr, "file");
+jd.setStream (zpt, JU.Rdr.getBIS (bytes), true);
 sData = jd.getAllDataFiles ("Molecule", "Input").toString ();
 } else {
 sData = JU.Rdr.fixUTF (bytes);
@@ -4109,10 +4137,10 @@ for (var i = 0; i < list.length; i++) {
 var file = list[i];
 if (file.length == 0 || file.indexOf ("#") == 0) continue;
 if (htCollections.containsKey (file)) vCollections.addLast (htCollections.get (file));
- else if (JW.Logger.debugging) JW.Logger.debug ("manifested file " + file + " was not found in " + fileName);
+ else if (JU.Logger.debugging) JU.Logger.debug ("manifested file " + file + " was not found in " + fileName);
 }
 }if (!doCombine) return vCollections;
-var result =  new J.adapter.smarter.AtomSetCollection ("Array", null, null, vCollections);
+var result = (vCollections.size () == 1 && Clazz_instanceOf (vCollections.get (0), J.adapter.smarter.AtomSetCollection) ? vCollections.get (0) :  new J.adapter.smarter.AtomSetCollection ("Array", null, null, vCollections));
 if (result.errorMessage != null) {
 if (ignoreErrors) return null;
 return result.errorMessage;
@@ -4124,35 +4152,36 @@ if (Clazz_exceptionOf (e$$, Exception)) {
 var e = e$$;
 {
 if (ignoreErrors) return null;
-JW.Logger.error ("" + e);
+JU.Logger.error ("" + e);
 return "" + e;
 }
 } else if (Clazz_exceptionOf (e$$, Error)) {
 var er = e$$;
 {
-JW.Logger.errorEx (null, er);
+JU.Logger.errorEx (null, er);
 return "" + er;
 }
 } else {
 throw e$$;
 }
 }
-}, "javajs.api.GenericZipTools,J.api.JmolAdapter,java.io.InputStream,~S,~A,java.util.Map,~N,~B");
+}, "JV.Viewer,J.api.JmolAdapter,java.io.InputStream,~S,~A,java.util.Map,~N,~B");
 Clazz_overrideMethod (c$, "getCachedPngjBytes", 
 function (jmb, pathName) {
-JW.Logger.info ("JmolUtil checking PNGJ cache for " + pathName);
+if (pathName.startsWith ("file:///")) pathName = "file:" + pathName.substring (7);
+JU.Logger.info ("JmolUtil checking PNGJ cache for " + pathName);
 var shortName = J.io.JmolUtil.shortSceneFilename (pathName);
-if (jmb.pngjCache == null && !jmb.clearAndCachePngjFile ([pathName, null])) return null;
+if (jmb.pngjCache == null && !jmb.clearAndCachePngjFile ( Clazz_newArray (-1, [pathName, null]))) return null;
 var isMin = (pathName.indexOf (".min.") >= 0);
 if (!isMin) {
 var cName = jmb.fm.getCanonicalName (JU.Rdr.getZipRoot (pathName));
-if (!jmb.pngjCache.containsKey (cName) && !jmb.clearAndCachePngjFile ([pathName, null])) return null;
+if (!jmb.pngjCache.containsKey (cName) && !jmb.clearAndCachePngjFile ( Clazz_newArray (-1, [pathName, null]))) return null;
 if (pathName.indexOf ("|") < 0) shortName = cName;
 }if (jmb.pngjCache.containsKey (shortName)) {
-JW.Logger.info ("FileManager using memory cache " + shortName);
+JU.Logger.info ("FileManager using memory cache " + shortName);
 return jmb.pngjCache.get (shortName);
-}if (!isMin || !jmb.clearAndCachePngjFile ([pathName, null])) return null;
-JW.Logger.info ("FileManager using memory cache " + shortName);
+}if (!isMin || !jmb.clearAndCachePngjFile ( Clazz_newArray (-1, [pathName, null]))) return null;
+JU.Logger.info ("FileManager using memory cache " + shortName);
 return jmb.pngjCache.get (shortName);
 }, "J.io.JmolBinary,~S");
 Clazz_overrideMethod (c$, "spartanFileList", 
@@ -4163,20 +4192,69 @@ var sname = name.$replace ('\\', '/');
 var pt = name.lastIndexOf (".spardir");
 pt = sname.lastIndexOf ("/");
 sname = name + "|" + name.substring (pt + 1, name.length - 4);
-return ["SpartanSmol", sname, sname + "/output"];
+return  Clazz_newArray (-1, ["SpartanSmol", sname, sname + "/output"]);
 }return J.io.JmolUtil.getSpartanFileList (name, dirNums);
 }, "javajs.api.GenericZipTools,~S,~S");
+Clazz_overrideMethod (c$, "getImage", 
+function (vwr, fullPathNameOrBytes, echoName) {
+var image = null;
+var info = null;
+var apiPlatform = vwr.apiPlatform;
+var createImage = false;
+var fullPathName = "" + fullPathNameOrBytes;
+if (Clazz_instanceOf (fullPathNameOrBytes, String)) {
+var isBMP = fullPathName.toUpperCase ().endsWith ("BMP");
+if (fullPathName.indexOf ("|") > 0 || isBMP) {
+var ret = vwr.fm.getFileAsBytes (fullPathName, null);
+if (!JU.PT.isAB (ret)) return "" + ret;
+image = (vwr.isJS ? ret : apiPlatform.createImage (ret));
+} else if (vwr.isJS) {
+} else if (JU.OC.urlTypeIndex (fullPathName) >= 0) {
+try {
+image = apiPlatform.createImage ( new java.net.URL (Clazz_castNullAs ("java.net.URL"), fullPathName, null));
+} catch (e) {
+if (Clazz_exceptionOf (e, Exception)) {
+return "bad URL: " + fullPathName;
+} else {
+throw e;
+}
+}
+} else {
+createImage = true;
+}} else if (vwr.isJS) {
+image = fullPathNameOrBytes;
+} else {
+createImage = true;
+}if (createImage) image = apiPlatform.createImage ("\1close".equals (fullPathNameOrBytes) ? "\1close" + echoName : fullPathNameOrBytes);
+{
+info = [echoName, fullPathNameOrBytes];
+}try {
+if (!apiPlatform.waitForDisplay (info, image)) return null;
+{
+return null;
+}} catch (e) {
+if (Clazz_exceptionOf (e, Exception)) {
+return e.toString () + " opening " + fullPathName;
+} else {
+throw e;
+}
+}
+}, "JV.Viewer,~O,~S");
 Clazz_defineStatics (c$,
 "DELPHI_BINARY_MAGIC_NUMBER", "\24\0\0\0");
 });
 })(Clazz
+,Clazz.newLongArray
+,Clazz.doubleToByte
 ,Clazz.doubleToInt
+,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
+,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

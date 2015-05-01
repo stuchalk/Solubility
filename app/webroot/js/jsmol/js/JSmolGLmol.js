@@ -74,10 +74,10 @@ GLmol.extendApplet = function(applet) {
 		// modelRadius is half the distance across the screen. 
 		// 100% implies that camera Z position is 3.5 * modelRadius, with a field of view of 16.24 degrees (2 * atan(1/7))
 		
-		if (!this._applet || !this._applet.viewer)
+		if (!this._applet)
 			return
 			
-		var view = this._applet.viewer.getGLmolView();
+		var view = this._applet.getGLmolView();
 		var gl = this._GLmol;
 		var rg = gl.rotationGroup;
 		if (!rg)

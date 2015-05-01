@@ -1,11 +1,15 @@
 })(Clazz
+,Clazz.newLongArray
+,Clazz.doubleToByte
 ,Clazz.doubleToInt
+,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
+,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

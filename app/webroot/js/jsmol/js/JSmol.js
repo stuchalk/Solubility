@@ -1,3 +1,5 @@
+// BH 9/6/2014 5:42:32 PM  two-point gestures broken
+// BH 5/8/2014 11:16:40 AM j2sPath starting with "/" fails to add idiom
 // BH 1/16/2014 8:44:03 PM   Jmol.__execDelayMS = 100; // FF bug when loading into a tab that is not 
 //                           immediately focused and not using jQuery for adding the applet and having  
 //                           multiple applets.
@@ -10,16 +12,16 @@
 // author: Bob Hanson, hansonr@stolaf.edu	4/16/2012
 // author: Takanori Nakane biochem_fan 6/12/2012
 
-// This library requires jQuery and 
-//
+// This library requires prior inclusion of 
+
+//  jQuery 
 //	JSmoljQueryExt.js
 //	JSmolCore.js
 //  JSmolApplet.js
 //  JSmolApi.js
 //  j2sjmol.js    (Clazz and associated classes)
-// prior to JSmol.js
 
-// these two:
+// these:
 //
 //  JSmolThree.js
 //  JSmolGLmol.js
@@ -28,6 +30,9 @@
 
 ;(function (Jmol) {
 
+	Jmol._isAsync = false; // testing only
+	Jmol._asyncCallbacks = {};
+	
 	Jmol._coreFiles = []; // required for package.js
 
 
@@ -65,6 +70,37 @@
 			Jmol._coreFiles.push(Jmol.__coreMore[i]);			 
 	}      		
 
+  Jmol._loadZJars = function(i) {
+    if (i < Jmol._coreFiles.length) {
+		  Clazz._Loader.loadZJar(Jmol._coreFiles[i], Clazz._Loader.runtimeKeyClass, function() {Jmol._loadZJars(i + 1)});
+		} else {
+			window["java.registered"] = true;
+			Jmol._nextExecution();
+		}
+	}
+	
+	    /*
+ClazzLoader._loadZJars = function(i) { 
+	if (Jmol._isAsync) {
+		if (i < Jmol._coreFiles.length) {
+		  ClazzLoader.loadZJar(Jmol._coreFiles[i], ClazzLoader.runtimeKeyClass, function() {ClazzLoader._loadZJars(i + 1)});
+		} else {
+			Jmol._nextExecution();
+		}
+		return;	
+	} else {
+		for (var i = 0; i < Jmol._coreFiles.length; i++)
+		  ClazzLoader.loadZJar(Jmol._coreFiles[i], ClazzLoader.runtimeKeyClass);
+		window["java.registered"] = true;
+	}
+}
+
+ClazzLoader._loadZJars(0);
+
+    */
+    
+
+
 	Jmol.__nextExecution = function(trigger) {
 		delete Jmol.__execTimer;
 		var es = Jmol.__execStack;
@@ -73,35 +109,39 @@
 			es.shift();
 		if (es.length == 0)
 			return;
-		if (!trigger) {
+		if (!Jmol._isAsync && !trigger) {
 			setTimeout("Jmol.__nextExecution(true)",10)
 			return;
 		}
 		e.push("done");
 		var s = "JSmol exec " + e[0]._id + " " + e[3] + " " + e[2];
+		if (self.System)
+			System.out.println(s);
+			//alert(s)
 		if (self.console)console.log(s + " -- OK")
 		Jmol.__execLog.push(s);
 		e[1](e[0],e[2]);	
 	};
 
 	Jmol.__loadClazz = function(applet) {
-		// problems with multiple applets?
 		if (!Jmol.__clazzLoaded) {
 			Jmol.__clazzLoaded = true;
+			// create the Clazz object
 			LoadClazz();
 			if (applet._noMonitor)
 				Clazz._LoaderProgressMonitor.showStatus = function() {}
 			LoadClazz = null;
 
-			Clazz._Loader.globalLoaded = function (file) {
+			Clazz._Loader.onGlobalLoaded = function (file) {
 			 // not really.... just nothing more yet to do yet
-				Clazz._LoaderProgressMonitor.showStatus ("Application loaded.", true);
+				Clazz._LoaderProgressMonitor.showStatus("Application loaded.", true);
 				if (!Jmol._debugCode || !Jmol.haveCore) {
 					Jmol.haveCore = true;
 					Jmol.__nextExecution();
 				}
 			};
-			Clazz._Loader.packageClasspath ("java", null, true);
+		  // load package.js and j2s/core/core.z.js
+			Clazz._Loader.loadPackageClasspath("java", null, true, Jmol.__nextExecution);
 			return;
 		}
 		Jmol.__nextExecution();
@@ -127,6 +167,9 @@
 			this._isLayered = true;
 			this._platform = "JSV.awtjs2d.Platform";
 			break;
+		case "Astex":
+			this._isAstex = true;
+			this._platform = "astex.awtjs2d.Platform";
 		}
 		if (checkOnly)
 			return this;
@@ -138,6 +181,18 @@
 		return this;
 	};
 
+	Jmol._setAppletParams = function(availableParams, params, Info, isHashtable) {
+		for (var i in Info)
+			if(!availableParams || availableParams.indexOf(";" + i.toLowerCase() + ";") >= 0){
+				if (Info[i] == null || i == "language" && !Jmol.featureDetection.supportsLocalization())
+					continue;
+				if (isHashtable)
+					params.put(i, (Info[i] === true ? Boolean.TRUE: Info[i] === false ? Boolean.FALSE : Info[i]))
+				else
+					params[i] = Info[i];
+			}
+	}     
+	 
 	Jmol._jsSetPrototype = function(proto) {
 		proto._init = function() {
 	 		this._setupJS();
@@ -157,7 +212,7 @@
 			if (this._deferApplet) {
 			} else if (Jmol._document) {
 				Jmol._documentWrite(t);
-				this._getCanvas(false);				        
+				this._newCanvas(false);				        
 				t = "";
 			} else {
 				this._deferApplet = true;
@@ -171,41 +226,7 @@
 			this._code = Jmol._documentWrite(t);
 		};
 
-		proto._cover = function (doCover) {
-			if (doCover || !this._deferApplet) {
-				this._displayCoverImage(doCover);
-				return;
-			}
-			// uncovering UNMADE applet upon clicking image
-			var s = (this._coverScript ? this._coverScript : "");
-			this._coverScript = "";
-			if (this._deferUncover)
-				s += ";refresh;javascript " + this._id + "._displayCoverImage(false)";
-			this._script(s, true);
-			if (this._deferUncover && this._coverTitle == "activate 3D model")
-				Jmol._getElement(this, "coverimage").title = "3D model is loading...";
-			this._start();
-			if (!this._deferUncover)
-				this._displayCoverImage(doCover);
-			if (this._init)
-				this._init();
-		};
-
-		proto._displayCoverImage = function(TF) {
-			if (!this._coverImage || this._isCovered == TF) return;
-			this._isCovered = TF;
-			Jmol._getElement(this, "coverdiv").style.display = (TF ? "block" : "none");
-		};
-
-		proto._start = function() {
-			if (this._deferApplet)
-				this._getCanvas(false);      
-			if (this._defaultModel)
-				Jmol._search(this, this._defaultModel);
-			this._showInfo(false);
-		};                      
-
-		proto._getCanvas = function(doReplace) {
+		proto._newCanvas = function(doReplace) {
 			if (this._is2D)
 				this._createCanvas2d(doReplace);
 			else
@@ -214,7 +235,7 @@
 
 		proto._createCanvas2d = function(doReplace) {
 			var container = Jmol.$(this, "appletdiv");
-			if (doReplace) {
+			//if (doReplace) {
 				try {
 				container[0].removeChild(this._canvas);
 				if (this._canvas.frontLayer)
@@ -225,7 +246,7 @@
 					container[0].removeChild(this._canvas.imageLayer);
 				Jmol._jsUnsetMouse(this._mouseInterface);
 				} catch (e) {}
-			}
+			//}
 			var w = Math.round(container.width());
 			var h = Math.round(container.height());
 			var canvas = document.createElement( 'canvas' );
@@ -267,6 +288,7 @@
 			return c;	
     }
     
+    
 		proto._setupJS = function() {
 			window["j2s.lib"] = {
 				base : this._j2sPath + "/",
@@ -277,6 +299,7 @@
 			var isFirst = (Jmol.__execStack.length == 0);
 			if (isFirst)
 				Jmol.__addExec([this, Jmol.__loadClazz, null, "loadClazz"]);
+				
 			if (this._isJSV) {
 				Jmol.__addCoreFile("jsv", this._j2sPath, this.__Info.preloadCore);
 				if (Jmol._debugCode) {
@@ -284,6 +307,12 @@
 					Jmol.__addExec([this, Jmol.__loadClass, "JSV.appletjs.JSVApplet", "load JSV"]);
 					if (this._isPro)
 						Jmol.__addExec([this, Jmol.__loadClass, "JSV.appletjs.JSVAppletPro", "load JSV(signed)"]);
+				}
+			} else if (this._isAstex) {
+				Jmol.__addCoreFile("astex", this._j2sPath, this.__Info.preloadCore);
+				if (Jmol._debugCode) {
+				// no min package for that
+					Jmol.__addExec([this, Jmol.__loadClass, "astex.MoleculeViewerAppletJS", "load Astex"]);
 				}
 			} else {
 				Jmol.__addCoreFile("jmol", this._j2sPath, this.__Info.preloadCore);
@@ -309,14 +338,17 @@
 	//		Jmol.GLmol.addExportHook(applet);
 		//	Jmol.__nextExecution();
 		//};
-
 		proto.__startAppletJS = function(applet) {
-			var viewerOptions =  new java.util.Hashtable ();
-			Jmol._setJmolParams(viewerOptions, applet.__Info, true);
+			if (Jmol._version.indexOf("$Date: ") == 0)
+				Jmol._version = (Jmol._version.substring(7) + " -").split(" -")[0] + " (JSmol/j2s)"
+			var viewerOptions = Clazz._4Name("java.util.Hashtable").newInstance();
+			Jmol._setAppletParams(applet._availableParams, viewerOptions, applet.__Info, true);
 			viewerOptions.put("appletReadyCallback","Jmol._readyCallback");
 			viewerOptions.put("applet", true);
 			viewerOptions.put("name", applet._id);// + "_object");
-			viewerOptions.put("syncId", Jmol._syncId);      
+			viewerOptions.put("syncId", Jmol._syncId);
+			if (Jmol._isAsync)
+				viewerOptions.put("async", true);
 			if (applet._color) 
 				viewerOptions.put("bgcolor", applet._color);
 			if (!applet._is2D)  
@@ -337,29 +369,73 @@
 			var codePath = applet._j2sPath + "/";
 			if (codePath.indexOf("://") < 0) {
 				var base = document.location.href.split("#")[0].split("?")[0].split("/");
-				base[base.length - 1] = codePath;
+				if (codePath.indexOf("/") == 0)
+					base = [base[0], codePath.substring(1)];
+				else
+					base[base.length - 1] = codePath;
 				codePath = base.join("/");
 			}
 			viewerOptions.put ("codePath", codePath);
 
 			Jmol._registerApplet(applet._id, applet);
-			applet._applet = (!applet._isJSV ? new J.appletjs.Jmol(viewerOptions) 
-				: applet._isPro ? new JSV.appletjs.JSVAppletPro(viewerOptions) 
-				: new JSV.appletjs.JSVApplet(viewerOptions));
-
-			if (!applet._is2D)
-				applet._GLmol.applet = applet;
+			//if (!applet._is2D)
+				//applet._GLmol.applet = applet;
+			try {
+				applet._newApplet(viewerOptions);
+			} catch (e) {
+				System.out.println((Jmol._isAsync ? "normal async abort from " : "") + e);
+				return;
+			}
 			applet._jsSetScreenDimensions();      
 			Jmol.__nextExecution();
 		};
 
+		proto._restoreState = function(clazzName, state) {
+			System.out.println("\n\nasynchronous restore state for " + clazzName + " " + state)
+			var applet = this;
+			var vwr = applet._applet && applet._applet.viewer;
+			switch (state) {
+			case "setOptions":
+				return function(_setOptions) {applet.__startAppletJS(applet)};
+			case "render":
+				return function() {setTimeout(function(){vwr.refresh(2)},10)};
+			default:
+				switch (clazzName) {
+				// debug mode only, when core.z.js has not been loaded and prior to start
+				case "J.shape.Balls":
+				case "J.shape.Sticks":
+				case "J.shape.Frank":
+					return null;
+				}
+				
+				//if (vwr.rm.repaintPending)
+					//return function() {setTimeout(function(){vwr.refresh(2)},10)};
+				if (vwr && vwr.isScriptExecuting && vwr.isScriptExecuting()) {
+					if (Jmol._asyncCallbacks[clazzName]) {
+						System.out.println("...ignored");
+						return 1;
+					}
+					var sc = vwr.getEvalContextAndHoldQueue(vwr.eval);
+					var pc = sc.pc - 1;
+					sc.asyncID = clazzName;
+					Jmol._asyncCallbacks[clazzName] = function(pc) {sc.pc=pc; System.out.println("sc.asyncID="+sc.asyncID+" sc.pc = " + sc.pc);vwr.eval.resumeEval(sc)};
+					vwr.eval.pc = vwr.eval.pcEnd;
+					System.out.println("setting resume for pc=" + sc.pc + " " + clazzName + " to " + Jmol._asyncCallbacks[clazzName] + "//" )
+					return function() {System.out.println("resuming " + clazzName + " " + Jmol._asyncCallbacks[clazzName]);Jmol._asyncCallbacks[clazzName](pc)};					
+				}
+				System.out.println(clazzName + "?????????????????????" + state)
+				return function() {setTimeout(function(){vwr.refresh(2)},10)};
+				//return null;
+			}
+		}
+	
 		proto._jsSetScreenDimensions = function() {
 				if (!this._applet)return
 				// strangely, if CTRL+/CTRL- are used repeatedly, then the
 				// applet div can be not the same size as the canvas if there
 				// is a border in place.
 				var d = Jmol._getElement(this, (this._is2D ? "canvas2d" : "canvas"));
-				this._applet.viewer.setScreenDimension(
+				this._applet.setScreenDimension(
 				d.width, d.height);
 // Math.floor(Jmol.$(this, "appletdiv").height()));
 
@@ -423,11 +499,11 @@
 
 
 		proto._processGesture = function(touches) {
-			return this._applet.viewer.mouse.processTwoPointGesture(touches);
+			return this._applet.processTwoPointGesture(touches);
 		}
 
 		proto._processEvent = function(type, xym) {
-			this._applet.viewer.processMouseEvent(type,xym[0],xym[1],xym[2],System.currentTimeMillis());
+			this._applet.processMouseEvent(type,xym[0],xym[1],xym[2],System.currentTimeMillis());
 		}
 
 		proto._resize = function() {
@@ -445,7 +521,7 @@
 	Jmol._repaint = function(applet, asNewThread) {
 		// asNewThread: true is from RepaintManager.repaintNow()
 		// false is from Repaintmanager.requestRepaintAndWait()
-		//
+		// called from apiPlatform Display.repaint()
 
 		// alert("_repaint " + arguments.callee.caller.caller.exName)
 		if (!applet || !applet._applet)return;
@@ -455,17 +531,17 @@
 		var w = Math.round(container.width());
 		var h = Math.round(container.height());
 		if (applet._is2D && (applet._canvas.width != w || applet._canvas.height != h)) {
-			applet._getCanvas(true);
-			applet._applet.viewer.setDisplay(applet._canvas);
+			applet._newCanvas(true);
+			applet._applet.setDisplay(applet._canvas);
 		}
-		applet._applet.viewer.setScreenDimension(w, h);
+		applet._applet.setScreenDimension(w, h);
 
 		if (asNewThread) {
-			setTimeout(function(){ applet._applet && applet._applet.viewer.updateJS(0,0)});
+			setTimeout(function(){ applet._applet && applet._applet.update()});
 		} else {
-			applet._applet.viewer.updateJS(0,0);
+			applet._applet.update();
 		}
-		// System.out.println(applet._applet.fullName)
+		// System.out.println(applet._applet.getFullName())
 	}
 
 	Jmol._getHiddenCanvas = function(applet, id, width, height, forceNew) {
@@ -512,7 +588,7 @@
 		var width = image.width;
 		var height = image.height; 
 		var id = "echo_" + echoNameAndPath[0];
-		var canvas = Jmol._getHiddenCanvas(platform.vwr.applet, id, width, height, true);
+		var canvas = Jmol._getHiddenCanvas(platform.vwr.html5Applet, id, width, height, true);
 		canvas.imageWidth = width;
 		canvas.imageHeight = height;
 		canvas.id = id;
