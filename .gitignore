@@ -8,7 +8,7 @@
 /app/tmp/sessions/**
 /app/tmp/tests/**
 !/**/empty
-/.idea
+.idea
 
 # OS generated files #
 ######################
