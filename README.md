@@ -8,8 +8,7 @@ This is a CakePHP REST style website developed to show how to take existing chem
 - Access the paper published on this site (coming soon...)
 
 
-> Stuart Chalk  
-
+> Stuart Chalk
 > Department of Chemistry
 
 > University of North Florida
