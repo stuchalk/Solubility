@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (null, "JSV.source.JDXSourceStreamTokenizer", ["java.lang.Character", "JU.SB", "JU.Logger"], function () {
+Clazz.load (null, "JSV.source.JDXSourceStreamTokenizer", ["java.lang.Character", "JU.SB", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.br = null;
 this.rawLabel = null;
@@ -45,14 +45,14 @@ this.line = null;
 }
 var pt = this.line.indexOf ("=");
 if (pt < 0) {
-if (isGet) JU.Logger.info ("BAD JDX LINE -- no '=' (line " + this.lineNo + "): " + this.line);
+if (isGet) JW.Logger.info ("BAD JDX LINE -- no '=' (line " + this.lineNo + "): " + this.line);
 this.rawLabel = this.line;
 if (!isGet) this.line = "";
 } else {
 this.rawLabel = this.line.substring (0, pt).trim ();
 if (isGet) this.line = this.line.substring (pt + 1);
 }this.labelLineNo = this.lineNo;
-if (JU.Logger.debugging) JU.Logger.info (this.rawLabel);
+if (JW.Logger.debugging) JW.Logger.info (this.rawLabel);
 return JSV.source.JDXSourceStreamTokenizer.cleanLabel (this.rawLabel);
 }, "~B");
 c$.cleanLabel = Clazz.defineMethod (c$, "cleanLabel", 
@@ -87,13 +87,13 @@ sb.append (this.line).appendC ('\n');
 }
 } catch (e) {
 if (Clazz.exceptionOf (e, java.io.IOException)) {
-JU.Logger.info (e.toString ());
+JW.Logger.info (e.toString ());
 } else {
 throw e;
 }
 }
 this.value = (this.rawLabel.startsWith ("##$") ? sb.toString ().trim () : JSV.source.JDXSourceStreamTokenizer.trimLines (sb));
-if (JU.Logger.debugging) JU.Logger.info (this.value);
+if (JW.Logger.debugging) JW.Logger.info (this.value);
 return this.value;
 });
 Clazz.defineMethod (c$, "readLineTrimmed", 

@@ -105,10 +105,10 @@ function (pt, argb) {
 }, "JU.P3,~N");
 Clazz.overrideMethod (c$, "outputSurface", 
 function (vertices, normals, colixes, indices, polygonColixes, nVertices, nPolygons, nFaces, bsPolygons, faceVertexMax, colix, colorList, htColixes, offset) {
-}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.Lst,java.util.Map,JU.P3");
+}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.List,java.util.Map,JU.P3");
 Clazz.overrideMethod (c$, "outputTriangle", 
 function (pt1, pt2, pt3, colix) {
-}, "JU.T3,JU.T3,JU.T3,~N");
+}, "JU.P3,JU.P3,JU.P3,~N");
 Clazz.overrideMethod (c$, "outputCircle", 
 function (pt1, pt2, radius, colix, doFill) {
 }, "JU.P3,JU.P3,~N,~N,~B");

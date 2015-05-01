@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.thread");
-Clazz.load (["java.lang.Thread"], "J.thread.JmolThread", ["JU.Logger"], function () {
+Clazz.load (["java.lang.Thread"], "J.thread.JmolThread", ["JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.$name = "JmolThread";
 this.vwr = null;
@@ -38,7 +38,7 @@ if (this.sc != null) this.useTimeout = eval.getAllowJSThreads ();
 }, "J.api.JmolScriptEvaluator");
 Clazz.defineMethod (c$, "resumeEval", 
 function () {
-if (this.eval == null || !this.isJS && !this.vwr.testAsync || !this.useTimeout) return;
+if (this.eval == null || !this.isJS || !this.useTimeout) return;
 this.sc.mustResumeEval = !this.stopped;
 this.eval.resumeEval (this.sc);
 this.eval = null;
@@ -60,7 +60,7 @@ this.run1 (-1);
 if (Clazz.exceptionOf (e$$, InterruptedException)) {
 var e = e$$;
 {
-if (JU.Logger.debugging && !(Clazz.instanceOf (this, J.thread.HoverWatcherThread))) this.oops (e);
+if (JW.Logger.debugging && !(Clazz.instanceOf (this, J.thread.HoverWatcherThread))) this.oops (e);
 }
 } else if (Clazz.exceptionOf (e$$, Exception)) {
 var e = e$$;
@@ -74,7 +74,7 @@ throw e$$;
 });
 Clazz.defineMethod (c$, "oops", 
 function (e) {
-JU.Logger.debug (this.$name + " exception " + e);
+JW.Logger.debug (this.$name + " exception " + e);
 if (!this.vwr.isJS) e.printStackTrace ();
 this.vwr.queueOnHold = false;
 }, "Exception");

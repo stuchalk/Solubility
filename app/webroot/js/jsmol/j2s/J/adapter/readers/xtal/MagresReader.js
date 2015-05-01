@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.xtal");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader", "java.util.Hashtable", "JU.Lst", "$.SB"], "J.adapter.readers.xtal.MagresReader", ["java.lang.Double", "JU.PT", "J.adapter.smarter.Atom", "JU.Escape", "$.Logger", "$.Tensor"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader", "java.util.Hashtable", "JU.List", "$.SB"], "J.adapter.readers.xtal.MagresReader", ["java.lang.Double", "JU.PT", "J.adapter.smarter.Atom", "JW.Escape", "$.Logger", "$.Tensor"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.currentBlock = -1;
 this.cellParams = null;
@@ -10,7 +10,7 @@ Clazz.instantialize (this, arguments);
 }, J.adapter.readers.xtal, "MagresReader", J.adapter.smarter.AtomSetCollectionReader);
 Clazz.prepareFields (c$, function () {
 this.magresUnits =  new java.util.Hashtable ();
-this.interactionTensors =  new JU.Lst ();
+this.interactionTensors =  new JU.List ();
 this.header =  new JU.SB ();
 });
 Clazz.overrideMethod (c$, "initializeReader", 
@@ -18,11 +18,11 @@ function () {
 this.setFractionalCoordinates (false);
 this.ignoreFileSpaceGroupName = true;
 });
-Clazz.overrideMethod (c$, "finalizeSubclassReader", 
+Clazz.overrideMethod (c$, "finalizeReader", 
 function () {
-this.asc.setInfo ("fileHeader", this.header.toString ());
+this.asc.setAtomSetCollectionAuxiliaryInfo ("fileHeader", this.header.toString ());
 this.finalizeReaderASCR ();
-if (this.interactionTensors.size () > 0) this.asc.setCurrentModelInfo ("interactionTensors", this.interactionTensors);
+if (this.interactionTensors.size () > 0) this.asc.setAtomSetAuxiliaryInfo ("interactionTensors", this.interactionTensors);
 });
 Clazz.overrideMethod (c$, "checkLine", 
 function () {
@@ -58,7 +58,7 @@ this.line = JU.PT.rep (this.line, "<", "[");
 this.line = JU.PT.rep (this.line, ">", "]");
 switch (Clazz.doubleToInt (("...............[calculation]..[/calculation].[atoms]........[/atoms].......[magres].......[/magres]......").indexOf (this.line + ".") / 15)) {
 case 0:
-JU.Logger.info ("block indicator ignored: " + this.line);
+JW.Logger.info ("block indicator ignored: " + this.line);
 break;
 case 1:
 if (this.currentBlock == -1) this.currentBlock = 0;
@@ -79,7 +79,7 @@ case 5:
 if (this.currentBlock == -1) {
 this.currentBlock = 2;
 this.magresUnits =  new java.util.Hashtable ();
-this.asc.setCurrentModelInfo ("magresUnits", this.magresUnits);
+this.asc.setAtomSetAuxiliaryInfo ("magresUnits", this.magresUnits);
 }break;
 case 6:
 if (this.currentBlock == 2) this.currentBlock = -1;
@@ -140,7 +140,7 @@ var tokens = this.getTokens ();
 var type = tokens[0];
 var units = this.magresUnits.get (type);
 if (units == null) {
-JU.Logger.warn (type + " ignored; no units defined; line: " + this.line);
+JW.Logger.warn (type + " ignored; no units defined; line: " + this.line);
 return true;
 }var isIsc = type.startsWith ("isc");
 if (tokens.length == 10) {
@@ -148,13 +148,13 @@ this.magresUnits.remove (type);
 var data =  Clazz.newFloatArray (9, 0);
 for (var i = 0; i < 9; ) data[i] = this.parseFloatStr (tokens[++i]);
 
-JU.Logger.info ("Magres reader creating magres_" + type + ": " + JU.Escape.eAF (data));
-this.asc.setCurrentModelInfo ("magres_" + type, data);
+JW.Logger.info ("Magres reader creating magres_" + type + ": " + JW.Escape.eAF (data));
+this.asc.setAtomSetAuxiliaryInfo ("magres_" + type, data);
 }var atomName1 = J.adapter.readers.xtal.MagresReader.getAtomName (tokens[1], tokens[2]);
 var pt = 3;
 var atomName2 = (isIsc ? J.adapter.readers.xtal.MagresReader.getAtomName (tokens[pt++], tokens[pt++]) : null);
 if (atomName1.equals (atomName2)) {
-JU.Logger.warn (type + " ignored; atom1 == atom2 for " + atomName1 + " line: " + this.line);
+JW.Logger.warn (type + " ignored; atom1 == atom2 for " + atomName1 + " line: " + this.line);
 return true;
 }var id = atomName1;
 if (atomName2 != null) id += "//" + atomName2;
@@ -162,17 +162,16 @@ var a =  Clazz.newDoubleArray (3, 3, 0);
 for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) a[i][j] = Double.$valueOf (tokens[pt++]).doubleValue ();
 
 
-var a1 = this.asc.getAtomFromName (atomName1);
-if (a1 == null) return true;
-var a2 = null;
-var t =  new JU.Tensor ().setFromAsymmetricTensor (a, type, id);
+var index1 = this.asc.getAtomIndexFromName (atomName1);
+var index2;
+var t =  new JW.Tensor ().setFromAsymmetricTensor (a, type, id);
 if (atomName2 == null) {
-a1.addTensor (t, null, false);
+index2 = -1;
+this.asc.atoms[index1].addTensor (t, null, false);
 } else {
-a2 = this.asc.getAtomFromName (atomName2);
-if (a2 == null) return true;
+index2 = this.asc.getAtomIndexFromName (atomName2);
 this.interactionTensors.addLast (t);
-}t.setAtomIndexes (a1.index, (a2 == null ? -1 : a2.index));
+}t.setAtomIndexes (index1, index2);
 return true;
 });
 Clazz.defineStatics (c$,

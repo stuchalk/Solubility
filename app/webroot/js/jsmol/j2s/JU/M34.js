@@ -283,52 +283,6 @@ tmp = this.m12;
 this.m12 = this.m21;
 this.m21 = tmp;
 });
-Clazz.defineMethod (c$, "setXRot", 
-function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = 1.0;
-this.m01 = 0.0;
-this.m02 = 0.0;
-this.m10 = 0.0;
-this.m11 = c;
-this.m12 = -s;
-this.m20 = 0.0;
-this.m21 = s;
-this.m22 = c;
-}, "~N");
-Clazz.defineMethod (c$, "setYRot", 
-function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = c;
-this.m01 = 0.0;
-this.m02 = s;
-this.m10 = 0.0;
-this.m11 = 1.0;
-this.m12 = 0.0;
-this.m20 = -s;
-this.m21 = 0.0;
-this.m22 = c;
-}, "~N");
-Clazz.defineMethod (c$, "setZRot", 
-function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = c;
-this.m01 = -s;
-this.m02 = 0.0;
-this.m10 = s;
-this.m11 = c;
-this.m12 = 0.0;
-this.m20 = 0.0;
-this.m21 = 0.0;
-this.m22 = 1.0;
-}, "~N");
-Clazz.defineMethod (c$, "determinant3", 
-function () {
-return this.m00 * (this.m11 * this.m22 - this.m21 * this.m12) - this.m01 * (this.m10 * this.m22 - this.m20 * this.m12) + this.m02 * (this.m10 * this.m21 - this.m20 * this.m11);
-});
 Clazz.defineMethod (c$, "err", 
 function () {
 throw  new ArrayIndexOutOfBoundsException ("matrix column/row out of bounds");

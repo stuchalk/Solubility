@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.molxyz");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.molxyz.XyzReader", ["java.lang.Float", "JU.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.molxyz.XyzReader", ["java.lang.Float", "JW.Logger"], function () {
 c$ = Clazz.declareType (J.adapter.readers.molxyz, "XyzReader", J.adapter.smarter.AtomSetCollectionReader);
 Clazz.overrideMethod (c$, "checkLine", 
 function () {
@@ -24,7 +24,7 @@ this.skipAtomSet (modelAtomCount);
 }this.discardLinesUntilNonBlank ();
 return false;
 });
-Clazz.overrideMethod (c$, "finalizeSubclassReader", 
+Clazz.overrideMethod (c$, "finalizeReader", 
 function () {
 this.isTrajectory = false;
 this.finalizeReaderASCR ();
@@ -41,7 +41,7 @@ for (var i = 0; i < modelAtomCount; ++i) {
 this.rd ();
 var tokens = this.getTokens ();
 if (tokens.length < 4) {
-JU.Logger.warn ("line cannot be read for XYZ atom data: " + this.line);
+JW.Logger.warn ("line cannot be read for XYZ atom data: " + this.line);
 continue;
 }var atom = this.addAtomXYZSymName (tokens, 1, null, null);
 this.setElementAndIsotope (atom, tokens[0]);

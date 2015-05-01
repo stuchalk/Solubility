@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.geodesic");
-Clazz.load (["J.api.JmolEnvCalc", "JU.P3", "J.atomdata.AtomData"], "J.geodesic.EnvelopeCalculation", ["JU.AU", "$.BS", "$.V3", "J.atomdata.RadiusData", "JU.BSUtil", "$.Geodesic", "$.Normix"], function () {
+Clazz.load (["J.api.JmolEnvCalc", "JU.P3", "J.atomdata.AtomData"], "J.geodesic.EnvelopeCalculation", ["JU.AU", "$.BS", "$.V3", "J.atomdata.RadiusData", "JW.BSUtil", "$.Geodesic", "$.Normix"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.geodesicMap = null;
 this.mapT = null;
@@ -57,10 +57,10 @@ function (vwr, ac, mads) {
 this.vwr = vwr;
 this.ac = ac;
 this.mads = mads;
-this.geodesicCount = JU.Geodesic.getVertexCount (3);
+this.geodesicCount = JW.Geodesic.getVertexCount (3);
 this.geodesicMap = JU.BS.newN (this.geodesicCount);
 this.mapT = JU.BS.newN (this.geodesicCount);
-J.geodesic.EnvelopeCalculation.EMPTY_SET = JU.BSUtil.emptySet;
+J.geodesic.EnvelopeCalculation.EMPTY_SET = JW.BSUtil.emptySet;
 return this;
 }, "J.atomdata.AtomDataServer,~N,~A");
 Clazz.defineMethod (c$, "getDotsConvexMaps", 
@@ -79,7 +79,7 @@ this.dotsConvexMaps =  new Array (max);
 }, "~N");
 Clazz.overrideMethod (c$, "getBsSurfaceClone", 
 function () {
-return JU.BSUtil.copy (this.bsSurface);
+return JW.BSUtil.copy (this.bsSurface);
 });
 Clazz.defineMethod (c$, "setMads", 
 function (mads) {
@@ -93,7 +93,7 @@ for (var iDot = this.geodesicCount; --iDot >= 0; ) if (!bs.get (iDot)) this.geod
 if (this.dotsConvexMaps == null) this.dotsConvexMaps =  new Array (this.ac);
 var map;
 if (this.geodesicMap.isEmpty ()) map = J.geodesic.EnvelopeCalculation.EMPTY_SET;
- else map = JU.BSUtil.copy (this.geodesicMap);
+ else map = JW.BSUtil.copy (this.geodesicMap);
 if (index >= this.dotsConvexMaps.length) return;
 this.dotsConvexMaps[index] = map;
 this.dotsConvexMax = Math.max (this.dotsConvexMax, index);
@@ -112,16 +112,16 @@ this.calculate (null, this.maxRadius, bs, this.bsIgnore, this.disregardNeighbors
 return;
 }if (this.dotsConvexMaps == null || this.dotsConvexMax == 0) return;
 var pt =  new JU.V3 ();
-if (this.bsTemp == null) this.bsTemp = JU.Normix.newVertexBitSet ();
+if (this.bsTemp == null) this.bsTemp = JW.Normix.newVertexBitSet ();
 for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) {
 if (i >= this.dotsConvexMax) return;
 var map = this.dotsConvexMaps[i];
 if (map == null || map.isEmpty ()) continue;
 var bsNew =  new JU.BS ();
 for (var j = map.nextSetBit (0); j >= 0; j = map.nextSetBit (j + 1)) {
-pt.setT (JU.Geodesic.getVertexVector (j));
+pt.setT (JW.Geodesic.getVertexVector (j));
 m.rotate (pt);
-bsNew.set (JU.Normix.getNormixV (pt, this.bsTemp));
+bsNew.set (JW.Normix.getNormixV (pt, this.bsTemp));
 }
 this.dotsConvexMaps[i] = bsNew;
 }
@@ -144,14 +144,13 @@ this.vwr.fillAtomData (this.atomData, 1 | (this.mads == null ? 2 : 0));
 this.ac = this.atomData.ac;
 if (this.mads != null) for (var i = 0; i < this.ac; i++) this.atomData.atomRadius[i] = this.mads[i] / 1000;
 
-this.bsMySelected = (onlySelectedDots && bsSelected != null ? JU.BSUtil.copy (bsSelected) : bsIgnore != null ? JU.BSUtil.setAll (this.ac) : null);
-JU.BSUtil.andNot (this.bsMySelected, bsIgnore);
+this.bsMySelected = (onlySelectedDots && bsSelected != null ? JW.BSUtil.copy (bsSelected) : bsIgnore != null ? JW.BSUtil.setAll (this.ac) : null);
+JW.BSUtil.andNot (this.bsMySelected, bsIgnore);
 this.disregardNeighbors = disregardNeighbors;
 this.maxRadius = maxRadius;
 this.bsSurface =  new JU.BS ();
 var isAll = (bsSelected == null);
 var iter = this.vwr.getSelectedAtomIterator (this.bsMySelected, false, this.modelZeroBased, false);
-this.checkNewDotsArray ();
 var i0 = (isAll ? this.ac - 1 : bsSelected.nextSetBit (0));
 for (var i = i0; i >= 0; i = (isAll ? i - 1 : bsSelected.nextSetBit (i + 1))) if (bsIgnore == null || !bsIgnore.get (i)) {
 this.setAtomI (i);
@@ -183,7 +182,7 @@ var iDot = this.dotsConvexMaps[i].size ();
 if (iDot > dotCount) iDot = dotCount;
 while (--iDot >= 0) if (this.dotsConvexMaps[i].get (iDot)) {
 var pt =  new JU.P3 ();
-pt.scaleAdd2 (this.atomData.atomRadius[i], JU.Geodesic.getVertexVector (iDot), this.atomData.atomXyz[i]);
+pt.scaleAdd2 (this.atomData.atomRadius[i], JW.Geodesic.getVertexVector (iDot), this.atomData.atomXyz[i]);
 points[nPoints++] = pt;
 }
 }
@@ -213,6 +212,7 @@ this.radiiIP2 *= this.radiiIP2;
 }, "~N");
 Clazz.defineMethod (c$, "calcConvexMap", 
  function (isSurface) {
+if (this.dotsConvexMaps == null) this.dotsConvexMaps =  new Array (this.ac);
 this.calcConvexBits ();
 var map;
 if (this.geodesicMap.isEmpty ()) map = J.geodesic.EnvelopeCalculation.EMPTY_SET;
@@ -221,13 +221,13 @@ this.bsSurface.set (this.indexI);
 if (isSurface) {
 this.addIncompleteFaces (this.geodesicMap);
 this.addIncompleteFaces (this.geodesicMap);
-}map = JU.BSUtil.copy (this.geodesicMap);
+}map = JW.BSUtil.copy (this.geodesicMap);
 }this.dotsConvexMaps[this.indexI] = map;
 }, "~B");
 Clazz.defineMethod (c$, "addIncompleteFaces", 
  function (points) {
 this.mapT.clearAll ();
-var faces = JU.Geodesic.getFaceVertexes (3);
+var faces = JW.Geodesic.getFaceVertexes (3);
 var len = faces.length;
 var maxPt = -1;
 for (var f = 0; f < len; ) {
@@ -261,14 +261,14 @@ var faceTest;
 var p1;
 var p2;
 var p3;
-var faces = JU.Geodesic.getFaceVertexes (3);
+var faces = JW.Geodesic.getFaceVertexes (3);
 var p4 = J.geodesic.EnvelopeCalculation.power4[2];
 var ok1;
 var ok2;
 var ok3;
 this.mapT.clearAll ();
 for (var i = 0; i < 12; i++) {
-this.vertexTest[i].scaleAdd2 (combinedRadii, JU.Geodesic.getVertexVector (i), this.centerI);
+this.vertexTest[i].scaleAdd2 (combinedRadii, JW.Geodesic.getVertexVector (i), this.centerI);
 }
 for (var f = 0; f < 20; f++) {
 faceTest = 0;
@@ -301,7 +301,7 @@ case 0:
 for (var j = 0; j < this.neighborCount; j++) {
 var maxDist = this.neighborPlusProbeRadii2[j];
 this.centerT = this.neighborCenters[j];
-this.pointT.scaleAdd2 (combinedRadii, JU.Geodesic.getVertexVector (vect), this.centerI);
+this.pointT.scaleAdd2 (combinedRadii, JW.Geodesic.getVertexVector (vect), this.centerI);
 if (this.pointT.distanceSquared (this.centerT) < maxDist) this.geodesicMap.clear (vect);
 }
 break;
@@ -311,16 +311,6 @@ this.mapT.set (vect);
 }
 }
 });
-Clazz.defineMethod (c$, "checkNewDotsArray", 
- function () {
-if (this.dotsConvexMaps == null) {
-this.dotsConvexMaps =  new Array (this.ac);
-} else if (this.dotsConvexMaps.length != this.ac) {
-var a =  new Array (this.ac);
-for (var i = 0; i < this.ac && i < this.dotsConvexMaps.length; i++) a[i] = this.dotsConvexMaps[i];
-
-this.dotsConvexMaps = a;
-}});
 Clazz.defineMethod (c$, "getNeighbors", 
  function (iter) {
 this.neighborCount = 0;
@@ -357,5 +347,5 @@ this.ac = this.atomData.ac;
 Clazz.defineStatics (c$,
 "EMPTY_SET", null);
 Clazz.defineStatics (c$,
-"power4",  Clazz.newIntArray (-1, [1, 4, 16, 64, 256]));
+"power4", [1, 4, 16, 64, 256]);
 });

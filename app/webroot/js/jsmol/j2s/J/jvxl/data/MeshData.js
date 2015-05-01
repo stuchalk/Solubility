@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.data");
-Clazz.load (["JU.MeshSurface"], "J.jvxl.data.MeshData", ["java.lang.Float", "java.util.Arrays", "JU.AU", "$.BS", "$.V3"], function () {
+Clazz.load (["JW.MeshSurface"], "J.jvxl.data.MeshData", ["java.lang.Float", "java.util.Arrays", "JU.AU", "$.BS", "$.V3"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.setsSuccessful = false;
 this.vertexIncrement = 1;
@@ -11,12 +11,12 @@ if (!Clazz.isClassDefined ("J.jvxl.data.MeshData.SortSet")) {
 J.jvxl.data.MeshData.$MeshData$SortSet$ ();
 }
 Clazz.instantialize (this, arguments);
-}, J.jvxl.data, "MeshData", JU.MeshSurface);
+}, J.jvxl.data, "MeshData", JW.MeshSurface);
 Clazz.defineMethod (c$, "addVertexCopy", 
-function (vertex, value, assocVertex, asCopy) {
+function (vertex, value, assocVertex) {
 if (assocVertex < 0) this.vertexIncrement = -assocVertex;
-return this.addVCVal (vertex, value, asCopy);
-}, "JU.T3,~N,~N,~B");
+return this.addVCVal (vertex, value);
+}, "JU.P3,~N,~N");
 Clazz.defineMethod (c$, "getSurfaceSet", 
 function () {
 return (this.surfaceSet == null ? this.getSurfaceSetForLevel (0) : this.surfaceSet);
@@ -62,21 +62,25 @@ this.nSets = n;
 this.surfaceSet = temp;
 if (!this.setsSuccessful && level < 2) this.getSurfaceSetForLevel (level + 1);
 if (level == 0) {
+this.sortSurfaceSets ();
+this.setVertexSets (false);
+}return this.surfaceSet;
+}, "~N");
+Clazz.defineMethod (c$, "sortSurfaceSets", 
+ function () {
 var sets =  new Array (this.nSets);
 for (var i = 0; i < this.nSets; i++) sets[i] = Clazz.innerTypeInstance (J.jvxl.data.MeshData.SSet, this, null, this.surfaceSet[i]);
 
 java.util.Arrays.sort (sets, Clazz.innerTypeInstance (J.jvxl.data.MeshData.SortSet, this, null));
 for (var i = 0; i < this.nSets; i++) this.surfaceSet[i] = sets[i].bs;
 
-this.setVertexSets (false);
-}return this.surfaceSet;
-}, "~N");
+});
 Clazz.defineMethod (c$, "setVertexSets", 
 function (onlyIfNull) {
 if (this.surfaceSet == null) return;
 var nNull = 0;
 for (var i = 0; i < this.nSets; i++) {
-if (this.surfaceSet[i] != null && this.surfaceSet[i].nextSetBit (0) < 0) this.surfaceSet[i] = null;
+if (this.surfaceSet[i] != null && this.surfaceSet[i].cardinality () == 0) this.surfaceSet[i] = null;
 if (this.surfaceSet[i] == null) nNull++;
 }
 if (nNull > 0) {
@@ -129,29 +133,29 @@ var val2 = vertexValues[iB];
 var val3 = vertexValues[iC];
 return (val1 >= 0 && val2 >= 0 && val3 >= 0 || val1 <= 0 && val2 <= 0 && val3 <= 0);
 }, "~N,~N,~N,~A");
-c$.calculateVolumeOrArea = Clazz.defineMethod (c$, "calculateVolumeOrArea", 
-function (m, thisSet, isArea, getSets) {
-if (getSets || m.nSets <= 0) m.getSurfaceSet ();
+Clazz.defineMethod (c$, "calculateVolumeOrArea", 
+function (thisSet, isArea, getSets) {
+if (getSets || this.nSets == 0) this.getSurfaceSet ();
 var justOne = (thisSet >= -1);
-var n = (justOne || m.nSets <= 0 ? 1 : m.nSets);
+var n = (justOne || this.nSets == 0 ? 1 : this.nSets);
 var v =  Clazz.newDoubleArray (n, 0);
 var vAB =  new JU.V3 ();
 var vAC =  new JU.V3 ();
 var vTemp =  new JU.V3 ();
-for (var i = m.pc; --i >= 0; ) {
-if (m.setABC (i) == null) continue;
-var iSet = (m.nSets <= 0 ? 0 : m.vertexSets[m.iA]);
+for (var i = this.pc; --i >= 0; ) {
+if (!this.setABC (i)) continue;
+var iSet = (this.nSets == 0 ? 0 : this.vertexSets[this.iA]);
 if (thisSet >= 0 && iSet != thisSet) continue;
 if (isArea) {
-vAB.sub2 (m.vs[m.iB], m.vs[m.iA]);
-vAC.sub2 (m.vs[m.iC], m.vs[m.iA]);
+vAB.sub2 (this.vs[this.iB], this.vs[this.iA]);
+vAC.sub2 (this.vs[this.iC], this.vs[this.iA]);
 vTemp.cross (vAB, vAC);
 v[justOne ? 0 : iSet] += vTemp.length ();
 } else {
-vAB.setT (m.vs[m.iB]);
-vAC.setT (m.vs[m.iC]);
+vAB.setT (this.vs[this.iB]);
+vAC.setT (this.vs[this.iC]);
 vTemp.cross (vAB, vAC);
-vAC.setT (m.vs[m.iA]);
+vAC.setT (this.vs[this.iA]);
 v[justOne ? 0 : iSet] += vAC.dot (vTemp);
 }}
 var factor = (isArea ? 2 : 6);
@@ -159,7 +163,7 @@ for (var i = 0; i < n; i++) v[i] /= factor;
 
 if (justOne) return Float.$valueOf (v[0]);
 return v;
-}, "J.jvxl.data.MeshData,~N,~B,~B");
+}, "~N,~B,~B");
 Clazz.defineMethod (c$, "updateInvalidatedVertices", 
 function (bs) {
 bs.clearAll ();

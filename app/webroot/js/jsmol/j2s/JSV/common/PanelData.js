@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["java.lang.Enum", "javajs.api.EventManager", "java.util.Hashtable", "JU.Lst"], "JSV.common.PanelData", ["java.lang.Boolean", "$.Double", "javajs.awt.Font", "JU.CU", "JSV.common.Annotation", "$.Coordinate", "$.GraphSet", "$.JSVFileManager", "$.JSVersion", "$.JSViewer", "$.MeasurementData", "$.Parameters", "$.PeakPickEvent", "$.ScriptToken", "$.Spectrum", "$.SubSpecChangeEvent", "$.ZoomEvent", "JSV.dialog.JSVDialog", "J.api.GenericGraphics", "JU.Logger"], function () {
+Clazz.load (["java.lang.Enum", "javajs.api.EventManager", "java.util.Hashtable", "JU.List"], "JSV.common.PanelData", ["java.lang.Boolean", "$.Double", "javajs.awt.Font", "JU.CU", "JSV.api.JSVGraphics", "JSV.common.Annotation", "$.Coordinate", "$.GraphSet", "$.JSVFileManager", "$.JSVersion", "$.JSViewer", "$.MeasurementData", "$.Parameters", "$.PeakPickEvent", "$.ScriptToken", "$.Spectrum", "$.SubSpecChangeEvent", "$.ZoomEvent", "JSV.dialog.JSVDialog", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.g2d = null;
 this.g2d0 = null;
@@ -71,7 +71,7 @@ this.gMain = null;
 Clazz.instantialize (this, arguments);
 }, JSV.common, "PanelData", null, javajs.api.EventManager);
 Clazz.prepareFields (c$, function () {
-this.listeners =  new JU.Lst ();
+this.listeners =  new JU.List ();
 this.options =  new java.util.Hashtable ();
 });
 Clazz.makeConstructor (c$, 
@@ -126,7 +126,7 @@ for (var entry, $entry = entries.iterator (); $entry.hasNext () && ((entry = $en
 JSV.common.Parameters.putInfo (key, info, "type", this.getSpectrumAt (0).getDataType ());
 JSV.common.Parameters.putInfo (key, info, "title", this.title);
 JSV.common.Parameters.putInfo (key, info, "nSets", Integer.$valueOf (this.graphSets.size ()));
-sets =  new JU.Lst ();
+sets =  new JU.List ();
 for (var i = this.graphSets.size (); --i >= 0; ) sets.addLast (this.graphSets.get (i).getInfo (key, -1));
 
 info.put ("sets", sets);
@@ -180,7 +180,7 @@ return this.display1D;
 });
 Clazz.defineMethod (c$, "initOne", 
 function (spectrum) {
-this.spectra =  new JU.Lst ();
+this.spectra =  new JU.List ();
 this.spectra.addLast (spectrum);
 this.initMany (this.spectra, 0, 0);
 }, "JSV.common.Spectrum");
@@ -196,7 +196,7 @@ this.commonFilePath = null;
 break;
 }
 this.setGraphSets (JSV.common.PanelData.LinkMode.NONE);
-}, "JU.Lst,~N,~N");
+}, "JU.List,~N,~N");
 Clazz.defineMethod (c$, "setGraphSets", 
  function (linkMode) {
 this.graphSets = JSV.common.GraphSet.createGraphSetsAndSetLinkMode (this, this.jsvp, this.spectra, this.startIndex, this.endIndex, linkMode);
@@ -231,7 +231,7 @@ Clazz.defineMethod (c$, "addAnnotation",
 function (tokens) {
 var title = this.currentGraphSet.addAnnotation (tokens, this.getTitle ());
 if (title != null) this.title = title;
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "addPeakHighlight", 
 function (peakInfo) {
 for (var i = 0; i < this.graphSets.size (); i++) this.graphSets.get (i).addPeakHighlight (peakInfo);
@@ -335,7 +335,7 @@ Clazz.defineMethod (c$, "printVersion",
 function (g, pageHeight) {
 this.g2d.setGraphicsColor (g, this.BLACK);
 var font = this.setFont (g, 100, 0, 12, true);
-var s = this.jsvp.getApiPlatform ().getDateFormat (null) + " JSpecView " + JSV.common.JSVersion.VERSION_SHORT;
+var s = this.jsvp.getApiPlatform ().getDateFormat (false) + " JSpecView " + JSV.common.JSVersion.VERSION_SHORT;
 var w = font.stringWidth (s);
 this.g2d.drawString (g, s, (this.thisWidth - this.right) * this.scalingFactor - w, pageHeight * this.scalingFactor - font.getHeight () * 3);
 }, "~O,~N");
@@ -379,7 +379,7 @@ Clazz.defineMethod (c$, "addToList",
 function (iSpec, list) {
 for (var i = 0; i < this.spectra.size (); i++) if (iSpec < 0 || i == iSpec) list.addLast (this.spectra.get (i));
 
-}, "~N,JU.Lst");
+}, "~N,JU.List");
 Clazz.defineMethod (c$, "scaleSelectedBy", 
 function (f) {
 for (var i = this.graphSets.size (); --i >= 0; ) this.graphSets.get (i).scaleSelectedBy (f);
@@ -842,7 +842,7 @@ case JSV.common.ScriptToken.ZOOMBOXCOLOR2:
 this.zoomBoxColor2 = color;
 break;
 default:
-JU.Logger.warn ("AwtPanel --- unrecognized color: " + st);
+JW.Logger.warn ("AwtPanel --- unrecognized color: " + st);
 break;
 }
 }, "JSV.common.ScriptToken,javajs.api.GenericColor");
@@ -850,7 +850,7 @@ Clazz.defineMethod (c$, "getColor",
 function (whatColor) {
 switch (whatColor) {
 default:
-JU.Logger.error ("awtgraphset missing color " + whatColor);
+JW.Logger.error ("awtgraphset missing color " + whatColor);
 return this.BLACK;
 case JSV.common.ScriptToken.ZOOMBOXCOLOR2:
 return this.zoomBoxColor2;
@@ -956,14 +956,14 @@ Clazz.defineMethod (c$, "printPdf",
 function (pdfCreator, pl) {
 var isPortrait = !pl.layout.equals ("landscape");
 this.print (pdfCreator, (isPortrait ? pl.imageableHeight : pl.imageableWidth), (isPortrait ? pl.imageableWidth : pl.imageableHeight), pl.imageableX, pl.imageableY, pl.paperHeight, pl.paperWidth, isPortrait, 0);
-}, "J.api.GenericGraphics,JSV.common.PrintLayout");
+}, "JSV.api.JSVGraphics,JSV.common.PrintLayout");
 Clazz.defineMethod (c$, "print", 
 function (g, height, width, x, y, paperHeight, paperWidth, isPortrait, pi) {
 this.g2d = this.g2d0;
 if (pi == 0) {
 this.isPrinting = true;
 var addFilePath = false;
-if (Clazz.instanceOf (g, J.api.GenericGraphics)) {
+if (Clazz.instanceOf (g, JSV.api.JSVGraphics)) {
 this.g2d = g;
 g = this.gMain;
 }if (this.printGraphPosition.equals ("default")) {

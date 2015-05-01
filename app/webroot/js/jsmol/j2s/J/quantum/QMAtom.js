@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.quantum");
-Clazz.load (["JU.P3"], "J.quantum.QMAtom", ["JU.Logger"], function () {
+Clazz.load (["JU.P3"], "J.quantum.QMAtom", ["JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.myX = null;
 this.myY = null;
@@ -64,7 +64,7 @@ if (qc.points != null) {
 qc.yMax = qc.zMax = 1;
 }} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.error ("Error in QuantumCalculation setting bounds");
+JW.Logger.error ("Error in QuantumCalculation setting bounds");
 } else {
 throw e;
 }

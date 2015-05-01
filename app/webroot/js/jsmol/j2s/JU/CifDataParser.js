@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JU");
-Clazz.load (["javajs.api.GenericCifDataParser", "java.util.Hashtable", "JU.SB"], "JU.CifDataParser", ["JU.Lst", "$.PT"], function () {
+Clazz.load (["javajs.api.GenericCifDataParser", "java.util.Hashtable", "JU.SB"], "JU.CifDataParser", ["java.lang.Character", "JU.List", "$.PT"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.reader = null;
 this.br = null;
@@ -14,17 +14,12 @@ this.fieldCount = 0;
 this.loopData = null;
 this.fileHeader = null;
 this.isHeader = true;
-this.nullString = "\0";
 this.fields = null;
 Clazz.instantialize (this, arguments);
 }, JU, "CifDataParser", null, javajs.api.GenericCifDataParser);
 Clazz.prepareFields (c$, function () {
 this.fileHeader =  new JU.SB ();
 });
-Clazz.defineMethod (c$, "setNullValue", 
-function (nullString) {
-this.nullString = nullString;
-}, "~S");
 Clazz.makeConstructor (c$, 
 function () {
 });
@@ -56,7 +51,7 @@ this.line = "";
 var key;
 var data = null;
 var allData =  new java.util.Hashtable ();
-var models =  new JU.Lst ();
+var models =  new JU.List ();
 allData.put ("models", models);
 try {
 while ((key = this.getNextToken ()) != null) {
@@ -65,16 +60,16 @@ models.addLast (data =  new java.util.Hashtable ());
 data.put ("name", key);
 continue;
 }if (key.startsWith ("loop_")) {
-this.getAllCifLoopData (data);
+this.getCifLoopData (data);
 continue;
-}if (key.charAt (0) != '_') {
+}if (key.indexOf ("_") != 0) {
 System.out.println ("CIF ERROR ? should be an underscore: " + key);
 } else {
 var value = this.getNextToken ();
 if (value == null) {
 System.out.println ("CIF ERROR ? end of file; data missing: " + key);
 } else {
-data.put (this.fixKey (key), value);
+data.put (key, value);
 }}}
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
@@ -92,14 +87,14 @@ throw e;
 }
 return allData;
 });
-Clazz.defineMethod (c$, "getAllCifLoopData", 
+Clazz.defineMethod (c$, "getCifLoopData", 
  function (data) {
-var key;
-var keyWords =  new JU.Lst ();
-while ((key = this.peekToken ()) != null && key.charAt (0) == '_') {
-key = this.fixKey (this.getTokenPeeked ());
-keyWords.addLast (key);
-data.put (key,  new JU.Lst ());
+var str;
+var keyWords =  new JU.List ();
+while ((str = this.peekToken ()) != null && str.charAt (0) == '_') {
+str = this.getTokenPeeked ();
+keyWords.addLast (str);
+data.put (str,  new JU.List ());
 }
 this.fieldCount = keyWords.size ();
 if (this.fieldCount == 0) return;
@@ -129,21 +124,21 @@ Clazz.overrideMethod (c$, "getData",
 function () {
 for (var i = 0; i < this.fieldCount; ++i) if ((this.loopData[i] = this.getNextDataToken ()) == null) return false;
 
-return (this.fieldCount > 0);
+return true;
 });
 Clazz.overrideMethod (c$, "skipLoop", 
 function () {
 var str;
-while ((str = this.peekToken ()) != null && str.charAt (0) == '_') this.getTokenPeeked ();
+while ((str = this.peekToken ()) != null && str.charAt (0) == '_') str = this.getTokenPeeked ();
 
 while (this.getNextDataToken () != null) {
 }
 });
 Clazz.overrideMethod (c$, "getNextToken", 
 function () {
-while (!this.strHasMoreTokens ()) if (this.setStringNextLine () == null) return null;
+while (!this.hasMoreTokens ()) if (this.setStringNextLine () == null) return null;
 
-return this.nextStrToken ();
+return this.nextToken ();
 });
 Clazz.overrideMethod (c$, "getNextDataToken", 
 function () {
@@ -154,10 +149,10 @@ return this.getTokenPeeked ();
 });
 Clazz.overrideMethod (c$, "peekToken", 
 function () {
-while (!this.strHasMoreTokens ()) if (this.setStringNextLine () == null) return null;
+while (!this.hasMoreTokens ()) if (this.setStringNextLine () == null) return null;
 
 var ich = this.ich;
-this.strPeeked = this.nextStrToken ();
+this.strPeeked = this.nextToken ();
 this.ichPeeked = this.ich;
 this.ich = ich;
 return this.strPeeked;
@@ -171,9 +166,9 @@ Clazz.overrideMethod (c$, "fullTrim",
 function (str) {
 var pt0 = -1;
 var pt1 = str.length;
-while (++pt0 < pt1 && JU.PT.isWhitespace (str.charAt (pt0))) {
+while (++pt0 < pt1 && Character.isWhitespace (str.charAt (pt0))) {
 }
-while (--pt1 > pt0 && JU.PT.isWhitespace (str.charAt (pt1))) {
+while (--pt1 > pt0 && Character.isWhitespace (str.charAt (pt1))) {
 }
 return str.substring (pt0, pt1 + 1);
 }, "~S");
@@ -224,9 +219,9 @@ if ((propertyOf[pt] = i) != -1) fieldOf[i] = pt;
 if (this.fieldCount > 0) this.loopData =  new Array (this.fieldCount);
 return propertyCount;
 }, "~A,~A,~A");
-Clazz.overrideMethod (c$, "fixKey", 
-function (key) {
-return (JU.PT.rep (key.startsWith ("_magnetic") ? key.substring (9) : key.startsWith ("_jana") ? key.substring (5) : key, ".", "_").toLowerCase ());
+Clazz.defineMethod (c$, "fixKey", 
+ function (key) {
+return JU.PT.rep (key, ".", "_").toLowerCase ();
 }, "~S");
 Clazz.defineMethod (c$, "setString", 
  function (str) {
@@ -252,7 +247,7 @@ break;
 this.setString (str);
 return str;
 });
-Clazz.defineMethod (c$, "strHasMoreTokens", 
+Clazz.defineMethod (c$, "hasMoreTokens", 
  function () {
 if (this.str == null) return false;
 var ch = '#';
@@ -260,7 +255,7 @@ while (this.ich < this.cch && ((ch = this.str.charAt (this.ich)) == ' ' || ch ==
 
 return (this.ich < this.cch && ch != '#');
 });
-Clazz.defineMethod (c$, "nextStrToken", 
+Clazz.defineMethod (c$, "nextToken", 
  function () {
 if (this.ich == this.cch) return null;
 var ichStart = this.ich;
@@ -269,7 +264,7 @@ if (ch != '\'' && ch != '"' && ch != '\1') {
 this.wasUnQuoted = true;
 while (this.ich < this.cch && (ch = this.str.charAt (this.ich)) != ' ' && ch != '\t') ++this.ich;
 
-if (this.ich == ichStart + 1) if (this.nullString != null && (this.str.charAt (ichStart) == '.' || this.str.charAt (ichStart) == '?')) return this.nullString;
+if (this.ich == ichStart + 1) if (this.str.charAt (ichStart) == '.' || this.str.charAt (ichStart) == '?') return "\0";
 var s = this.str.substring (ichStart, this.ich);
 return s;
 }this.wasUnQuoted = false;

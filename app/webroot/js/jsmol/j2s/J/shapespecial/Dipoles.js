@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shapespecial");
-Clazz.load (["J.shape.Shape", "JU.P3"], "J.shapespecial.Dipoles", ["java.lang.Float", "java.util.Hashtable", "JU.AU", "$.Lst", "$.PT", "$.SB", "$.V3", "JS.T", "J.shapespecial.Dipole", "JU.BSUtil", "$.C", "$.Logger"], function () {
+Clazz.load (["J.shape.Shape", "JU.P3"], "J.shapespecial.Dipoles", ["java.lang.Float", "java.util.Hashtable", "JU.AU", "$.List", "$.SB", "$.V3", "J.script.T", "J.shapespecial.Dipole", "JW.BSUtil", "$.C", "$.Logger", "$.Txt"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.dipoleCount = 0;
 this.dipoles = null;
@@ -23,7 +23,7 @@ this.dipoles =  new Array (4);
 this.startCoord =  new JU.P3 ();
 this.endCoord =  new JU.P3 ();
 });
-Clazz.overrideMethod (c$, "setProperty", 
+Clazz.defineMethod (c$, "setProperty", 
 function (propertyName, value, bs) {
 if ("init" === propertyName) {
 this.tempDipole =  new J.shapespecial.Dipole ();
@@ -36,21 +36,33 @@ this.calculatedDipole = null;
 this.isUserValue = this.isBond = this.iHaveTwoEnds = false;
 return;
 }if ("calculate" === propertyName) {
-this.calculatedDipole = this.vwr.calculateMolecularDipole (value);
-JU.Logger.info ("calculated molecular dipole = " + this.calculatedDipole + " " + (this.calculatedDipole == null ? "" : "" + this.calculatedDipole.length ()));
+this.calculatedDipole = this.vwr.calculateMolecularDipole ();
+JW.Logger.info ("calculated molecular dipole = " + this.calculatedDipole + " " + (this.calculatedDipole == null ? "" : "" + this.calculatedDipole.length ()));
 return;
 }if ("thisID" === propertyName) {
 this.wildID = null;
 var thisID = value;
-if (thisID == null || JU.PT.isWild (thisID)) {
+if (thisID == null || JW.Txt.isWild (thisID)) {
 this.currentDipole = null;
 if (thisID != null) this.wildID = thisID.toUpperCase ();
 return;
 }this.currentDipole = this.findDipole (thisID);
 if (this.currentDipole == null) this.currentDipole = this.allocDipole (thisID, "");
 this.tempDipole = this.currentDipole;
-if (thisID.equals ("molecular")) this.getMolecular (null);
-return;
+if (thisID.equals ("molecular")) {
+var v = this.calculatedDipole;
+if (v == null) {
+v = this.vwr.getModelDipole ();
+JW.Logger.info ("file molecular dipole = " + v + " " + (v != null ? "" + v.length () : ""));
+}if (v == null) this.calculatedDipole = v = this.vwr.calculateMolecularDipole ();
+if (v == null) {
+JW.Logger.warn ("No molecular dipole found for this model; setting to {0 0 0}");
+v =  new JU.V3 ();
+}this.tempDipole.set (JU.P3.new3 (0, 0, 0), JU.V3.new3 (-v.x, -v.y, -v.z));
+this.tempDipole.type = 4;
+this.tempDipole.thisID = "molecular";
+this.setDipole ();
+}return;
 }if ("bonds" === propertyName) {
 this.isBond = true;
 this.currentDipole = null;
@@ -58,55 +70,47 @@ for (var i = this.dipoleCount; --i >= 0; ) if (this.isBondDipole (i)) return;
 
 this.getBondDipoles ();
 return;
-}if ("all" === propertyName) {
-this.tempDipole.lstDipoles =  new JU.Lst ();
-return;
 }if ("on" === propertyName) {
-this.setPropertyTok (1048589, this.isBond, 0, 0);
+this.setProperty (1048589, this.isBond, 0, 0);
 return;
 }if ("off" === propertyName) {
-this.setPropertyTok (1048588, this.isBond, 0, 0);
+this.setProperty (1048588, this.isBond, 0, 0);
 return;
 }if ("delete" === propertyName) {
 if (this.wildID == null && this.currentDipole == null) {
 this.clear (false);
 return;
-}this.setPropertyTok (12291, this.isBond, 0, 0);
+}this.setProperty (12291, this.isBond, 0, 0);
 return;
 }if ("width" === propertyName) {
 var mad = this.tempDipole.mad = Clazz.floatToShort ((value).floatValue () * 1000);
-if (this.currentDipole == null) this.setPropertyTok (659488, this.isBond, mad, 0);
+if (this.currentDipole == null) this.setProperty (659488, this.isBond, mad, 0);
 return;
 }if ("offset" === propertyName) {
 var offset = this.tempDipole.offsetAngstroms = (value).floatValue ();
-if (this.currentDipole == null) this.setPropertyTok (1611272194, this.isBond, 0, offset);
+if (this.currentDipole == null) this.setProperty (1611272194, this.isBond, 0, offset);
 return;
-}if ("offsetPt" === propertyName) {
-this.tempDipole.offsetPt = value;
-if (this.currentDipole != null) {
-this.currentDipole.setOffsetPt (this.tempDipole.offsetPt);
-}return;
 }if ("offsetPercent" === propertyName) {
 var offsetPercent = this.tempDipole.offsetPercent = (value).intValue ();
 if (this.tempDipole.dipoleValue != 0) this.tempDipole.offsetAngstroms = offsetPercent / 100 * this.tempDipole.dipoleValue;
-if (this.currentDipole == null) this.setPropertyTok (269484210, this.isBond, 0, offsetPercent / 100);
+if (this.currentDipole == null) this.setProperty (269484210, this.isBond, 0, offsetPercent / 100);
 return;
 }if ("offsetSide" === propertyName) {
 var offsetSide = (value).floatValue ();
-this.setPropertyTok (3145754, this.isBond, 0, offsetSide);
+this.setProperty (3145754, this.isBond, 0, offsetSide);
 return;
 }if ("cross" === propertyName) {
-this.setPropertyTok (135267329, this.isBond, ((value).booleanValue () ? 1 : 0), 0);
+this.setProperty (135267329, this.isBond, ((value).booleanValue () ? 1 : 0), 0);
 return;
 }if ("color" === propertyName) {
-this.colix = JU.C.getColixO (value);
+this.colix = JW.C.getColixO (value);
 if (this.isBond) {
 this.setColixDipole (this.colix, 1023, bs);
 } else if (value != null) {
-this.setPropertyTok (1766856708, false, 0, 0);
+this.setProperty (1766856708, false, 0, 0);
 }return;
 }if ("translucency" === propertyName) {
-this.setPropertyTok (603979967, this.isBond, (value.equals ("translucent") ? 1 : 0), 0);
+this.setProperty (603979967, this.isBond, (value.equals ("translucent") ? 1 : 0), 0);
 return;
 }if ("clear" === propertyName) {
 this.currentDipole = null;
@@ -114,53 +118,49 @@ this.clear (false);
 }if ("clearBonds" === propertyName) {
 this.clear (true);
 }if ("startSet" === propertyName) {
-var bsAtoms = value;
-this.endCoord = null;
-this.startCoord = this.ms.getAtomSetCenter (bsAtoms);
-this.tempDipole.set2Value (this.startCoord, JU.P3.new3 (0, 0, 0), this.dipoleValue);
-if (JU.BSUtil.cardinalityOf (bsAtoms) == 1) this.atomIndex1 = bsAtoms.nextSetBit (0);
+var atomset = value;
+this.startCoord = this.vwr.getAtomSetCenter (atomset);
+this.tempDipole.set (this.startCoord, JU.P3.new3 (0, 0, 0), this.dipoleValue);
+if (JW.BSUtil.cardinalityOf (atomset) == 1) this.atomIndex1 = atomset.nextSetBit (0);
 return;
 }if ("atomBitset" === propertyName) {
 var atomset = value;
-if (atomset.cardinality () > 2) {
-this.getMolecular (atomset);
-return;
-}this.atomIndex1 = atomset.nextSetBit (0);
+this.atomIndex1 = atomset.nextSetBit (0);
 this.startCoord = this.ms.at[this.atomIndex1];
 atomset.clear (this.atomIndex1);
 propertyName = "endSet";
 }if ("endSet" === propertyName) {
 this.iHaveTwoEnds = true;
 var atomset = value;
-if (this.atomIndex1 >= 0 && JU.BSUtil.cardinalityOf (atomset) == 1) {
+if (this.atomIndex1 >= 0 && JW.BSUtil.cardinalityOf (atomset) == 1) {
 this.atomIndex2 = atomset.nextSetBit (0);
-this.tempDipole.set2AtomValue (this.ms.at[this.atomIndex1], this.ms.at[this.atomIndex2], 1);
-this.currentDipole = this.findDipoleFor (this.tempDipole.thisID, this.tempDipole.dipoleInfo);
+this.tempDipole.set (this.ms.at[this.atomIndex1], this.ms.at[this.atomIndex2], 1);
+this.currentDipole = this.findDipole (this.tempDipole.thisID, this.tempDipole.dipoleInfo);
 this.tempDipole.thisID = this.currentDipole.thisID;
 if (this.isSameAtoms (this.currentDipole, this.tempDipole.dipoleInfo)) {
 this.tempDipole = this.currentDipole;
 if (this.dipoleValue > 0) this.tempDipole.dipoleValue = this.dipoleValue;
 }} else {
-this.tempDipole.set2Value (this.startCoord, this.ms.getAtomSetCenter (atomset), this.dipoleValue);
+this.tempDipole.set (this.startCoord, this.vwr.getAtomSetCenter (atomset), this.dipoleValue);
 }return;
 }if ("startCoord" === propertyName) {
 this.startCoord.setT (value);
-this.tempDipole.set2Value (this.startCoord, JU.P3.new3 (0, 0, 0), this.dipoleValue);
+this.tempDipole.set (this.startCoord, JU.P3.new3 (0, 0, 0), this.dipoleValue);
 return;
 }if ("endCoord" === propertyName) {
 this.iHaveTwoEnds = true;
 this.endCoord.setT (value);
-this.tempDipole.set2Value (this.startCoord, this.endCoord, this.dipoleValue);
+this.tempDipole.set (this.startCoord, this.endCoord, this.dipoleValue);
 this.dumpDipoles ("endCoord");
 return;
 }if ("value" === propertyName) {
 this.dipoleValue = (value).floatValue ();
 this.isUserValue = true;
-this.tempDipole.setValue (this.dipoleValue);
+this.tempDipole.set (this.dipoleValue);
 if (this.tempDipole.offsetPercent != 0) this.tempDipole.offsetAngstroms = this.tempDipole.offsetPercent / 100 * this.tempDipole.dipoleValue;
 return;
 }if ("set" === propertyName) {
-if (this.isBond || !this.iHaveTwoEnds && this.tempDipole.bsMolecule == null) return;
+if (this.isBond || !this.iHaveTwoEnds) return;
 this.setDipole ();
 this.setModelIndex ();
 return;
@@ -176,44 +176,14 @@ this.dipoleCount--;
 this.currentDipole = null;
 return;
 }}, "~S,~O,JU.BS");
-Clazz.defineMethod (c$, "getMolecular", 
- function (bsMolecule) {
-var v = (bsMolecule == null ? this.calculatedDipole : null);
-if (v == null && bsMolecule == null) {
-v = this.vwr.getModelDipole ();
-JU.Logger.info ("file molecular dipole = " + v + " " + (v != null ? "" + v.length () : ""));
-}if (v == null) this.calculatedDipole = v = this.vwr.calculateMolecularDipole (bsMolecule);
-if (v == null) {
-JU.Logger.warn ("No molecular dipole found for this model; setting to {0 0 0}");
-v =  new JU.V3 ();
-}this.tempDipole.bsMolecule = bsMolecule;
-this.tempDipole.setPtVector (JU.P3.new3 (0, 0, 0), JU.V3.new3 (-v.x, -v.y, -v.z));
-if (this.tempDipole.lstDipoles != null) {
-this.getAllMolecularDipoles (bsMolecule);
-}this.tempDipole.type = 4;
-if (this.currentDipole.thisID == null || bsMolecule == null) this.tempDipole.thisID = "molecular";
-this.setDipole ();
-}, "JU.BS");
-Clazz.defineMethod (c$, "getAllMolecularDipoles", 
- function (bsAtoms) {
-var mols = this.ms.getMolecules ();
-for (var i = mols.length; --i >= 0; ) {
-var m = mols[i];
-if (m.atomList.intersects (bsAtoms)) {
-var v = this.ms.calculateMolecularDipole (0, m.atomList);
-if (v == null) continue;
-var center = this.ms.getAtomSetCenter (m.atomList);
-this.tempDipole.lstDipoles.addLast ( Clazz.newArray (-1, [v, center, m.atomList]));
-}}
-}, "JU.BS");
-Clazz.defineMethod (c$, "setPropertyTok", 
+Clazz.defineMethod (c$, "setProperty", 
  function (tok, bondOnly, iValue, fValue) {
-if (this.currentDipole != null) this.setPropertyFor (tok, this.currentDipole, iValue, fValue);
+if (this.currentDipole != null) this.setProperty (tok, this.currentDipole, iValue, fValue);
  else {
-for (var i = this.dipoleCount; --i >= 0; ) if (!bondOnly || this.isBondDipole (i)) if (this.wildID == null || JU.PT.isMatch (this.dipoles[i].thisID.toUpperCase (), this.wildID, true, true)) this.setPropertyFor (tok, this.dipoles[i], iValue, fValue);
+for (var i = this.dipoleCount; --i >= 0; ) if (!bondOnly || this.isBondDipole (i)) if (this.wildID == null || JW.Txt.isMatch (this.dipoles[i].thisID.toUpperCase (), this.wildID, true, true)) this.setProperty (tok, this.dipoles[i], iValue, fValue);
 
 }}, "~N,~B,~N,~N");
-Clazz.defineMethod (c$, "setPropertyFor", 
+Clazz.defineMethod (c$, "setProperty", 
  function (tok, dipole, iValue, fValue) {
 switch (tok) {
 case 1048589:
@@ -247,17 +217,17 @@ case 603979967:
 dipole.setTranslucent (iValue == 1, this.translucentLevel);
 return;
 }
-JU.Logger.error ("Unkown dipole property! " + JS.T.nameOf (tok));
+JW.Logger.error ("Unkown dipole property! " + J.script.T.nameOf (tok));
 }, "~N,J.shapespecial.Dipole,~N,~N");
 Clazz.overrideMethod (c$, "getPropertyData", 
 function (property, data) {
 if (property === "getNames") {
 }if (property === "checkID") {
 var key = (data[0]).toUpperCase ();
-var isWild = JU.PT.isWild (key);
+var isWild = JW.Txt.isWild (key);
 for (var i = this.dipoleCount; --i >= 0; ) {
 var id = this.dipoles[i].thisID;
-if (id.equalsIgnoreCase (key) || isWild && JU.PT.isMatch (id.toUpperCase (), key, true, true)) {
+if (id.equalsIgnoreCase (key) || isWild && JW.Txt.isMatch (id.toUpperCase (), key, true, true)) {
 data[1] = id;
 return true;
 }}
@@ -279,9 +249,9 @@ var bonds = this.ms.bo;
 for (var i = this.ms.bondCount; --i >= 0; ) {
 var bond = bonds[i];
 if (!bond.isCovalent ()) continue;
-var c1 = partialCharges[bond.atom1.i];
-var c2 = partialCharges[bond.atom2.i];
-if (c1 != c2) this.setDipoleAtoms (bond.atom1, bond.atom2, c1, c2);
+var c1 = partialCharges[bond.getAtomIndex1 ()];
+var c2 = partialCharges[bond.getAtomIndex2 ()];
+if (c1 != c2) this.setDipole (bond.getAtom1 (), bond.getAtom2 (), c1, c2);
 }
 });
 Clazz.defineMethod (c$, "isBondDipole", 
@@ -301,22 +271,22 @@ if (d != null) d.colix = colix;
 Clazz.defineMethod (c$, "setDipole", 
  function () {
 if (this.currentDipole == null) this.currentDipole = this.allocDipole ("", "");
-this.currentDipole.set (this.tempDipole);
+this.currentDipole.set (this.tempDipole.thisID, this.tempDipole.dipoleInfo, this.tempDipole.atoms, this.tempDipole.dipoleValue, this.tempDipole.mad, this.tempDipole.offsetAngstroms, this.tempDipole.offsetPercent, this.tempDipole.offsetSide, this.tempDipole.origin, this.tempDipole.vector);
 this.currentDipole.isUserValue = this.isUserValue;
-this.currentDipole.modelIndex = this.vwr.am.cmi;
+this.currentDipole.modelIndex = this.vwr.getCurrentModelIndex ();
 });
-Clazz.defineMethod (c$, "setDipoleAtoms", 
+Clazz.defineMethod (c$, "setDipole", 
  function (atom1, atom2, c1, c2) {
-var dipole = this.findAtomDipole (atom1, atom2, true);
+var dipole = this.findDipole (atom1, atom2, true);
 var value = (c1 - c2) / 2 * atom1.distance (atom2) / 0.208194;
 if (value < 0) {
-dipole.set2AtomValue (atom2, atom1, -value);
+dipole.set (atom2, atom1, -value);
 } else {
-dipole.set2AtomValue (atom1, atom2, value);
+dipole.set (atom1, atom2, value);
 }dipole.type = 3;
-dipole.modelIndex = atom1.mi;
+dipole.modelIndex = atom1.getModelIndex ();
 }, "JM.Atom,JM.Atom,~N,~N");
-Clazz.defineMethod (c$, "getDipoleIndexFor", 
+Clazz.defineMethod (c$, "getDipoleIndex", 
  function (dipoleInfo, thisID) {
 if (dipoleInfo != null && dipoleInfo.length > 0) for (var i = this.dipoleCount; --i >= 0; ) if (this.isSameAtoms (this.dipoles[i], dipoleInfo)) return i;
 
@@ -352,7 +322,7 @@ if (dipoleIndex >= 0) {
 return this.dipoles[dipoleIndex];
 }return null;
 }, "~S");
-Clazz.defineMethod (c$, "findAtomDipole", 
+Clazz.defineMethod (c$, "findDipole", 
  function (atom1, atom2, doAllocate) {
 var dipoleIndex = this.getDipoleIndex (atom1.i, atom2.i);
 if (dipoleIndex >= 0) {
@@ -361,12 +331,12 @@ return this.dipoles[dipoleIndex];
 }, "JM.Atom,JM.Atom,~B");
 Clazz.defineMethod (c$, "findBondDipole", 
  function (bond) {
-var d = this.findAtomDipole (bond.atom1, bond.atom2, false);
+var d = this.findDipole (bond.getAtom1 (), bond.getAtom2 (), false);
 return (d == null || d.atoms[0] == null ? null : d);
 }, "JM.Bond");
-Clazz.defineMethod (c$, "findDipoleFor", 
+Clazz.defineMethod (c$, "findDipole", 
  function (thisID, dipoleInfo) {
-var dipoleIndex = this.getDipoleIndexFor (dipoleInfo, thisID);
+var dipoleIndex = this.getDipoleIndex (dipoleInfo, thisID);
 if (dipoleIndex >= 0) {
 if (thisID.length > 0) this.dipoles[dipoleIndex].thisID = thisID;
 return this.dipoles[dipoleIndex];
@@ -376,17 +346,17 @@ Clazz.defineMethod (c$, "allocDipole",
  function (thisID, dipoleInfo) {
 this.dipoles = JU.AU.ensureLength (this.dipoles, this.dipoleCount + 1);
 if (thisID == null || thisID.length == 0) thisID = "dipole" + (this.dipoleCount + 1);
-var d = this.dipoles[this.dipoleCount++] =  new J.shapespecial.Dipole ().init (this.vwr.am.cmi, thisID, dipoleInfo, this.colix, 5, true);
+var d = this.dipoles[this.dipoleCount++] =  new J.shapespecial.Dipole (this.vwr.getCurrentModelIndex (), thisID, dipoleInfo, this.colix, 5, true);
 return d;
 }, "~S,~S");
 Clazz.defineMethod (c$, "dumpDipoles", 
  function (msg) {
 for (var i = this.dipoleCount; --i >= 0; ) {
 var dipole = this.dipoles[i];
-JU.Logger.info ("\n\n" + msg + " dump dipole " + i + " " + dipole + " " + dipole.thisID + " " + dipole.dipoleInfo + " " + dipole.visibilityFlags + " mad=" + dipole.mad + " vis=" + dipole.visible + "\n orig" + dipole.origin + " " + " vect" + dipole.vector + " val=" + dipole.dipoleValue);
+JW.Logger.info ("\n\n" + msg + " dump dipole " + i + " " + dipole + " " + dipole.thisID + " " + dipole.dipoleInfo + " " + dipole.visibilityFlags + " mad=" + dipole.mad + " vis=" + dipole.visible + "\n orig" + dipole.origin + " " + " vect" + dipole.vector + " val=" + dipole.dipoleValue);
 }
-if (this.currentDipole != null) JU.Logger.info (" current = " + this.currentDipole + this.currentDipole.origin);
-if (this.tempDipole != null) JU.Logger.info (" temp = " + this.tempDipole + " " + this.tempDipole.origin);
+if (this.currentDipole != null) JW.Logger.info (" current = " + this.currentDipole + this.currentDipole.origin);
+if (this.tempDipole != null) JW.Logger.info (" temp = " + this.tempDipole + " " + this.tempDipole.origin);
 }, "~S");
 Clazz.defineMethod (c$, "clear", 
  function (clearBondDipolesOnly) {
@@ -407,24 +377,21 @@ return -1;
 }, "~S");
 Clazz.overrideMethod (c$, "getShapeDetail", 
 function () {
-var V =  new JU.Lst ();
+var V =  new JU.List ();
 var atomInfo;
-var ptTemp =  new JU.P3 ();
 for (var i = 0; i < this.dipoleCount; i++) {
 var info =  new java.util.Hashtable ();
 var dipole = this.dipoles[i];
 info.put ("ID", dipole.thisID);
 info.put ("vector", dipole.vector);
 info.put ("origin", dipole.origin);
-if (dipole.bsMolecule != null) {
-info.put ("bsMolecule", dipole.bsMolecule);
-} else if (dipole.atoms[0] != null) {
+if (dipole.atoms[0] != null) {
 atomInfo =  new java.util.Hashtable ();
-this.ms.getAtomIdentityInfo (dipole.atoms[0].i, atomInfo, ptTemp);
-var atoms =  new JU.Lst ();
+this.vwr.getAtomIdentityInfo (dipole.atoms[0].i, atomInfo);
+var atoms =  new JU.List ();
 atoms.addLast (atomInfo);
 atomInfo =  new java.util.Hashtable ();
-this.ms.getAtomIdentityInfo (dipole.atoms[1].i, atomInfo, ptTemp);
+this.vwr.getAtomIdentityInfo (dipole.atoms[1].i, atomInfo);
 atoms.addLast (atomInfo);
 info.put ("atoms", atoms);
 info.put ("magnitude", Float.$valueOf (dipole.vector.length ()));
@@ -436,13 +403,13 @@ Clazz.defineMethod (c$, "setModelIndex",
  function () {
 if (this.currentDipole == null) return;
 this.currentDipole.visible = true;
-this.currentDipole.modelIndex = this.vwr.am.cmi;
+this.currentDipole.modelIndex = this.vwr.getCurrentModelIndex ();
 });
-Clazz.overrideMethod (c$, "setModelVisibilityFlags", 
-function (bsModels) {
+Clazz.overrideMethod (c$, "setVisibilityFlags", 
+function (bs) {
 for (var i = this.dipoleCount; --i >= 0; ) {
 var dipole = this.dipoles[i];
-dipole.visibilityFlags = ((dipole.modelIndex < 0 || bsModels.get (dipole.modelIndex)) && dipole.mad != 0 && dipole.visible && dipole.origin != null && dipole.vector != null && dipole.vector.length () != 0 && dipole.dipoleValue != 0 ? this.vf : 0);
+dipole.visibilityFlags = ((dipole.modelIndex < 0 || bs.get (dipole.modelIndex)) && dipole.mad != 0 && dipole.visible && dipole.origin != null && dipole.vector != null && dipole.vector.length () != 0 && dipole.dipoleValue != 0 ? this.vf : 0);
 }
 }, "JU.BS");
 Clazz.overrideMethod (c$, "getShapeState", 
@@ -450,7 +417,7 @@ function () {
 if (this.dipoleCount == 0) return "";
 var s =  new JU.SB ();
 var thisModel = -1;
-var modelCount = this.vwr.ms.mc;
+var modelCount = this.vwr.getModelCount ();
 for (var i = 0; i < this.dipoleCount; i++) {
 var dipole = this.dipoles[i];
 if (dipole.isValid) {

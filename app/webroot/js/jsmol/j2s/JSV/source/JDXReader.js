@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (["J.api.JmolJDXMOLReader"], "JSV.source.JDXReader", ["java.io.BufferedReader", "$.StringReader", "java.lang.Double", "$.Float", "java.util.Hashtable", "$.StringTokenizer", "JU.Lst", "$.PT", "$.SB", "JSV.api.JSVZipReader", "JSV.common.Coordinate", "$.JSVFileManager", "$.JSViewer", "$.PeakInfo", "$.Spectrum", "JSV.exception.JSVException", "JSV.source.JDXDecompressor", "$.JDXSource", "$.JDXSourceStreamTokenizer", "JU.Logger"], function () {
+Clazz.load (["J.adapter.smarter.JmolJDXMOLReader"], "JSV.source.JDXReader", ["java.io.BufferedReader", "$.StringReader", "java.lang.Double", "$.Float", "java.util.Hashtable", "$.StringTokenizer", "JU.List", "$.PT", "$.SB", "JSV.api.JSVZipReader", "JSV.common.Coordinate", "$.JSVFileManager", "$.JSViewer", "$.PeakInfo", "$.Spectrum", "JSV.exception.JSVException", "JSV.source.JDXDecompressor", "$.JDXSource", "$.JDXSourceStreamTokenizer", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.nmrMaxY = NaN;
 this.source = null;
@@ -23,7 +23,7 @@ this.acdAssignments = null;
 this.acdMolFile = null;
 this.peakData = null;
 Clazz.instantialize (this, arguments);
-}, JSV.source, "JDXReader", null, J.api.JmolJDXMOLReader);
+}, JSV.source, "JDXReader", null, J.adapter.smarter.JmolJDXMOLReader);
 c$.getVarList = Clazz.defineMethod (c$, "getVarList", 
 function (dataClass) {
 var index = JSV.source.JDXReader.VAR_LIST_TABLE[0].indexOf (dataClass);
@@ -64,14 +64,14 @@ var xmlSource = null;
 if (xmlType != null) xmlSource = (JSV.common.JSViewer.getInterface ("JSV.source." + xmlType + "Reader")).getSource (filePath, br);
 br.close ();
 if (xmlSource == null) {
-JU.Logger.error (header + "...");
+JW.Logger.error (header + "...");
 throw  new JSV.exception.JSVException ("File type not recognized");
 }return xmlSource;
 }return ( new JSV.source.JDXReader (filePath, obscure, loadImaginary, iSpecFirst, iSpecLast, nmrMaxY)).getJDXSource (br);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 if (br != null) br.close ();
-if (header != null) JU.Logger.error (header + "...");
+if (header != null) JW.Logger.error (header + "...");
 var s = e.getMessage ();
 {
 }throw  new JSV.exception.JSVException ("Error reading data: " + s);
@@ -93,7 +93,7 @@ while (!this.done && "##TITLE".equals (this.t.peakLabel ())) {
 isOK = true;
 if (label != null && !this.isZipFile) this.errorLog.append ("Warning - file is a concatenation without LINK record -- does not conform to IUPAC standards!\n");
 var spectrum =  new JSV.common.Spectrum ();
-var dataLDRTable =  new JU.Lst ();
+var dataLDRTable =  new JU.List ();
 while (!this.done && (label = this.t.getLabel ()) != null && (value = this.getValue (label)) != null) {
 if (this.isTabularData) {
 this.setTabularDataType (spectrum, label);
@@ -131,18 +131,18 @@ return (this.isTabularData = ("##DATATABLE##PEAKTABLE##XYDATA##XYPOINTS#".indexO
 Clazz.defineMethod (c$, "addSpectrum", 
  function (spectrum, forceSub) {
 if (!this.loadImaginary && spectrum.isImaginary ()) {
-JU.Logger.info ("FileReader skipping imaginary spectrum -- use LOADIMAGINARY TRUE to load this spectrum.");
+JW.Logger.info ("FileReader skipping imaginary spectrum -- use LOADIMAGINARY TRUE to load this spectrum.");
 return true;
 }if (this.acdAssignments != null) {
 if (!spectrum.dataType.equals ("MASS SPECTRUM") && !spectrum.isContinuous ()) {
-JU.Logger.info ("Skipping ACD Labs line spectrum for " + spectrum);
+JW.Logger.info ("Skipping ACD Labs line spectrum for " + spectrum);
 return true;
 }if (this.acdAssignments.size () > 0) {
 try {
 this.mpr.setACDAssignments (spectrum.title, spectrum.getTypeLabel (), this.source.peakCount, this.acdAssignments, this.acdMolFile);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.info ("Failed to create peak data: " + e);
+JW.Logger.info ("Failed to create peak data: " + e);
 } else {
 throw e;
 }
@@ -160,7 +160,7 @@ return true;
 }, "JSV.common.Spectrum,~B");
 Clazz.defineMethod (c$, "getBlockSpectra", 
  function (sourceLDRTable) {
-JU.Logger.debug ("--JDX block start--");
+JW.Logger.debug ("--JDX block start--");
 var label = "";
 var value = null;
 var isNew = (this.source.type == 0);
@@ -179,13 +179,13 @@ this.source.type = 1;
 this.source.isCompoundSource = true;
 var dataLDRTable;
 var spectrum =  new JSV.common.Spectrum ();
-dataLDRTable =  new JU.Lst ();
+dataLDRTable =  new JU.List ();
 this.readDataLabel (spectrum, label, value, this.errorLog, this.obscure);
 try {
 var tmp;
 while ((tmp = this.t.getLabel ()) != null) {
 if ((value = this.getValue (tmp)) == null && "##END".equals (label)) {
-JU.Logger.debug ("##END= " + this.t.getValue ());
+JW.Logger.debug ("##END= " + this.t.getValue ());
 break;
 }label = tmp;
 if (this.isTabularData) {
@@ -203,7 +203,7 @@ label = "";
 }if (this.done) break;
 if (spectrum == null) {
 spectrum =  new JSV.common.Spectrum ();
-dataLDRTable =  new JU.Lst ();
+dataLDRTable =  new JU.List ();
 if (label === "") continue;
 if (label == null) {
 label = "##END";
@@ -211,7 +211,7 @@ continue;
 }}if (value == null) {
 if (spectrum.getXYCoords ().length > 0 && !this.addSpectrum (spectrum, forceSub)) return this.source;
 spectrum =  new JSV.common.Spectrum ();
-dataLDRTable =  new JU.Lst ();
+dataLDRTable =  new JU.List ();
 continue;
 }if (this.readDataLabel (spectrum, label, value, this.errorLog, this.obscure)) continue;
 JSV.source.JDXReader.addHeader (dataLDRTable, this.t.rawLabel, value);
@@ -226,16 +226,16 @@ throw e;
 }
 this.addErrorLogSeparator ();
 this.source.setErrorLog (this.errorLog.toString ());
-JU.Logger.debug ("--JDX block end--");
+JW.Logger.debug ("--JDX block end--");
 return this.source;
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "addErrorLogSeparator", 
  function () {
 if (this.errorLog.length () > 0 && this.errorLog.lastIndexOf ("=====================\n") != this.errorLog.length () - "=====================\n".length) this.errorLog.append ("=====================\n");
 });
 Clazz.defineMethod (c$, "getNTupleSpectra", 
  function (sourceLDRTable, spectrum0, label) {
-var minMaxY =  Clazz.newDoubleArray (-1, [1.7976931348623157E308, 4.9E-324]);
+var minMaxY = [1.7976931348623157E308, 4.9E-324];
 this.blockID = Math.random ();
 var isOK = true;
 if (this.firstSpec > 0) spectrum0.numDim = 1;
@@ -252,7 +252,7 @@ this.source.setHeaderTable (sourceLDRTable);
 }while (!(label = (isVARNAME ? label : this.t.getLabel ())).equals ("##PAGE")) {
 isVARNAME = false;
 var st =  new java.util.StringTokenizer (this.t.getValue (), ",");
-var attrList =  new JU.Lst ();
+var attrList =  new JU.List ();
 while (st.hasMoreTokens ()) attrList.addLast (st.nextToken ().trim ());
 
 nTupleTable.put (label, attrList);
@@ -286,7 +286,7 @@ if (Clazz.exceptionOf (e, Exception)) {
 throw e;
 }
 }
-}}var dataLDRTable =  new JU.Lst ();
+}}var dataLDRTable =  new JU.List ();
 spectrum.setHeaderTable (dataLDRTable);
 while (!label.equals ("##DATATABLE")) {
 JSV.source.JDXReader.addHeader (dataLDRTable, this.t.rawLabel, this.t.getValue ());
@@ -324,9 +324,9 @@ spectrum = null;
 }
 this.addErrorLogSeparator ();
 this.source.setErrorLog (this.errorLog.toString ());
-JU.Logger.info ("NTUPLE MIN/MAX Y = " + minMaxY[0] + " " + minMaxY[1]);
+JW.Logger.info ("NTUPLE MIN/MAX Y = " + minMaxY[0] + " " + minMaxY[1]);
 return this.source;
-}, "JU.Lst,JSV.source.JDXDataObject,~S");
+}, "JU.List,JSV.source.JDXDataObject,~S");
 Clazz.defineMethod (c$, "readDataLabel", 
  function (spectrum, label, value, errorLog, obscure) {
 if (JSV.source.JDXReader.readHeaderLabel (spectrum, label, value, errorLog, obscure)) return true;
@@ -469,7 +469,7 @@ var fileDeltaX = JSV.common.Coordinate.deltaX (xyCoords[xyCoords.length - 1].get
 spec.setIncreasing (fileDeltaX > 0);
 return true;
 }return false;
-}, "JSV.source.JDXDataObject,JU.Lst");
+}, "JSV.source.JDXDataObject,JU.List");
 Clazz.defineMethod (c$, "readNTUPLECoords", 
  function (spec, nTupleTable, plotSymbols, minMaxY) {
 var list;
@@ -520,7 +520,7 @@ var decompressor =  new JSV.source.JDXDecompressor (this.t, spec.fileFirstX, spe
 var firstLastX =  Clazz.newDoubleArray (2, 0);
 var t = System.currentTimeMillis ();
 var xyCoords = decompressor.decompressData (this.errorLog, firstLastX);
-if (JU.Logger.debugging) JU.Logger.debug ("decompression time = " + (System.currentTimeMillis () - t) + " ms");
+if (JW.Logger.debugging) JW.Logger.debug ("decompression time = " + (System.currentTimeMillis () - t) + " ms");
 spec.setXYCoords (xyCoords);
 var d = decompressor.getMinY ();
 if (minMaxY != null) {
@@ -542,7 +542,7 @@ this.errorLog.append ("lastX from Header " + spec.fileLastX + " Found " + firstL
 this.errorLog.append ("deltaX from Header " + fileDeltaX + "\n");
 this.errorLog.append ("Number of points in Header " + spec.nPointsFile + " Found " + xyCoords.length + "\n");
 } else {
-}if (JU.Logger.debugging) {
+}if (JW.Logger.debugging) {
 System.err.println (this.errorLog.toString ());
 }}, "JSV.source.JDXDataObject,~A");
 c$.addHeader = Clazz.defineMethod (c$, "addHeader", 
@@ -552,8 +552,8 @@ for (var i = 0; i < table.size (); i++) if ((entry = table.get (i))[0].equals (l
 entry[1] = value;
 return;
 }
-table.addLast ( Clazz.newArray (-1, [label, value, JSV.source.JDXSourceStreamTokenizer.cleanLabel (label)]));
-}, "JU.Lst,~S,~S");
+table.addLast ([label, value, JSV.source.JDXSourceStreamTokenizer.cleanLabel (label)]);
+}, "JU.List,~S,~S");
 Clazz.defineMethod (c$, "checkCustomTags", 
  function (spectrum, label, value) {
 if (label.length > 10) label = label.substring (0, 10);
@@ -570,17 +570,17 @@ this.mpr.readModels ();
 break;
 case 10:
 case 20:
-this.peakData =  new JU.Lst ();
+this.peakData =  new JU.List ();
 this.source.peakCount += this.mpr.readPeaks (pt == 20, this.source.peakCount);
 break;
 case 30:
-this.acdAssignments =  new JU.Lst ();
+this.acdAssignments =  new JU.List ();
 this.acdMolFile = JU.PT.rep (value, "$$ Empty String", "");
 break;
 case 40:
 case 50:
 case 60:
-this.acdAssignments = this.mpr.readACDAssignments (spectrum.nPointsFile, pt == 40);
+this.acdAssignments = this.mpr.readACDAssignments (spectrum.nPointsFile);
 break;
 }
 } catch (e) {
@@ -609,7 +609,7 @@ if (this.modelSpectrum.isNMR ()) this.modelSpectrum.setNHydrogens (nH);
 }, "~N,~S,~S");
 Clazz.overrideMethod (c$, "addPeakData", 
 function (info) {
-if (this.peakData == null) this.peakData =  new JU.Lst ();
+if (this.peakData == null) this.peakData =  new JU.List ();
 this.peakData.addLast ( new JSV.common.PeakInfo (info));
 }, "~S");
 Clazz.overrideMethod (c$, "processModelData", 
@@ -637,6 +637,6 @@ while ((line = this.rd ()) != null && line.trim ().length == 0) {
 return line;
 });
 Clazz.defineStatics (c$,
-"VAR_LIST_TABLE",  Clazz.newArray (-1, ["PEAKTABLE   XYDATA      XYPOINTS", " (XY..XY)    (X++(Y..Y)) (XY..XY)    "]),
+"VAR_LIST_TABLE", ["PEAKTABLE   XYDATA      XYPOINTS", " (XY..XY)    (X++(Y..Y)) (XY..XY)    "],
 "ERROR_SEPARATOR", "=====================\n");
 });

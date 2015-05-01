@@ -1,7 +1,5 @@
 // JmolApplet.js -- Jmol._Applet and Jmol._Image
 
-// BY 10/19/2014 8:08:51 PM moved applet._cover and applet._displayCoverImage to 
-// BH 5/8/2014 11:20:21 AM trying to fix AH nd JG problem with multiple applets
 // BH 1/27/2014 8:36:43 AM adding Info.viewSet
 // BH 12/13/2013 9:04:53 AM _evaluate DEPRECATED (see JSmolApi.js Jmol.evaulateVar
 // BH 11/24/2013 11:41:31 AM streamlined createApplet, with added JNLP for local reading
@@ -23,11 +21,6 @@
 		this._viewType = "Jmol";
 		this._isJava = true;
 		this._syncKeyword = "Select:";
-		this._availableParams = ";progressbar;progresscolor;boxbgcolor;boxfgcolor;allowjavascript;boxmessage;\
-									;messagecallback;pickcallback;animframecallback;appletreadycallback;atommovedcallback;\
-									;echocallback;evalcallback;hovercallback;language;loadstructcallback;measurecallback;\
-									;minimizationcallback;resizecallback;scriptcallback;statusform;statustext;statustextarea;\
-									;synccallback;usecommandthread;syncid;appletid;startupscript;menufile;";
 		if (checkOnly)
 			return this;
 		this._isSigned = Info.isSigned;
@@ -102,6 +95,7 @@
 		};	 
 		Jmol._addDefaultInfo(Info, DefaultInfo);
 		Jmol._debugAlert = Info.debug;
+			if (!Jmol.featureDetection.allowHTML5)Info.use = "JAVA";
 
 		Info.serverURL && (Jmol._serverUrl = Info.serverURL);
 
@@ -118,12 +112,8 @@
 			case "WEBGL":
 				applet = Applet._getCanvas(id, Info, checkOnly, true);
 				break;
-			case "HTML5":               
-  			if (Jmol.featureDetection.allowHTML5){
-				  applet = Applet._getCanvas(id, Info, checkOnly, false);
-        } else {
-          List.push("JAVA");
-        }
+			case "HTML5":
+				applet = Applet._getCanvas(id, Info, checkOnly, false);
 				break;
 			case "IMAGE":
 				applet = new Jmol._Image(id, Info, checkOnly);
@@ -179,7 +169,7 @@
 		if (Jmol._isFile) {
 			// local installations need jnlp here and should reference JmolApplet(Signed).jar, not JmolApplet(Signed)0.jar  
 			jarFile = jarFile.replace(/0\.jar/,".jar");
-			//jnlp = " jnlp_href=\"" + jarFile.replace(/\.jar/,".jnlp") + "\"";
+			jnlp = " jnlp_href=\"" + jarFile.replace(/\.jar/,".jnlp") + "\"";
 		}
 		// size is set to 100% of containers' size, but only if resizable. 
 		// Note that resizability in MSIE requires: 
@@ -222,9 +212,7 @@
 				+ " code='" + params.code + "' codebase='" + applet._jarPath + "' archive='" + jarFile + "' mayscript='true'>\n"
 				+ t + "<table bgcolor='yellow'><tr><td align='center' valign='middle' " + widthAndHeight + ">\n"
 				+ Applet._noJavaMsg + "</td></tr></table></applet>\n";
-		}
-		if (applet._deferApplet)
-			applet._javaCode = t, t="";
+		}	
 		t = Jmol._getWrapper(applet, true) + t + Jmol._getWrapper(applet, false) 
 			+ (Info.addSelectionOptions ? Jmol._getGrabberOptions(applet) : "");
 		if (Jmol._debugAlert)
@@ -232,11 +220,6 @@
 		applet._code = Jmol._documentWrite(t);
 	}
 
-	proto._newApplet = function(viewerOptions) {
-		this._viewerOptions = viewerOptions;
-		return new J.appletjs.Jmol(viewerOptions);
-	}
-	
 	proto._create = function(id, Info){
 		Jmol._setObject(this, id, Info);
 		var params = {
@@ -250,7 +233,7 @@
 			code: "JmolApplet.class"
 		};
 
-		Jmol._setAppletParams(this._availableParams, params, Info);
+		Jmol._setJmolParams(params, Info);
 		function sterilizeInline(model) {
 			model = model.replace(/\r|\n|\r\n/g, (model.indexOf("|") >= 0 ? "\\/n" : "|")).replace(/'/g, "&#39;");
 			if(Jmol._debugAlert)
@@ -315,8 +298,6 @@
 		if (this._2dapplet._isEmbedded) {
 			this._showInfo(false);
 			this._show(!tf);
-			// for whatever reason this must be here
-			this._2dapplet.__showContainer(true, true);
 		}
 	}
 
@@ -550,7 +531,7 @@
 	}
 
 	proto._searchDatabase = function(query, database, script, _jmol_searchDatabase){
-		if (this._2dapplet && this._2dapplet._isEmbedded && !Jmol.$(this, "appletdiv:visible")[0])
+		if (this._2dapplet && this._2dapplet._isEmbedded && Jmol.$(this, "2dappletdiv:visible")[0])
 			return this._2dapplet._searchDatabase(query, database, script); 
 		this._showInfo(false);
 		if (query.indexOf("?") >= 0) {
@@ -590,7 +571,7 @@
 		if (doscript)
 			this._script("load async \"" + file + "\";" + script);
 		else
-			this._applet.openFile(file);
+			this._applet.viewer.openFile(file);
 		this._checkDeferred("");
 		return true;
 	}
@@ -604,7 +585,7 @@
 			script += ";if ({*}.molecule.max > 1 || {*}.modelindex.max > 0){ delete molecule > 1 or modelindex > 0;x = getProperty('extractModel',{*});load inline @x};"
 		}
 		if (!script && this._noscript) {
-			this._applet.loadInlineString(mol, "", false);
+			this._applet.viewer.loadInline(mol, '\0');
 		} else {
 		  this._loadMolData(mol, script, false);
 		}
@@ -666,9 +647,9 @@
 			this._script(A.length == 0 ? "select none" : "select on visible and (@" + A.join(",@") + ")");
 	}
 
-  proto._isDeferred = function () {
-      return !this._canvas && this._cover && this._isCovered && this._deferApplet
-  }
+	proto._isDeferred = function () {
+		return this._cover && this._isCovered && this._deferApplet
+	}
 
 	proto._checkDeferred = function(script) {
 		if (this._isDeferred()) {
@@ -678,38 +659,6 @@
 		}
 		return false;
 	}
-
-	proto._cover = function (doCover) {
-		if (doCover || !this._deferApplet) {
-			this._displayCoverImage(doCover);
-			return;
-		}
-		// uncovering UNMADE applet upon clicking image
-		var s = (this._coverScript ? this._coverScript : "");
-		this._coverScript = "";
-		if (this._deferUncover)
-			s += ";refresh;javascript " + this._id + "._displayCoverImage(false)";
-		this._script(s, true);
-		if (this._deferUncover && this._coverTitle == "activate 3D model")
-			Jmol._getElement(this, "coverimage").title = "3D model is loading...";
-		if (!this._isJava)
-			this._newCanvas(false);
-		if (this._defaultModel)	
-			Jmol._search(this, this._defaultModel);
-		this._showInfo(false);
-		if (!this._deferUncover)
-			this._displayCoverImage(false);
-		if (this._isJava)
-			Jmol.$html(Jmol.$(this, "appletdiv"), this._javaCode);
-		if (this._init)
-			this._init();
-	};
-
-	proto._displayCoverImage = function(TF) {
-		if (!this._coverImage || this._isCovered == TF) return;
-		this._isCovered = TF;
-		Jmol._getElement(this, "coverdiv").style.display = (TF ? "block" : "none");
-	};
 
   proto._getSmiles = function() {
 		return this._evaluate("{visible}.find('SMILES')");   
@@ -746,7 +695,6 @@
 
 	proto._create = function(id, Info) {
 		Jmol._setObject(this, id, Info);
-		thisnfo);
 		this._src || (this._src = "");
 		var t = Jmol._getWrapper(this, true) 
 			+ '<img id="'+id+'_image" width="' + Info.width + '" height="' + Info.height + '" src=""/>'

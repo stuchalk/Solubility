@@ -1,11 +1,11 @@
 Clazz.declarePackage ("J.adapter.readers.xml");
-Clazz.load (["J.adapter.readers.xml.XmlReader"], "J.adapter.readers.xml.XmlMagResReader", ["JU.Logger"], function () {
+Clazz.load (["J.adapter.readers.xml.XmlReader"], "J.adapter.readers.xml.XmlMagResReader", ["JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.myAttributes = null;
 Clazz.instantialize (this, arguments);
 }, J.adapter.readers.xml, "XmlMagResReader", J.adapter.readers.xml.XmlReader);
 Clazz.prepareFields (c$, function () {
-this.myAttributes =  Clazz.newArray (-1, []);
+this.myAttributes = [];
 });
 Clazz.makeConstructor (c$, 
 function () {
@@ -22,7 +22,7 @@ this.PX (parent, saxReader);
 }, "J.adapter.readers.xml.XmlReader,~O");
 Clazz.overrideMethod (c$, "processStartElement", 
 function (localName) {
-if (JU.Logger.debugging) JU.Logger.debug ("xmlmagres: start " + localName);
+if (JW.Logger.debugging) JW.Logger.debug ("xmlmagres: start " + localName);
 if (!this.parent.continuing) return;
 if ("calculation".equals (localName)) {
 this.keepChars = true;
@@ -33,7 +33,7 @@ return;
 }}, "~S");
 Clazz.overrideMethod (c$, "processEndElement", 
 function (localName) {
-if (JU.Logger.debugging) JU.Logger.debug ("xmlmagres: end " + localName);
+if (JW.Logger.debugging) JW.Logger.debug ("xmlmagres: end " + localName);
 while (true) {
 if ("calculation".equals (localName)) {
 break;

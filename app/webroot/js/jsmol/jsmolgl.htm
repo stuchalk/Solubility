@@ -26,7 +26,7 @@ var s = document.location.search;
 Jmol._debugCode = (s.indexOf("debugcode") >= 0);
 
 jmol_isReady = function(applet) {
-	document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion)
+	document.title = (applet._id + " - Jmol " + ___JmolVersion)
 	Jmol._getElement(applet, "appletdiv").style.border="1px solid blue"
 }		
 

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.render");
-Clazz.load (["J.render.ShapeRenderer"], "J.render.HalosRenderer", ["JU.C"], function () {
+Clazz.load (["J.render.ShapeRenderer"], "J.render.HalosRenderer", ["JW.C"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.isAntialiased = false;
 Clazz.instantialize (this, arguments);
@@ -12,10 +12,10 @@ var showHiddenSelections = (selectDisplayTrue && this.vwr.getBoolean (603979920)
 if (halos.mads == null && halos.bsHighlight == null && !selectDisplayTrue) return false;
 this.isAntialiased = this.g3d.isAntialiased ();
 var atoms = this.ms.at;
-var bsSelected = (selectDisplayTrue ? this.vwr.bsA () : null);
+var bsSelected = (selectDisplayTrue ? this.vwr.getSelectedAtoms () : null);
 var needTranslucent = false;
 this.g3d.addRenderer (1073741880);
-for (var i = this.ms.ac; --i >= 0; ) {
+for (var i = this.ms.getAtomCount (); --i >= 0; ) {
 var atom = atoms[i];
 if ((atom.shapeVisibilityFlags & 1) == 0) continue;
 var isHidden = this.ms.isAtomHidden (i);
@@ -26,11 +26,11 @@ if (isHidden && !showHiddenSelections) continue;
 if (this.mad == 0) this.mad = -1;
 if (this.colix == 0) this.colix = halos.colixSelection;
 if (this.colix == 2) this.colix = 23;
- else if (this.colix == 0) this.colix = JU.C.getColixInherited (this.colix, atom.colixAtom);
+ else if (this.colix == 0) this.colix = JW.C.getColixInherited (this.colix, atom.getColix ());
 } else if (isHidden) {
 continue;
 } else {
-this.colix = JU.C.getColixInherited (this.colix, atom.colixAtom);
+this.colix = JW.C.getColixInherited (this.colix, atom.getColix ());
 }if (this.mad != 0) {
 if (this.render1 (atom)) needTranslucent = true;
 }if (!isHidden && halos.bsHighlight != null && halos.bsHighlight.get (i)) {
@@ -42,23 +42,23 @@ return needTranslucent;
 });
 Clazz.defineMethod (c$, "render1", 
 function (atom) {
-var colixFill = (this.mad == -2 ? 0 : JU.C.getColixTranslucent3 (this.colix, true, 0.5));
+var colixFill = (this.mad == -2 ? 0 : JW.C.getColixTranslucent3 (this.colix, true, 0.5));
 var needTranslucent = (this.mad != -2);
-if (!this.g3d.setC (this.colix)) {
+if (!this.g3d.setColix (this.colix)) {
 needTranslucent = true;
 this.colix = 0;
-if (colixFill == 0 || !this.g3d.setC (colixFill)) return needTranslucent;
+if (colixFill == 0 || !this.g3d.setColix (colixFill)) return needTranslucent;
 }var z = atom.sZ;
 var d = this.mad;
 if (d < 0) {
 d = atom.sD;
 if (d == 0) {
 var ellipsemax = (atom.isVisible (20) ? atom.getADPMinMax (true) : 0);
-if (ellipsemax > 0) d = this.vwr.tm.scaleToScreen (z, Clazz.doubleToInt (Math.floor (ellipsemax * 2000)));
+if (ellipsemax > 0) d = this.vwr.scaleToScreen (z, Clazz.doubleToInt (Math.floor (ellipsemax * 2000)));
 if (d == 0) {
-d = Clazz.floatToInt (this.vwr.tm.scaleToScreen (z, this.mad == -2 ? 250 : 500));
+d = Clazz.floatToInt (this.vwr.scaleToScreen (z, this.mad == -2 ? 250 : 500));
 }}} else {
-d = this.vwr.tm.scaleToScreen (z, this.mad);
+d = this.vwr.scaleToScreen (z, this.mad);
 }if (this.isAntialiased) d /= 2;
 var more = (d / 2);
 if (this.mad == -2) more /= 2;

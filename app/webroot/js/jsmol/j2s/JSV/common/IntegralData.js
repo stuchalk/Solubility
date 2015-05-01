@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["java.lang.Enum", "JSV.common.MeasurementData", "$.IntegralComparator"], "JSV.common.IntegralData", ["java.lang.Double", "java.util.Collections", "$.StringTokenizer", "JU.AU", "$.BS", "$.DF", "$.Lst", "$.PT", "JSV.common.Annotation", "$.Coordinate", "$.Integral", "$.ScriptToken"], function () {
+Clazz.load (["java.lang.Enum", "JSV.common.MeasurementData", "$.IntegralComparator"], "JSV.common.IntegralData", ["java.lang.Double", "java.util.Collections", "$.StringTokenizer", "JU.AU", "$.BS", "$.DF", "$.List", "$.PT", "JSV.common.Annotation", "$.Coordinate", "$.Integral", "$.ScriptToken"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.percentMinY = 0;
 this.percentOffset = 0;
@@ -166,7 +166,7 @@ this.percentRange = Math.max (10, this.percentRange);
 });
 c$.getIntegrationRatiosFromString = Clazz.defineMethod (c$, "getIntegrationRatiosFromString", 
 function (spec, value) {
-var ratios =  new JU.Lst ();
+var ratios =  new JU.List ();
 var allParamTokens =  new java.util.StringTokenizer (value, ",");
 while (allParamTokens.hasMoreTokens ()) {
 var token = allParamTokens.nextToken ();
@@ -220,14 +220,14 @@ return bs;
 Clazz.overrideMethod (c$, "getMeasurementListArray", 
 function (units) {
 var data =  new Array (this.size ());
-for (var pt = 0, i = this.size (); --i >= 0; ) data[pt++] =  Clazz.newArray (-1, ["" + pt, JU.DF.formatDecimalDbl (this.get (i).getXVal (), 2), JU.DF.formatDecimalDbl (this.get (i).getXVal2 (), 2), this.get (i).text]);
+for (var pt = 0, i = this.size (); --i >= 0; ) data[pt++] = ["" + pt, JU.DF.formatDecimalDbl (this.get (i).getXVal (), 2), JU.DF.formatDecimalDbl (this.get (i).getXVal2 (), 2), this.get (i).text];
 
 return data;
 }, "~S");
 Clazz.overrideMethod (c$, "getMeasurementListArrayReal", 
 function (units) {
 var data = JU.AU.newDouble2 (this.size ());
-for (var pt = 0, i = this.size (); --i >= 0; pt++) data[pt] =  Clazz.newDoubleArray (-1, [this.get (i).getXVal (), this.get (i).getXVal2 (), this.get (i).getValue ()]);
+for (var pt = 0, i = this.size (); --i >= 0; pt++) data[pt] = [this.get (i).getXVal (), this.get (i).getXVal2 (), this.get (i).getValue ()];
 
 return data;
 }, "~S");
@@ -315,5 +315,5 @@ Clazz.defineStatics (c$,
 "DEFAULT_RANGE", 50,
 "DEFAULT_MINY", 0.1);
 c$.c = c$.prototype.c =  new JSV.common.IntegralComparator ();
-c$.$HEADER = c$.prototype.$HEADER =  Clazz.newArray (-1, ["peak", "start/ppm", "end/ppm", "value"]);
+c$.$HEADER = c$.prototype.$HEADER = ["peak", "start/ppm", "end/ppm", "value"];
 });

@@ -2,7 +2,6 @@ Clazz.declarePackage ("J.render");
 Clazz.load (null, "J.render.ShapeRenderer", ["JV.JC"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
-this.tm = null;
 this.g3d = null;
 this.ms = null;
 this.shape = null;
@@ -23,7 +22,6 @@ function () {
 Clazz.defineMethod (c$, "setViewerG3dShapeID", 
 function (vwr, shapeID) {
 this.vwr = vwr;
-this.tm = vwr.tm;
 this.shapeID = shapeID;
 this.myVisibilityFlag = JV.JC.getShapeVisibilityFlag (shapeID);
 this.initRenderer ();

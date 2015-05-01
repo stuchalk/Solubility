@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.render");
-Clazz.load (["J.render.ShapeRenderer", "JU.P3", "$.P3i", "$.V3"], "J.render.FontLineShapeRenderer", ["java.lang.Float", "JU.PT"], function () {
+Clazz.load (["J.render.ShapeRenderer", "JU.P3", "$.P3i", "$.V3"], "J.render.FontLineShapeRenderer", ["java.lang.Float", "J.c.AXES", "JW.Txt"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.imageFontScaling = 0;
 this.atomA = null;
@@ -46,11 +46,11 @@ var diameter;
 var isMad = (madOrPixels > 20);
 switch (this.exportType) {
 case 1:
-diameter = (isMad ? madOrPixels : Clazz.doubleToInt (Math.floor (this.vwr.tm.unscaleToScreen (z, madOrPixels * 2) * 1000)));
+diameter = (isMad ? madOrPixels : Clazz.doubleToInt (Math.floor (this.vwr.unscaleToScreen (z, madOrPixels * 2) * 1000)));
 break;
 default:
 if (isMad) {
-diameter = Clazz.floatToInt (this.vwr.tm.scaleToScreen (z, madOrPixels));
+diameter = Clazz.floatToInt (this.vwr.scaleToScreen (z, madOrPixels));
 } else {
 if (this.g3d.isAntialiased ()) madOrPixels += madOrPixels;
 diameter = madOrPixels;
@@ -75,10 +75,10 @@ this.drawTicks (this.atomA, this.atomB, diameter, true);
 Clazz.defineMethod (c$, "drawTicks", 
 function (pt1, pt2, diameter, withLabels) {
 if (Float.isNaN (this.tickInfo.first)) this.tickInfo.first = 0;
-this.drawTicks2 (pt1, pt2, this.tickInfo.ticks.x, 8, diameter, (!withLabels ? null : this.tickInfo.tickLabelFormats == null ?  Clazz.newArray (-1, ["%0.2f"]) : this.tickInfo.tickLabelFormats));
+this.drawTicks2 (pt1, pt2, this.tickInfo.ticks.x, 8, diameter, (!withLabels ? null : this.tickInfo.tickLabelFormats == null ? ["%0.2f"] : this.tickInfo.tickLabelFormats));
 this.drawTicks2 (pt1, pt2, this.tickInfo.ticks.y, 4, diameter, null);
 this.drawTicks2 (pt1, pt2, this.tickInfo.ticks.z, 2, diameter, null);
-}, "JU.Point3fi,JU.Point3fi,~N,~B");
+}, "JW.Point3fi,JW.Point3fi,~N,~B");
 Clazz.defineMethod (c$, "drawTicks2", 
  function (ptA, ptB, dx, length, diameter, formats) {
 if (dx == 0) return;
@@ -112,11 +112,11 @@ this.vectorT2.scale (length / this.vectorT2.length ());
 var ptRef = this.tickInfo.reference;
 if (ptRef == null) {
 this.pointT3.setT (this.vwr.getBoundBoxCenter ());
-if (this.vwr.g.axesMode == 603979810) {
+if (this.vwr.getAxesMode () === J.c.AXES.BOUNDBOX) {
 this.pointT3.add3 (1, 1, 1);
 }} else {
 this.pointT3.setT (ptRef);
-}this.tm.transformPtScr (this.pointT3, this.pt2i);
+}this.vwr.transformPtScr (this.pointT3, this.pt2i);
 var horizontal = (Math.abs (this.vectorT2.x / this.vectorT2.y) < 0.2);
 var centerX = horizontal;
 var centerY = !horizontal;
@@ -129,18 +129,18 @@ var i = (this.draw000 ? 0 : -1);
 while (p < d) {
 if (p >= this.tickInfo.first) {
 this.pointT2.setT (this.pointT);
-this.tm.transformPt3f (this.pointT2, this.pointT2);
+this.vwr.transformPt3f (this.pointT2, this.pointT2);
 this.drawLine (Clazz.doubleToInt (Math.floor (this.pointT2.x)), Clazz.doubleToInt (Math.floor (this.pointT2.y)), Clazz.floatToInt (z), (x = Clazz.doubleToInt (Math.floor (this.pointT2.x + this.vectorT2.x))), (y = Clazz.doubleToInt (Math.floor (this.pointT2.y + this.vectorT2.y))), Clazz.floatToInt (z), diameter);
 if (drawLabel && (this.draw000 || p != 0)) {
 val[0] = Float.$valueOf ((p == 0 ? 0 : p * signFactor));
-var s = JU.PT.sprintf (formats[i % formats.length], "f", val);
+var s = JW.Txt.sprintf (formats[i % formats.length], "f", val);
 this.drawString (x, y, Clazz.floatToInt (z), 4, rightJustify, centerX, centerY, Clazz.doubleToInt (Math.floor (this.pointT2.y)), s);
 }}this.pointT.add (this.vectorT);
 p += dx;
 z += dz;
 i++;
 }
-}, "JU.Point3fi,JU.Point3fi,~N,~N,~N,~A");
+}, "JW.Point3fi,JW.Point3fi,~N,~N,~N,~A");
 Clazz.defineMethod (c$, "drawLine", 
 function (x1, y1, z1, x2, y2, z2, diameter) {
 return this.drawLine2 (x1, y1, z1, x2, y2, z2, diameter);
@@ -206,8 +206,8 @@ var yS = Clazz.doubleToInt (Math.floor (yA + dy * i / f));
 var zS = Clazz.doubleToInt (Math.floor (zA + dz * i / f));
 if (isDots) {
 this.s1.set (xS, yS, zS);
-if (pt == ptS) this.g3d.setC (this.colixA);
- else if (pt == ptE) this.g3d.setC (this.colixB);
+if (pt == ptS) this.g3d.setColix (this.colixA);
+ else if (pt == ptE) this.g3d.setColix (this.colixB);
 this.g3d.fillSphereI (this.width, this.s1);
 continue;
 }if (pt == ptS) colixS = this.colixB;
@@ -225,10 +225,10 @@ if (this.asLineOnly) this.g3d.drawLine (colixA, colixB, xA, yA, zA, xB, yB, zB);
  else this.g3d.fillCylinderXYZ (colixA, colixB, endcaps, (!this.isExport || this.mad == 1 ? diameter : this.mad), xA, yA, zA, xB, yB, zB);
 }, "~N,~N,~N,~N,~N,~N,~N,~N,~N,~N");
 Clazz.defineStatics (c$,
-"dashes",  Clazz.newIntArray (-1, [12, 0, 0, 2, 5, 7, 10]),
-"hDashes",  Clazz.newIntArray (-1, [10, 7, 6, 1, 3, 4, 6, 7, 9]),
-"ndots",  Clazz.newIntArray (-1, [0, 3, 1000]),
-"sixdots",  Clazz.newIntArray (-1, [12, 3, 6, 1, 3, 5, 7, 9, 11]),
-"fourdots",  Clazz.newIntArray (-1, [13, 3, 5, 2, 5, 8, 11]),
-"twodots",  Clazz.newIntArray (-1, [12, 3, 4, 3, 9]));
+"dashes", [12, 0, 0, 2, 5, 7, 10],
+"hDashes", [10, 7, 6, 1, 3, 4, 6, 7, 9],
+"ndots", [0, 3, 1000],
+"sixdots", [12, 3, 6, 1, 3, 5, 7, 9, 11],
+"fourdots", [13, 3, 5, 2, 5, 8, 11],
+"twodots", [12, 3, 4, 3, 9]);
 });

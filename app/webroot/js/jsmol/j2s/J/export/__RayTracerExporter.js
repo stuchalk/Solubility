@@ -14,29 +14,29 @@ this.lineWidthMad = 2;
 Clazz.overrideMethod (c$, "outputVertex", 
 function (pt, offset) {
 J["export"].___Exporter.setTempVertex (pt, offset, this.tempP1);
-this.tm.transformPt3f (this.tempP1, this.tempP1);
+this.vwr.transformPt3f (this.tempP1, this.tempP1);
 this.output (this.tempP1);
-}, "JU.T3,JU.T3");
+}, "JU.P3,JU.P3");
 Clazz.defineMethod (c$, "getScreenNormal", 
 function (pt, normal, factor) {
 if (Float.isNaN (normal.x)) {
 this.tempP3.set (0, 0, 0);
 return this.tempP3;
 }this.tempP1.add2 (pt, normal);
-this.tm.transformPt3f (pt, this.tempP2);
-this.tm.transformPt3f (this.tempP1, this.tempP3);
+this.vwr.transformPt3f (pt, this.tempP2);
+this.vwr.transformPt3f (this.tempP1, this.tempP3);
 this.tempP3.sub (this.tempP2);
 this.tempP3.scale (factor);
 return this.tempP3;
-}, "JU.T3,JU.T3,~N");
+}, "JU.P3,JU.V3,~N");
 Clazz.defineMethod (c$, "initVars", 
 function () {
-this.isSlabEnabled = this.tm.slabEnabled;
+this.isSlabEnabled = this.vwr.getSlabEnabled ();
 this.minScreenDimension = Math.min (this.screenWidth, this.screenHeight);
 });
 Clazz.overrideMethod (c$, "drawAtom", 
 function (atom) {
-this.outputSphere (atom.sX, atom.sY, atom.sZ, atom.sD / 2, atom.colixAtom);
+this.outputSphere (atom.sX, atom.sY, atom.sZ, atom.sD / 2, atom.getColix ());
 }, "JM.Atom");
 Clazz.overrideMethod (c$, "drawCircle", 
 function (x, y, z, diameter, colix, doFill) {
@@ -69,22 +69,22 @@ this.tempP1.setT (this.tempV2);
 this.fillConicalCylinder (screenA, this.tempP1, madBond, colix1, endcaps);
 this.fillConicalCylinder (this.tempP1, screenB, madBond, colix2, endcaps);
 }if (endcaps != 3) return;
-var radius = this.vwr.tm.scaleToScreen (Clazz.floatToInt (screenA.z), madBond) / 2;
+var radius = this.vwr.scaleToScreen (Clazz.floatToInt (screenA.z), madBond) / 2;
 if (radius <= 1) return;
 this.outputSphere (screenA.x, screenA.y, screenA.z, radius, colix1);
-radius = this.vwr.tm.scaleToScreen (Clazz.floatToInt (screenB.z), madBond) / 2;
+radius = this.vwr.scaleToScreen (Clazz.floatToInt (screenB.z), madBond) / 2;
 if (radius <= 1) return;
 this.outputSphere (screenB.x, screenB.y, screenB.z, radius, colix2);
 }, "JU.P3,JU.P3,~N,~N,~N,~N,~N");
 Clazz.defineMethod (c$, "fillConicalCylinder", 
 function (screenA, screenB, madBond, colix, endcaps) {
-var radius1 = this.vwr.tm.scaleToScreen (Clazz.floatToInt (screenA.z), madBond) / 2;
+var radius1 = this.vwr.scaleToScreen (Clazz.floatToInt (screenA.z), madBond) / 2;
 if (radius1 == 0) return;
 if (radius1 < 1) radius1 = 1;
 if (screenA.distance (screenB) == 0) {
 this.outputSphere (screenA.x, screenA.y, screenA.z, radius1, colix);
 return;
-}var radius2 = this.vwr.tm.scaleToScreen (Clazz.floatToInt (screenB.z), madBond) / 2;
+}var radius2 = this.vwr.scaleToScreen (Clazz.floatToInt (screenB.z), madBond) / 2;
 if (radius2 == 0) return;
 if (radius2 < 1) radius2 = 1;
 this.outputCylinderConical (screenA, screenB, radius1, radius2, colix);
@@ -113,7 +113,7 @@ this.outputSphere (pt.x, pt.y, pt.z, diameter / 2, colix);
 Clazz.overrideMethod (c$, "fillTriangle", 
 function (colix, ptA, ptB, ptC, twoSided, isCartesian) {
 this.outputTriangle (ptA, ptB, ptC, colix);
-}, "~N,JU.T3,JU.T3,JU.T3,~B,~B");
+}, "~N,JU.P3,JU.P3,JU.P3,~B,~B");
 Clazz.overrideMethod (c$, "fillEllipsoid", 
 function (center, points, colix, x, y, z, diameter, toEllipsoidal, coef, deriv, octantPoints) {
 var radius = diameter / 2;

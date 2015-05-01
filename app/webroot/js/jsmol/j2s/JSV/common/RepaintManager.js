@@ -14,10 +14,9 @@ if (this.repaintPending) {
 return false;
 }this.repaintPending = true;
 this.vwr.pd ().taintedAll = true;
-var applet = this.vwr.html5Applet;
 {
-if (typeof Jmol != "undefined" && Jmol._repaint && applet)
-Jmol._repaint(applet, false);
+if (typeof Jmol != "undefined" && Jmol._repaint && this.vwr.applet)
+Jmol._repaint(this.vwr.applet, false);
 this.repaintDone();
 }return true;
 });

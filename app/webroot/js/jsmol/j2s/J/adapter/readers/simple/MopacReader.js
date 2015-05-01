@@ -1,6 +1,7 @@
 Clazz.declarePackage ("J.adapter.readers.simple");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.simple.MopacReader", ["java.lang.Exception", "$.Float", "JU.BS", "$.PT", "JU.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.simple.MopacReader", ["java.lang.Exception", "$.Float", "JU.BS", "$.PT", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
+this.baseAtomIndex = 0;
 this.chargesFound = false;
 this.haveHeader = false;
 this.mopacVersion = 0;
@@ -17,7 +18,7 @@ if (this.line.indexOf ("2009") >= 0) this.mopacVersion = 2009;
  else if (this.line.indexOf ("2002") >= 0) this.mopacVersion = 2002;
  else if (this.line.indexOf ("MOPAC2") >= 0) this.mopacVersion = JU.PT.parseInt (this.line.substring (this.line.indexOf ("MOPAC2") + 5));
 }
-JU.Logger.info ("MOPAC version " + this.mopacVersion);
+JW.Logger.info ("MOPAC version " + this.mopacVersion);
 });
 Clazz.overrideMethod (c$, "checkLine", 
 function () {
@@ -68,6 +69,7 @@ this.chargesFound = true;
 });
 Clazz.defineMethod (c$, "processCoordinates", 
 function () {
+this.readLines (3);
 if (!this.chargesFound) {
 this.asc.newAtomSet ();
 this.baseAtomIndex = this.asc.ac;
@@ -75,9 +77,7 @@ this.baseAtomIndex = this.asc.ac;
 this.chargesFound = false;
 }var atoms = this.asc.atoms;
 var atomNumber;
-while (this.rd ().trim ().length == 0 || this.line.indexOf ("ATOM") >= 0) {
-}
-while (this.line != null) {
+while (this.rd () != null) {
 var tokens = this.getTokens ();
 if (tokens.length == 0 || (atomNumber = this.parseIntStr (tokens[0])) == -2147483648) break;
 var atom = atoms[this.baseAtomIndex + atomNumber - 1];
@@ -88,13 +88,12 @@ var elementSymbol = tokens[1];
 var atno = this.parseIntStr (elementSymbol);
 if (atno != -2147483648) elementSymbol = J.adapter.smarter.AtomSetCollectionReader.getElementSymbol (atno);
 atom.elementSymbol = elementSymbol;
-this.rd ();
 }
 });
 Clazz.defineMethod (c$, "readFrequencies", 
  function () {
 var bsOK =  new JU.BS ();
-var n0 = this.asc.iSet + 1;
+var n0 = this.asc.currentAtomSetIndex + 1;
 var tokens;
 var done = false;
 while (!done && this.rd () != null && this.line.indexOf ("DESCRIPTION") < 0 && this.line.indexOf ("MASS-WEIGHTED") < 0) if (this.line.toUpperCase ().indexOf ("ROOT") >= 0) {
@@ -123,7 +122,7 @@ if (this.line.indexOf ("DESCRIPTION") < 0) this.discardLinesUntilContains ("DESC
 while (this.discardLinesUntilContains ("VIBRATION") != null) {
 tokens = this.getTokens ();
 var freqNo = this.parseIntStr (tokens[1]);
-tokens[0] = JU.PT.getTokens (this.rd ())[1];
+tokens[0] = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.rd ())[1];
 if (tokens[2].equals ("ATOM")) tokens[2] = null;
 info[freqNo - 1] = tokens;
 if (freqNo == this.vibrationNumber) break;
@@ -132,7 +131,7 @@ for (var i = this.vibrationNumber - 1; --i >= 0; ) if (info[i] == null) info[i] 
 
 for (var i = 0, n = n0; i < this.vibrationNumber; i++) {
 if (!bsOK.get (i)) continue;
-this.asc.iSet = n++;
+this.asc.currentAtomSetIndex = n++;
 this.asc.setAtomSetFrequency (null, info[i][2], info[i][0], null);
 }
 });

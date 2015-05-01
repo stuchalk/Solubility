@@ -27,9 +27,8 @@ this.close ();
 return this.doClose;
 }, "~S,JU.OC,java.util.Map");
 Clazz.defineMethod (c$, "putString", 
-function (s) {
-var b = s.getBytes ();
-this.out.write (b, 0, b.length);
+function (str) {
+this.out.append (str);
 }, "~S");
 Clazz.defineMethod (c$, "putByte", 
 function (b) {

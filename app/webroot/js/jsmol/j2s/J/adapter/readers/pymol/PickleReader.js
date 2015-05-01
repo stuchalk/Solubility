@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.pymol");
-Clazz.load (["java.util.Hashtable", "JU.Lst"], "J.adapter.readers.pymol.PickleReader", ["java.lang.Double", "$.Long", "JU.SB", "JU.Logger"], function () {
+Clazz.load (["java.util.Hashtable", "JU.List"], "J.adapter.readers.pymol.PickleReader", ["java.lang.Double", "$.Long", "JU.SB", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.binaryDoc = null;
@@ -15,14 +15,15 @@ this.emptyListPt = 0;
 this.thisSection = null;
 this.inMovie = false;
 this.inNames = false;
+this.thisName = null;
 this.lastMark = 0;
 this.retrieveCount = 0;
 Clazz.instantialize (this, arguments);
 }, J.adapter.readers.pymol, "PickleReader");
 Clazz.prepareFields (c$, function () {
-this.stack =  new JU.Lst ();
-this.marks =  new JU.Lst ();
-this.build =  new JU.Lst ();
+this.stack =  new JU.List ();
+this.marks =  new JU.List ();
+this.build =  new JU.List ();
 this.memo =  new java.util.Hashtable ();
 });
 Clazz.makeConstructor (c$, 
@@ -61,7 +62,8 @@ case 101:
 l = this.getObjects (this.getMark ());
 if (this.inNames && this.markCount == 2) {
 var pt = this.binaryDoc.getPosition ();
-var l2 =  new JU.Lst ();
+System.out.println (" " + this.thisName + " " + this.filePt + " " + (pt - this.filePt));
+var l2 =  new JU.List ();
 l2.addLast (Integer.$valueOf (this.filePt));
 l2.addLast (Integer.$valueOf (pt - this.filePt));
 l.addLast (l2);
@@ -100,7 +102,7 @@ case 106:
 i = this.binaryDoc.readIntLE ();
 o = this.getMemo (i);
 if (o == null) {
-JU.Logger.error ("did not find memo item for " + i);
+JW.Logger.error ("did not find memo item for " + i);
 this.push ("LONG_BINGET" + (++this.id));
 } else {
 this.push (o);
@@ -111,6 +113,7 @@ a =  Clazz.newByteArray (i, 0);
 this.binaryDoc.readByteArray (a, 0, i);
 s =  String.instantialize (a, "UTF-8");
 if (this.inNames && this.markCount == 3 && this.lastMark == this.stack.size ()) {
+this.thisName = s;
 this.filePt = this.emptyListPt;
 }this.push (s);
 break;
@@ -130,10 +133,10 @@ this.push (s);
 break;
 case 93:
 this.emptyListPt = this.binaryDoc.getPosition () - 1;
-this.push ( new JU.Lst ());
+this.push ( new JU.List ());
 break;
 case 99:
-l =  new JU.Lst ();
+l =  new JU.List ();
 l.addLast ("global");
 l.addLast (this.readString ());
 l.addLast (this.readString ());
@@ -154,7 +157,7 @@ this.push (this.getObjects (this.getMark ()));
 break;
 case 115:
 o = this.pop ();
-if (!(Clazz.instanceOf (this.peek (), String))) JU.Logger.error (this.peek () + " is not a string");
+if (!(Clazz.instanceOf (this.peek (), String))) JW.Logger.error (this.peek () + " is not a string");
 s = this.pop ();
 (this.peek ()).put (s, o);
 break;
@@ -162,7 +165,7 @@ case 117:
 mark = this.getMark ();
 l = this.getObjects (mark);
 o = this.peek ();
-if (Clazz.instanceOf (o, JU.Lst)) {
+if (Clazz.instanceOf (o, JU.List)) {
 for (i = 0; i < l.size (); i++) (o).addLast (l.get (i));
 
 } else {
@@ -193,11 +196,11 @@ throw e;
 }
 break;
 default:
-JU.Logger.error ("Pickle reader error: " + b + " " + this.binaryDoc.getPosition ());
+JW.Logger.error ("Pickle reader error: " + b + " " + this.binaryDoc.getPosition ());
 }
 }
 if (logging) this.log ("");
-JU.Logger.info ("PyMOL Pickle reader cached " + this.memo.size () + " tokens; retrieved " + this.retrieveCount);
+JW.Logger.info ("PyMOL Pickle reader cached " + this.memo.size () + " tokens; retrieved " + this.retrieveCount);
 this.memo = null;
 map = this.stack.remove (0);
 if (map.size () == 0) for (i = this.stack.size (); --i >= 0; ) {
@@ -218,13 +221,14 @@ Clazz.defineMethod (c$, "getMemo",
  function (i) {
 var o = this.memo.get (Integer.$valueOf (i));
 if (o == null) return o;
+System.out.println ("retrieving string " + o + " at " + this.binaryDoc.getPosition ());
 this.retrieveCount++;
 return o;
 }, "~N");
 Clazz.defineMethod (c$, "getObjects", 
  function (mark) {
 var n = this.stack.size () - mark;
-var args =  new JU.Lst ();
+var args =  new JU.List ();
 for (var j = 0; j < n; j++) args.addLast (null);
 
 for (var j = n, i = this.stack.size (); --i >= mark; ) args.set (--j, this.stack.remove (i));

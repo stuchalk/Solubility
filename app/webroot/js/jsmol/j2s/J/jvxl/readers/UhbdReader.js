@@ -19,12 +19,12 @@ this.nSurfaces = 1;
 }, "J.jvxl.readers.SurfaceGenerator,java.io.BufferedReader");
 Clazz.overrideMethod (c$, "readParameters", 
 function () {
-this.rd ();
+this.readLine ();
 this.jvxlFileHeaderBuffer = JU.SB.newS (this.line);
 this.jvxlFileHeaderBuffer.append ("UHBD format ").append (this.line).append ("\n");
 this.jvxlFileHeaderBuffer.append ("see http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
-this.rd ();
-this.rd ();
+this.readLine ();
+this.readLine ();
 this.voxelCounts[0] = this.parseIntStr (this.line.substring (0, 7));
 this.voxelCounts[1] = this.parseIntStr (this.line.substring (7, 14));
 this.voxelCounts[2] = this.parseIntStr (this.line.substring (14, 21));
@@ -34,16 +34,16 @@ this.volumetricVectors[0].set (0, 0, dx);
 this.volumetricVectors[1].set (0, dx, 0);
 this.volumetricVectors[2].set (dx, 0, 0);
 this.planeCount = this.voxelCounts[0] * this.voxelCounts[1];
-this.rd ();
-this.rd ();
+this.readLine ();
+this.readLine ();
 });
 Clazz.overrideMethod (c$, "nextVoxel", 
 function () {
 if (this.voxelCount % this.planeCount == 0) {
-this.rd ();
+this.readLine ();
 this.pt = 0;
 }if (this.pt % 78 == 0) {
-this.rd ();
+this.readLine ();
 this.pt = 0;
 }this.voxelCount++;
 var voxelValue = this.parseFloatStr (this.line.substring (this.pt, this.pt + 13));

@@ -24,13 +24,13 @@ this.pt += nToAdd;
 return nBytesRemaining - nToAdd;
 }, "~A,~N,~N");
 Clazz.defineMethod (c$, "addTo", 
-function (jzt, data) {
-data.append (JU.ZipData.getGzippedBytesAsString (jzt, this.buf));
-}, "javajs.api.GenericZipTools,JU.SB");
+function (data) {
+data.append (JU.ZipData.getGzippedBytesAsString (this.buf));
+}, "JU.SB");
 c$.getGzippedBytesAsString = Clazz.defineMethod (c$, "getGzippedBytesAsString", 
-function (jzt, bytes) {
+function (bytes) {
 try {
-var bis = jzt.getUnGzippedInputStream (bytes);
+var bis = JU.ZipTools.getUnGzippedInputStream (bytes);
 var s = JU.ZipTools.getStreamAsString (bis);
 bis.close ();
 return s;
@@ -41,5 +41,5 @@ return "";
 throw e;
 }
 }
-}, "javajs.api.GenericZipTools,~A");
+}, "~A");
 });

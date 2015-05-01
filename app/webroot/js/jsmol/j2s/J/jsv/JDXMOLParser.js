@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jsv");
-Clazz.load (["J.api.JmolJDXMOLParser"], "J.jsv.JDXMOLParser", ["java.util.Hashtable", "JU.BS", "$.Lst", "$.PT", "$.SB", "JU.Logger"], function () {
+Clazz.load (["J.adapter.smarter.JmolJDXMOLParser"], "J.jsv.JDXMOLParser", ["java.util.Hashtable", "JU.BS", "$.List", "$.PT", "$.SB", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.line = null;
 this.lastModel = "";
@@ -13,7 +13,7 @@ this.modelIdList = "";
 this.peakIndex = null;
 this.peakFilePath = null;
 Clazz.instantialize (this, arguments);
-}, J.jsv, "JDXMOLParser", null, J.api.JmolJDXMOLParser);
+}, J.jsv, "JDXMOLParser", null, J.adapter.smarter.JmolJDXMOLParser);
 Clazz.makeConstructor (c$, 
 function () {
 });
@@ -31,7 +31,7 @@ this.peakIndex =  Clazz.newIntArray (1, 0);
 htParams.put ("peakIndex", this.peakIndex);
 }if (!htParams.containsKey ("subFileName")) this.peakFilePath = JU.PT.split (filePath, "|")[0];
 }}return this;
-}, "J.api.JmolJDXMOLReader,~S,java.util.Map");
+}, "J.adapter.smarter.JmolJDXMOLReader,~S,java.util.Map");
 Clazz.overrideMethod (c$, "getAttribute", 
 function (line, tag) {
 var attr = JU.PT.getQuotedAttribute (line, tag);
@@ -68,41 +68,27 @@ while (this.readLine () != null && !this.line.contains ("$$$$")) sb.append (this
 return JU.PT.rep (sb.toString (), "  $$ Empty String", "");
 });
 Clazz.overrideMethod (c$, "readACDAssignments", 
-function (nPoints, isPeakAssignment) {
-var list =  new JU.Lst ();
-try {
+function (nPoints) {
+var list =  new JU.List ();
 this.readLine ();
 if (nPoints < 0) nPoints = 2147483647;
 for (var i = 0; i < nPoints; i++) {
-var s = this.readLine ();
-if (s == null || s.indexOf ("#") == 0) break;
-if (isPeakAssignment) {
-while (s.indexOf (">") < 0) s += " " + this.readLine ();
-
-s = s.trim ();
-}s = JU.PT.replaceAllCharacters (s, "()<>", " ").trim ();
-if (s.length == 0) break;
-var pt = s.indexOf ("'");
+this.line = JU.PT.replaceAllCharacters (this.readLine (), "()<>", " ").trim ();
+if (this.line.length == 0 || this.line.indexOf ("#") >= 0 || this.line.indexOf ("$") >= 0) break;
+var pt = this.line.indexOf ("'");
 if (pt >= 0) {
-var pt2 = s.indexOf ("'", pt + 1);
-s = s.substring (0, pt) + JU.PT.rep (s.substring (pt + 1, pt2), ",", ";") + s.substring (pt2 + 1);
-}JU.Logger.info ("Peak Assignment: " + s);
-var tokens = JU.PT.split (s, ",");
+var pt2 = this.line.indexOf ("'", pt + 1);
+this.line = this.line.substring (0, pt) + JU.PT.rep (this.line.substring (pt + 1, pt2), ",", ";") + this.line.substring (pt2 + 1);
+}JW.Logger.info ("Peak Assignment: " + this.line);
+var tokens = JU.PT.split (this.line, ",");
 list.addLast (tokens);
 }
-} catch (e) {
-if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.error ("Error reading peak assignments at " + this.line + ": " + e);
-} else {
-throw e;
-}
-}
 return list;
-}, "~N,~B");
+}, "~N");
 Clazz.overrideMethod (c$, "setACDAssignments", 
 function (model, mytype, peakCount, acdlist, molFile) {
 try {
-if (peakCount >= 0) this.peakIndex =  Clazz.newIntArray (-1, [peakCount]);
+if (peakCount >= 0) this.peakIndex = [peakCount];
 var isMS = (mytype.indexOf ("MASS") == 0);
 var file = " file=" + JU.PT.esc (this.peakFilePath.$replace ('\\', '/'));
 model = " model=" + JU.PT.esc (model + " (assigned)");
@@ -110,7 +96,7 @@ this.piUnitsX = "";
 this.piUnitsY = "";
 var dx = this.getACDPeakWidth (mytype) / 2;
 var htSets =  new java.util.Hashtable ();
-var list =  new JU.Lst ();
+var list =  new JU.List ();
 var zzcMap = null;
 var ptx;
 var pta;
@@ -138,11 +124,7 @@ var x = JU.PT.parseFloat (data[ptx]);
 var a = data[pta];
 if (isMS) a = this.fixACDAtomList (a, zzcMap, nAtoms);
  else a = a.$replace (';', ',');
-if (a.indexOf ("select") >= 0) {
-var pt = a.indexOf ("select atomno=");
-if (pt < 0) continue;
-a = JU.PT.split (a.substring (pt + 14), " ")[0];
-}var title = (isMS ? "m/z=" + Math.round (x) + ": " + data[2] + " (" + data[1] + ")" : pta == 2 ? "" + (Math.round (x * 10) / 10) : null);
+var title = (isMS ? "m/z=" + Math.round (x) + ": " + data[2] + " (" + data[1] + ")" : pta == 2 ? "" + (Math.round (x * 10) / 10) : null);
 this.getStringInfo (file, title, mytype, model, a, htSets, "" + x, list, " atoms=\"%ATOMS%\" xMin=\"" + (x - dx) + "\" xMax=\"" + (x + dx) + "\">");
 }
 return this.setPeakData (list, 0);
@@ -153,7 +135,7 @@ return 0;
 throw e;
 }
 }
-}, "~S,~S,~N,JU.Lst,~S");
+}, "~S,~S,~N,JU.List,~S");
 Clazz.defineMethod (c$, "fixACDAtomList", 
  function (atoms, zzcMap, nAtoms) {
 atoms = atoms.trim ();
@@ -183,7 +165,7 @@ return (type.indexOf ("HNMR") >= 0 ? 0.05 : type.indexOf ("CNMR") >= 0 ? 1 : typ
 Clazz.overrideMethod (c$, "readPeaks", 
 function (isSignals, peakCount) {
 try {
-if (peakCount >= 0) this.peakIndex =  Clazz.newIntArray (-1, [peakCount]);
+if (peakCount >= 0) this.peakIndex = [peakCount];
 var offset = (isSignals ? 1 : 0);
 var tag1 = (isSignals ? "Signals" : "Peaks");
 var tag2 = (isSignals ? "<Signal" : "<PeakData");
@@ -195,11 +177,11 @@ var mytype = JU.PT.getQuotedAttribute (this.line, "type");
 this.piUnitsX = JU.PT.getQuotedAttribute (this.line, "xLabel");
 this.piUnitsY = JU.PT.getQuotedAttribute (this.line, "yLabel");
 var htSets =  new java.util.Hashtable ();
-var list =  new JU.Lst ();
+var list =  new JU.List ();
 while (this.readLine () != null && !(this.line = this.line.trim ()).startsWith ("</" + tag1)) {
 if (this.line.startsWith (tag2)) {
 this.getRecord (tag2);
-JU.Logger.info (this.line);
+JW.Logger.info (this.line);
 var title = JU.PT.getQuotedAttribute (this.line, "title");
 if (mytype == null) mytype = JU.PT.getQuotedAttribute (this.line, "type");
 var atoms = JU.PT.getQuotedAttribute (this.line, "atoms");
@@ -232,12 +214,12 @@ nH += na;
 info = JU.PT.rep (info, "%ATOMS%", s.substring (1));
 info = JU.PT.rep (info, "%S%", (na == 1 ? "" : "s"));
 info = JU.PT.rep (info, "%NATOMS%", "" + na);
-}JU.Logger.info ("adding PeakData " + info);
+}JW.Logger.info ("adding PeakData " + info);
 this.loader.addPeakData (info);
 }
 this.loader.setSpectrumPeaks (nH, this.piUnitsX, this.piUnitsY);
 return n;
-}, "JU.Lst,~N");
+}, "JU.List,~N");
 Clazz.defineMethod (c$, "getStringInfo", 
  function (file, title, mytype, model, atoms, htSets, key, list, more) {
 if ("HNMR".equals (mytype)) mytype = "1HNMR";
@@ -249,15 +231,14 @@ var stringInfo = "<PeakData " + file + " index=\"%INDEX%\"" + title + type + mod
 if (atoms != null) stringInfo = JU.PT.rep (stringInfo, "atoms=\"" + atoms + "\"", "atoms=\"%ATOMS%\"");
 var o = htSets.get (key);
 if (o == null) {
-o =  Clazz.newArray (-1, [stringInfo, (atoms == null ? null :  new JU.BS ())]);
+o = [stringInfo, (atoms == null ? null :  new JU.BS ())];
 htSets.put (key, o);
 list.addLast (o);
 }if (atoms != null) {
 var bs = o[1];
 atoms = atoms.$replace (',', ' ');
-if (atoms.equals ("*")) atoms = "0:1000";
 bs.or (JU.BS.unescape ("({" + atoms + "})"));
-}}, "~S,~S,~S,~S,~S,java.util.Map,~S,JU.Lst,~S");
+}}, "~S,~S,~S,~S,~S,java.util.Map,~S,JU.List,~S");
 Clazz.defineMethod (c$, "getModelData", 
  function (isFirst) {
 this.lastModel = this.thisModelID;

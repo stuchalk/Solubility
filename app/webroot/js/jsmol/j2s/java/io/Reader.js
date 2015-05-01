@@ -41,5 +41,5 @@ function () {
 throw  new java.io.IOException ("reset() not supported");
 });
 Clazz.defineStatics (c$,
-"MAX_SKIP_BUFFE_SIZE", 8192);
+"maxSkipBufferSize", 8192);
 });

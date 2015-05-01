@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.export");
-Clazz.load (["J.export.__RayTracerExporter"], "J.export._PovrayExporter", ["java.lang.Float", "$.Short", "JU.Measure", "$.P4", "JV.Viewer"], function () {
+Clazz.load (["J.export.__RayTracerExporter"], "J.export._PovrayExporter", ["java.lang.Float", "$.Short", "JU.P4", "JW.Measure", "JV.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.haveMacros = false;
 Clazz.instantialize (this, arguments);
@@ -69,7 +69,7 @@ this.writeMacros ();
 });
 Clazz.defineMethod (c$, "writeMacros", 
  function () {
-this.output ("#default { finish {\n" + "  ambient " + this.gdata.getAmbientPercent () / 100 + "\n" + "  diffuse " + this.gdata.getDiffusePercent () / 100 + "\n" + "  specular " + this.gdata.getSpecularPercent () / 100 + "\n" + "  roughness .00001\n  metallic\n  phong 0.9\n  phong_size 120\n}}" + "\n\n");
+this.output ("#default { finish {\n" + "  ambient " + this.g3d.getAmbientPercent () / 100 + "\n" + "  diffuse " + this.g3d.getDiffusePercent () / 100 + "\n" + "  specular " + this.g3d.getSpecularPercent () / 100 + "\n" + "  roughness .00001\n  metallic\n  phong 0.9\n  phong_size 120\n}}" + "\n\n");
 this.output ("#macro check_shadow()\n #if (noShadows)\n  no_shadow \n #end\n#end\n\n");
 this.output ("#declare slabZ = " + this.slabZ + ";\n" + "#declare depthZ = " + this.depthZ + ";\n" + "#declare dzSlab = 10;\n" + "#declare dzDepth = dzSlab;\n" + "#declare dzStep = 0.001;\n\n");
 this.output ("#macro clip()\n  clipped_by { box {<0,0,slabZ>,<Width,Height,depthZ>} }\n#end\n\n");
@@ -80,7 +80,7 @@ this.writeMacrosBond ();
 });
 Clazz.defineMethod (c$, "writeMacrosFinish", 
  function () {
-this.output ("#macro translucentFinish(T)\n" + " #local shineFactor = T;\n" + " #if (T <= 0.25)\n" + "  #declare shineFactor = (1.0-4*T);\n" + " #end\n" + " #if (T > 0.25)\n" + "  #declare shineFactor = 0;\n" + " #end\n" + " finish {\n" + "  ambient " + this.gdata.getAmbientPercent () / 100 + "\n" + "  diffuse " + this.gdata.getDiffusePercent () / 100 + "\n" + "  specular " + this.gdata.getSpecularPercent () / 100 + "\n" + "  roughness .00001\n" + "  metallic shineFactor\n" + "  phong 0.9*shineFactor\n" + "  phong_size 120*shineFactor\n}" + "#end\n\n");
+this.output ("#macro translucentFinish(T)\n" + " #local shineFactor = T;\n" + " #if (T <= 0.25)\n" + "  #declare shineFactor = (1.0-4*T);\n" + " #end\n" + " #if (T > 0.25)\n" + "  #declare shineFactor = 0;\n" + " #end\n" + " finish {\n" + "  ambient " + this.g3d.getAmbientPercent () / 100 + "\n" + "  diffuse " + this.g3d.getDiffusePercent () / 100 + "\n" + "  specular " + this.g3d.getSpecularPercent () / 100 + "\n" + "  roughness .00001\n" + "  metallic shineFactor\n" + "  phong 0.9*shineFactor\n" + "  phong_size 120*shineFactor\n}" + "#end\n\n");
 });
 Clazz.defineMethod (c$, "writeMacrosAtom", 
  function () {
@@ -130,8 +130,9 @@ Clazz.overrideMethod (c$, "outputCone",
 function (screenBase, screenTip, radius, colix, isBarb) {
 if (isBarb) {
 if (!this.haveMacros) this.writeMacros2 ();
+var plane =  new JU.P4 ();
 this.tempP1.set (screenBase.x, screenTip.y, 12345.6789);
-var plane = JU.Measure.getPlaneThroughPoints (screenBase, screenTip, this.tempP1, this.tempV1, this.tempV2,  new JU.P4 ());
+JW.Measure.getPlaneThroughPoints (screenBase, screenTip, this.tempP1, this.tempV1, this.tempV2, this.tempV3, plane);
 this.output ("barb(" + this.getTriad (screenBase) + "," + radius + "," + this.getTriad (screenTip) + ",0" + "," + this.color4 (colix) + "," + plane.x + "," + plane.y + "," + plane.z + "," + -plane.w + ")\n");
 } else {
 this.output ("b(" + this.getTriad (screenBase) + "," + radius + "," + this.getTriad (screenTip) + ",0" + "," + this.color4 (colix) + ")\n");
@@ -212,7 +213,7 @@ this.output ("  translucentFinish(" + J["export"].___Exporter.translucencyFracti
 }this.output ("  check_shadow()\n");
 this.output ("  clip()\n");
 this.output ("}\n");
-}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.Lst,java.util.Map,JU.P3");
+}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.List,java.util.Map,JU.P3");
 Clazz.overrideMethod (c$, "outputSphere", 
 function (x, y, z, radius, colix) {
 this.output ("a(" + x + "," + y + "," + z + "," + radius + "," + this.color4 (colix) + ")\n");
@@ -228,5 +229,5 @@ Clazz.overrideMethod (c$, "outputTriangle",
 function (ptA, ptB, ptC, colix) {
 if (!this.haveMacros) this.writeMacros2 ();
 this.output ("r(" + this.getTriad (ptA) + "," + this.getTriad (ptB) + "," + this.getTriad (ptC) + "," + this.color4 (colix) + ")\n");
-}, "JU.T3,JU.T3,JU.T3,~N");
+}, "JU.P3,JU.P3,JU.P3,~N");
 });

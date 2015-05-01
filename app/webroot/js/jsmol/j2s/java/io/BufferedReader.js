@@ -20,7 +20,7 @@ Clazz.makeConstructor (c$,
 function ($in) {
 Clazz.superConstructor (this, java.io.BufferedReader, [$in]);
 this.$in = $in;
-this.setSize (8192);
+this.setSize (java.io.BufferedReader.defaultCharBufferSize);
 }, "java.io.Reader");
 Clazz.defineMethod (c$, "ensureOpen", 
  function () {
@@ -129,7 +129,7 @@ str = s.toString ();
 if (c == '\r') {
 this.skipLF = true;
 }return str;
-}if (s == null) s = JU.SB.newN (80);
+}if (s == null) s = JU.SB.newN (java.io.BufferedReader.defaultExpectedLineLength);
 s.appendCB (this.cb, startChar, i - startChar);
 }
 }}, "~B");
@@ -206,6 +206,6 @@ this.cb = null;
 Clazz.defineStatics (c$,
 "INVALIDATED", -2,
 "UNMARKED", -1,
-"DEFAULT_CHAR_BUFFER_SIZE", 8192,
-"DEFAULT_EXPECTED_LINE_LENGTH", 80);
+"defaultCharBufferSize", 8192,
+"defaultExpectedLineLength", 80);
 });

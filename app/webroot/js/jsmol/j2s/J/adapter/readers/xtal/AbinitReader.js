@@ -37,12 +37,12 @@ this.readAtoms ();
 });
 Clazz.defineMethod (c$, "readNoatom", 
  function () {
-var tokens = this.getTokens ();
+var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.line);
 if (tokens.length <= 2) this.nAtom = this.parseIntStr (tokens[1]);
 });
 Clazz.defineMethod (c$, "readNotypes", 
  function () {
-var tokens = this.getTokens ();
+var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.line);
 if (tokens.length <= 2) this.nType = this.parseIntStr (tokens[1]);
 });
 Clazz.defineMethod (c$, "readTypesequence", 
@@ -81,7 +81,7 @@ this.setSpaceGroupName ("P1");
 for (var i = 0; i < 3; i++) this.addPrimitiveLatticeVector (i, this.cellLattice, i * 3);
 
 var atoms = this.asc.atoms;
-var i0 = this.asc.getAtomSetAtomIndex (this.asc.iSet);
+var i0 = this.asc.getAtomSetAtomIndex (this.asc.currentAtomSetIndex);
 if (!this.iHaveFractionalCoordinates) for (var i = this.asc.ac; --i >= i0; ) this.setAtomCoord (atoms[i]);
 
 this.applySymmetryAndSetTrajectory ();
@@ -94,7 +94,7 @@ var i0 = this.asc.ac;
 this.line = this.line.substring (12);
 while (this.line != null && !this.line.contains ("x")) {
 var atom = this.asc.addNewAtom ();
-this.setAtomCoordScaled (atom, this.getTokens (), 0, 0.5291772);
+this.setAtomCoordScaled (atom, J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.line), 0, 0.5291772);
 this.rd ();
 }
 this.discardLinesUntilContains ("z");

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.export");
-Clazz.load (["java.util.Hashtable", "JU.Lst"], "JSV.export.FormContext", ["java.lang.Character", "$.Double", "java.util.Map", "JU.PT", "JSV.common.Coordinate", "JU.Logger"], function () {
+Clazz.load (["java.util.Hashtable", "JU.List"], "JSV.export.FormContext", ["java.lang.Character", "$.Double", "java.util.Map", "JU.PT", "JSV.common.Coordinate", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.tokens = null;
 this.context = null;
@@ -14,7 +14,7 @@ Clazz.instantialize (this, arguments);
 }, JSV["export"], "FormContext");
 Clazz.prepareFields (c$, function () {
 this.context =  new java.util.Hashtable ();
-this.cmds =  new JU.Lst ();
+this.cmds =  new JU.List ();
 });
 Clazz.makeConstructor (c$, 
 function () {
@@ -32,7 +32,7 @@ return null;
 }, "~S");
 Clazz.defineMethod (c$, "getFormTokens", 
  function (template) {
-this.formTokens =  new JU.Lst ();
+this.formTokens =  new JU.List ();
 if (template.indexOf ("\r\n") >= 0) template = JU.PT.replaceAllCharacters (template, "\r\n", "\n");
 template = template.$replace ('\r', '\n');
 var lines = template.$plit ("\n");
@@ -127,7 +127,7 @@ if (tokens.length != 4) {
 return;
 }vt.$var = tokens[1].substring (1);
 var vc = this.context.get (tokens[3].substring (1));
-if (Clazz.instanceOf (vc, JU.Lst)) vt.vc = vc;
+if (Clazz.instanceOf (vc, JU.List)) vt.vc = vc;
 vt.cmdPtr = vt.ptr;
 vt.pointCount = -1;
 }, "JSV.export.FormContext.FormToken");
@@ -185,13 +185,13 @@ return (value.equals (compare));
 case 1:
 return (!value.equals (compare));
 default:
-JU.Logger.warn ("???? " + key + " " + compare + " " + value);
+JW.Logger.warn ("???? " + key + " " + compare + " " + value);
 }
 break;
 }
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.warn (e.toString () + " in VelocityContext.merge");
+JW.Logger.warn (e.toString () + " in VelocityContext.merge");
 } else {
 throw e;
 }
@@ -298,7 +298,7 @@ this.cmdPtr = this.b$["JSV.export.FormContext"].cmds.remove (0).intValue ();
 this.b$["JSV.export.FormContext"].formTokens.get (this.cmdPtr).endPtr = this.ptr;
 this.b$["JSV.export.FormContext"].cmds.add (0,  new Integer (this.ptr));
 } else {
-JU.Logger.warn ("??? " + a);
+JW.Logger.warn ("??? " + a);
 }if (c) {
 var d = this.b$["JSV.export.FormContext"].formTokens.get (this.cmdPtr);
 if (d.cmdType != 1 && d.cmdType != 3) {
@@ -316,7 +316,7 @@ Clazz.defineStatics (c$,
 "VT_END", 4,
 "VT_FOREACH", 5,
 "VT_SET", 6,
-"ops",  Clazz.newArray (-1, ["==", "!=", "="]),
+"ops", ["==", "!=", "="],
 "OP_EEQ", 0,
 "OP_NE", 1,
 "OP_EQ", 2);

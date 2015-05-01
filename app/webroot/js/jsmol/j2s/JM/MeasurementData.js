@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM");
-Clazz.load (["J.api.JmolMeasurementClient"], "JM.MeasurementData", ["java.lang.Float", "JU.BS", "$.Lst", "JM.Measurement", "JU.BSUtil"], function () {
+Clazz.load (["J.api.JmolMeasurementClient"], "JM.MeasurementData", ["java.lang.Float", "JU.BS", "$.List", "JM.Measurement", "JW.BSUtil"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.client = null;
 this.measurementStrings = null;
@@ -37,7 +37,7 @@ this.vwr = vwr;
 this.points = points;
 this.thisID = id;
 return this;
-}, "~S,JV.Viewer,JU.Lst");
+}, "~S,JV.Viewer,JU.List");
 Clazz.defineMethod (c$, "setModelSet", 
 function (m) {
 this.ms = m;
@@ -45,10 +45,10 @@ return this;
 }, "JM.ModelSet");
 Clazz.defineMethod (c$, "set", 
 function (tokAction, htMin, radiusData, strFormat, units, tickInfo, mustBeConnected, mustNotBeConnected, intramolecular, isAll, mad, colix, text) {
-this.ms = this.vwr.ms;
+this.ms = this.vwr.getModelSet ();
 this.tokAction = tokAction;
 if (this.points.size () >= 2 && Clazz.instanceOf (this.points.get (0), JU.BS) && Clazz.instanceOf (this.points.get (1), JU.BS)) {
-this.justOneModel = JU.BSUtil.haveCommon (this.vwr.ms.getModelBS (this.points.get (0), false), this.vwr.ms.getModelBS (this.points.get (1), false));
+this.justOneModel = JW.BSUtil.haveCommon (this.vwr.getModelBitSet (this.points.get (0), false), this.vwr.getModelBitSet (this.points.get (1), false));
 }this.htMin = htMin;
 this.radiusData = radiusData;
 this.strFormat = strFormat;
@@ -85,10 +85,10 @@ for (var i = 0; i < this.minArray.length; i++) this.minArray[i] = -0.0;
 this.define (null, this.ms);
 return this.minArray;
 }if (asArray) {
-this.measurements =  new JU.Lst ();
+this.measurements =  new JU.List ();
 this.define (null, this.ms);
 return this.measurements;
-}this.measurementStrings =  new JU.Lst ();
+}this.measurementStrings =  new JU.List ();
 this.define (null, this.ms);
 return this.measurementStrings;
 }, "~B,~B");
@@ -134,7 +134,7 @@ return;
 }var haveNext = false;
 for (var i = bs.nextSetBit (0), pt = 0; i >= 0; i = bs.nextSetBit (i + 1), pt++) {
 if (i == thisAtomIndex) continue;
-var modelIndex = this.atoms[i].mi;
+var modelIndex = this.atoms[i].getModelIndex ();
 if (thisModel >= 0 && this.justOneModel) {
 if (thispt == 0) thisModel = modelIndex;
  else if (thisModel != modelIndex) continue;

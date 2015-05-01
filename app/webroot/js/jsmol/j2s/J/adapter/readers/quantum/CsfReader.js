@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.quantum");
-Clazz.load (["J.adapter.readers.quantum.MopacSlaterReader", "java.util.Hashtable"], "J.adapter.readers.quantum.CsfReader", ["java.lang.Float", "JU.AU", "$.Lst", "$.PT", "J.adapter.readers.quantum.BasisFunctionReader", "J.adapter.smarter.Atom", "$.Bond", "JU.Logger"], function () {
+Clazz.load (["J.adapter.readers.quantum.MopacSlaterReader", "java.util.Hashtable"], "J.adapter.readers.quantum.CsfReader", ["java.lang.Float", "JU.AU", "$.List", "$.PT", "J.adapter.smarter.Atom", "$.Bond", "J.api.JmolAdapter", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.nAtoms = 0;
 this.strAtomicNumbers = "";
@@ -11,6 +11,7 @@ this.htBonds = null;
 this.propertyItemCounts = null;
 this.fieldTypes = null;
 this.connectors = null;
+this.nBonds = 0;
 Clazz.instantialize (this, arguments);
 }, J.adapter.readers.quantum, "CsfReader", J.adapter.readers.quantum.MopacSlaterReader);
 Clazz.prepareFields (c$, function () {
@@ -48,7 +49,7 @@ return false;
 });
 Clazz.defineMethod (c$, "processLocalTransform", 
  function () {
-var tokens = JU.PT.getTokens (this.rd () + " " + this.rd () + " " + this.rd () + " " + this.rd ());
+var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.rd () + " " + this.rd () + " " + this.rd () + " " + this.rd ());
 this.setTransform (this.parseFloatStr (tokens[0]), this.parseFloatStr (tokens[1]), this.parseFloatStr (tokens[2]), this.parseFloatStr (tokens[4]), this.parseFloatStr (tokens[5]), this.parseFloatStr (tokens[6]), this.parseFloatStr (tokens[8]), this.parseFloatStr (tokens[9]), this.parseFloatStr (tokens[10]));
 });
 Clazz.defineMethod (c$, "getPropertyCount", 
@@ -88,7 +89,7 @@ var ioffset = i0;
 for (var i = 0; i < n; i++) {
 var ipt = ioffset + i;
 if (ipt == tokens.length) {
-tokens = JU.PT.getTokens (this.rd ());
+tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.rd ());
 ioffset -= ipt - i0;
 ipt = i0;
 }if (isInteger) (f)[i] = this.parseIntStr (tokens[ipt]);
@@ -102,7 +103,7 @@ this.rd ();
 this.parseLineParameters (J.adapter.readers.quantum.CsfReader.connectorFields, J.adapter.readers.quantum.CsfReader.connectorFieldMap);
 out : for (; this.rd () != null; ) {
 if (this.line.startsWith ("property_flags:")) break;
-var thisAtomID = null;
+var thisAtomID = -2147483648;
 var thisBondID = null;
 var tokens = this.getTokens ();
 var field2 = "";
@@ -121,7 +122,7 @@ if (field.equals ("sto_basis_fxn")) this.nSlaters++;
  else if (!field.equals ("bond")) continue out;
 break;
 case 2:
-thisAtomID = field;
+thisAtomID = JU.PT.parseInt (field);
 break;
 case 4:
 thisBondID = field2 + field;
@@ -130,22 +131,25 @@ break;
 default:
 }
 }
-if (thisAtomID != null && thisBondID != null) {
+if (thisAtomID != -2147483648 && thisBondID != null) {
 if (this.connectors.containsKey (thisBondID)) {
 var connect = this.connectors.get (thisBondID);
 connect[1] = thisAtomID;
-if (this.htBonds != null) this.setBond (this.htBonds.get (thisBondID), connect);
-} else {
-var connect =  new Array (2);
+if (this.htBonds != null) {
+var bond = this.htBonds.get (thisBondID);
+this.setBond (bond, connect);
+}} else {
+var connect =  Clazz.newIntArray (2, 0);
 connect[0] = thisAtomID;
 this.connectors.put (thisBondID, connect);
 }}}
 });
 Clazz.defineMethod (c$, "setBond", 
  function (bond, connect) {
-bond.atomIndex1 = this.asc.getAtomIndex (connect[0]);
-bond.atomIndex2 = this.asc.getAtomIndex (connect[1]);
+bond.atomIndex1 = this.asc.getAtomIndexFromSerial (connect[0]);
+bond.atomIndex2 = this.asc.getAtomIndexFromSerial (connect[1]);
 this.asc.addBond (bond);
+this.nBonds++;
 }, "J.adapter.smarter.Bond,~A");
 Clazz.defineMethod (c$, "processAtomObject", 
  function () {
@@ -160,7 +164,7 @@ var field;
 for (var i = 0; i < this.fieldCount; i++) {
 var type = this.fieldTypes[i];
 if (type == 0) continue;
-if ((field = tokens[i]) == null) JU.Logger.warn ("field == null in " + this.line);
+if ((field = tokens[i]) == null) JW.Logger.warn ("field == null in " + this.line);
 switch (type) {
 case -1:
 atom.atomSerial = JU.PT.parseInt (field);
@@ -185,7 +189,7 @@ break;
 }
 }
 if (Float.isNaN (atom.x) || Float.isNaN (atom.y) || Float.isNaN (atom.z)) {
-JU.Logger.warn ("atom " + atom.atomName + " has invalid/unknown coordinates");
+JW.Logger.warn ("atom " + atom.atomName + " has invalid/unknown coordinates");
 } else {
 this.nAtoms++;
 this.asc.addAtomWithMappedSerialNumber (atom);
@@ -210,14 +214,15 @@ var order = 1;
 if (field.equals ("single")) order = 1;
  else if (field.equals ("double")) order = 2;
  else if (field.equals ("triple")) order = 3;
- else JU.Logger.warn ("unknown CSF bond order: " + field);
+ else JW.Logger.warn ("unknown CSF bond order: " + field);
 var bond =  new J.adapter.smarter.Bond (-1, -1, 1);
 bond.order = order;
 if (this.connectors == null) {
 if (this.htBonds == null) this.htBonds =  new java.util.Hashtable ();
 this.htBonds.put (thisBondID, bond);
 } else {
-this.setBond (bond, this.connectors.get (thisBondID));
+var connect = this.connectors.get (thisBondID);
+this.setBond (bond, connect);
 }break;
 }
 }
@@ -250,7 +255,7 @@ break;
 }
 for (var i = 0; i < this.nVibrations; i++) {
 if (!this.doGetVibration (i + 1)) continue;
-this.asc.cloneAtomSetWithBonds (false);
+this.asc.cloneFirstAtomSetWithBonds (this.nBonds);
 this.asc.setAtomSetFrequency (null, null, energies[i], null);
 var ipt = 0;
 var baseAtom = this.nAtoms * (i + 1);
@@ -264,7 +269,7 @@ if (this.nSlaters == 0 && this.nGaussians == 0 || !this.doReadMolecularOrbitals)
 this.rd ();
 return;
 }this.nOrbitals = (this.nSlaters + this.nGaussians);
-JU.Logger.info ("Reading CSF data for " + this.nOrbitals + " molecular orbitals");
+JW.Logger.info ("Reading CSF data for " + this.nOrbitals + " molecular orbitals");
 var energy =  Clazz.newFloatArray (this.nOrbitals, 0);
 var occupancy =  Clazz.newFloatArray (this.nOrbitals, 0);
 var list =  Clazz.newFloatArray (this.nOrbitals, this.nOrbitals, 0);
@@ -321,7 +326,7 @@ this.setMOs ("eV");
 });
 Clazz.defineMethod (c$, "processBasisObject", 
  function (sto_gto) {
-var atomNos = JU.PT.getTokens (this.strAtomicNumbers);
+var atomNos = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.strAtomicNumbers);
 this.atomicNumbers =  Clazz.newIntArray (atomNos.length, 0);
 for (var i = 0; i < this.atomicNumbers.length; i++) this.atomicNumbers[i] = this.parseIntStr (atomNos[i]);
 
@@ -363,17 +368,17 @@ this.fillCsfArray ("contractions", tokens, i, contractionCoefs[ipt], false);
 }
 }
 if (isGaussian) {
-var sdata =  new JU.Lst ();
-var gdata =  new JU.Lst ();
+var sdata =  new JU.List ();
+var gdata =  new JU.List ();
 var iShell = 0;
 var gaussianCount = 0;
 for (var ipt = 0; ipt < this.nGaussians; ipt++) {
 if (shells[ipt] != iShell) {
 iShell = shells[ipt];
 var slater =  Clazz.newIntArray (4, 0);
-var iAtom = this.asc.getAtomIndex (this.connectors.get (sto_gto + "_basis_fxn" + (ipt + 1))[0]);
+var iAtom = this.asc.getAtomIndexFromSerial ((this.connectors.get (sto_gto + "_basis_fxn" + (ipt + 1)))[0]);
 slater[0] = iAtom;
-slater[1] = J.adapter.readers.quantum.BasisFunctionReader.getQuantumShellTagID (types[ipt].substring (0, 1));
+slater[1] = J.api.JmolAdapter.getQuantumShellTagID (types[ipt].substring (0, 1));
 var nZ = 0;
 while (++nZ < nZetas && zetas[ipt][nZ] != 0) {
 }
@@ -381,7 +386,7 @@ slater[2] = gaussianCount;
 slater[3] = nZ;
 sdata.addLast (slater);
 gaussianCount += nZ;
-for (var i = 0; i < nZ; i++) gdata.addLast ( Clazz.newFloatArray (-1, [zetas[ipt][i], contractionCoefs[ipt][i]]));
+for (var i = 0; i < nZ; i++) gdata.addLast ([zetas[ipt][i], contractionCoefs[ipt][i]]);
 
 }}
 var garray = JU.AU.newFloat2 (gaussianCount);
@@ -391,7 +396,7 @@ this.moData.put ("shells", sdata);
 this.moData.put ("gaussians", garray);
 } else {
 for (var ipt = 0; ipt < this.nSlaters; ipt++) {
-var iAtom = this.asc.getAtomIndex (this.connectors.get (sto_gto + "_basis_fxn" + (ipt + 1))[0]);
+var iAtom = this.asc.getAtomIndexFromSerial ((this.connectors.get (sto_gto + "_basis_fxn" + (ipt + 1)))[0]);
 for (var i = 0; i < nZetas; i++) {
 if (zetas[ipt][i] == 0) break;
 this.createSphericalSlaterByType (iAtom, this.atomicNumbers[iAtom], types[ipt], zetas[ipt][i] * (i == 0 ? 1 : -1), contractionCoefs == null ? 1 : contractionCoefs[ipt][i]);
@@ -404,34 +409,34 @@ Clazz.defineStatics (c$,
 "objID1", 2,
 "objCls2", 3,
 "objID2", 4,
-"connectorFields",  Clazz.newArray (-1, ["objCls1", "objID1", "objCls2", "objID2"]),
-"connectorFieldMap",  Clazz.newByteArray (-1, [1, 2, 3, 4]),
+"connectorFields", ["objCls1", "objID1", "objCls2", "objID2"],
+"connectorFieldMap", [1, 2, 3, 4],
 "ID", -1,
-"SYM", 1,
-"ANUM", 2,
-"CHRG", 3,
-"XYZ", 4,
-"PCHRG", 5,
-"atomFields",  Clazz.newArray (-1, ["ID", "sym", "anum", "chrg", "xyz_coordinates", "pchrg"]),
-"atomFieldMap",  Clazz.newByteArray (-1, [-1, 1, 2, 3, 4, 5]),
-"BTYPE", 1,
-"bondFields",  Clazz.newArray (-1, ["ID", "type"]),
-"bondFieldMap",  Clazz.newByteArray (-1, [-1, 1]),
-"NORMAL_MODE", 1,
-"VIB_ENERGY", 2,
-"DIPOLE", 3,
-"vibFields",  Clazz.newArray (-1, ["ID", "normalMode", "Energy", "transitionDipole"]),
-"vibFieldMap",  Clazz.newByteArray (-1, [-1, 1, 2, 3]),
-"EIG_VAL", 1,
-"MO_OCC", 2,
-"EIG_VEC", 3,
-"EIG_VEC_COMPRESSED", 4,
-"COEF_INDICES", 5,
-"BFXN_ANGL", 6,
-"STO_EXP", 7,
-"CONTRACTIONS", 8,
-"GTO_EXP", 9,
-"SHELL", 10,
-"moFields",  Clazz.newArray (-1, ["ID", "eig_val", "mo_occ", "eig_vec", "eig_vec_compressed", "coef_indices", "bfxn_ang", "sto_exp", "contractions", "gto_exp", "shell"]),
-"moFieldMap",  Clazz.newByteArray (-1, [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+"sym", 1,
+"anum", 2,
+"chrg", 3,
+"xyz_coordinates", 4,
+"pchrg", 5,
+"atomFields", ["ID", "sym", "anum", "chrg", "xyz_coordinates", "pchrg"],
+"atomFieldMap", [-1, 1, 2, 3, 4, 5],
+"bondType", 1,
+"bondFields", ["ID", "type"],
+"bondFieldMap", [-1, 1],
+"normalMode", 1,
+"vibEnergy", 2,
+"transitionDipole", 3,
+"vibFields", ["ID", "normalMode", "Energy", "transitionDipole"],
+"vibFieldMap", [-1, 1, 2, 3],
+"eig_val", 1,
+"mo_occ", 2,
+"eig_vec", 3,
+"eig_vec_compressed", 4,
+"coef_indices", 5,
+"bfxn_ang", 6,
+"sto_exp", 7,
+"contractions", 8,
+"gto_exp", 9,
+"shell", 10,
+"moFields", ["ID", "eig_val", "mo_occ", "eig_vec", "eig_vec_compressed", "coef_indices", "bfxn_ang", "sto_exp", "contractions", "gto_exp", "shell"],
+"moFieldMap", [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });

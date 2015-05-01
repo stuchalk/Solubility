@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.VolumeFileReader"], "J.jvxl.readers.DelPhiBinaryReader", ["JU.SB", "$.V3", "JU.Logger"], function () {
+Clazz.load (["J.jvxl.readers.VolumeFileReader"], "J.jvxl.readers.DelPhiBinaryReader", ["JU.SB", "$.V3", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.data = null;
 this.pt = 0;
@@ -14,7 +14,7 @@ function (sg, brNull) {
 var fileName = (sg.getReaderData ())[0];
 this.init2VFR (sg, this.br);
 this.binarydoc = this.newBinaryDocument ();
-this.setStream (fileName, false);
+this.binarydoc.setStream (sg.getAtomDataServer ().getBufferedInputStream (fileName), false);
 this.nSurfaces = 1;
 if (this.params.thePlane == null) this.params.insideOut = !this.params.insideOut;
 this.allowSigma = false;
@@ -23,27 +23,27 @@ this.isAngstroms = true;
 Clazz.overrideMethod (c$, "readParameters", 
 function () {
 var uplbl = this.readString ();
-JU.Logger.info (uplbl);
+JW.Logger.info (uplbl);
 var nxttoplbl = this.readString ();
-JU.Logger.info (nxttoplbl);
+JW.Logger.info (nxttoplbl);
 this.data = this.readFloatArray ();
-JU.Logger.info ("DelPhi data length: " + this.data.length);
+JW.Logger.info ("DelPhi data length: " + this.data.length);
 var botlbl = this.readString ();
-JU.Logger.info (botlbl);
+JW.Logger.info (botlbl);
 var scalemid = this.readFloatArray ();
 var scale = scalemid[0];
-JU.Logger.info ("DelPhi scale: " + scale);
+JW.Logger.info ("DelPhi scale: " + scale);
 var dx = (scale == 1 ? 0.84375 : 1 / scale);
 this.volumetricVectors[0] = JU.V3.new3 (0, 0, dx);
 this.volumetricVectors[1] = JU.V3.new3 (0, dx, 0);
 this.volumetricVectors[2] = JU.V3.new3 (dx, 0, 0);
-JU.Logger.info ("DelPhi resolution (pts/angstrom) set to: " + dx);
+JW.Logger.info ("DelPhi resolution (pts/angstrom) set to: " + dx);
 var nx = 65;
 this.voxelCounts[0] = this.voxelCounts[1] = this.voxelCounts[2] = nx;
-JU.Logger.info ("DelPhi voxel counts: " + nx);
+JW.Logger.info ("DelPhi voxel counts: " + nx);
 dx *= Clazz.doubleToInt ((nx - 1) / 2);
 this.volumetricOrigin.set (scalemid[1], scalemid[2], scalemid[3]);
-JU.Logger.info ("DelPhi center " + this.volumetricOrigin);
+JW.Logger.info ("DelPhi center " + this.volumetricOrigin);
 this.volumetricOrigin.x -= dx;
 this.volumetricOrigin.y -= dx;
 this.volumetricOrigin.z -= dx;

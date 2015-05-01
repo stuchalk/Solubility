@@ -4,7 +4,6 @@ c$ = Clazz.decorateAsClass (function () {
 this.stream = null;
 this.isRandom = false;
 this.isBigEndian = true;
-this.jzt = null;
 this.t8 = null;
 this.nBytes = 0;
 this.out = null;
@@ -12,6 +11,10 @@ Clazz.instantialize (this, arguments);
 }, JU, "BinaryDocument", JU.BC, javajs.api.GenericBinaryDocument);
 Clazz.prepareFields (c$, function () {
 this.t8 =  Clazz.newByteArray (8, 0);
+});
+Clazz.makeConstructor (c$, 
+function () {
+Clazz.superConstructor (this, JU.BinaryDocument, []);
 });
 Clazz.overrideMethod (c$, "close", 
 function () {
@@ -26,11 +29,10 @@ throw e;
 if (this.out != null) this.out.closeChannel ();
 });
 Clazz.overrideMethod (c$, "setStream", 
-function (jzt, bis, isBigEndian) {
-if (jzt != null) this.jzt = jzt;
+function (bis, isBigEndian) {
 if (bis != null) this.stream =  new java.io.DataInputStream (bis);
 this.isBigEndian = isBigEndian;
-}, "javajs.api.GenericZipTools,java.io.BufferedInputStream,~B");
+}, "java.io.BufferedInputStream,~B");
 Clazz.overrideMethod (c$, "setStreamData", 
 function (stream, isBigEndian) {
 if (stream != null) this.stream = stream;
@@ -54,21 +56,22 @@ return b;
 Clazz.overrideMethod (c$, "readByteArray", 
 function (b, off, len) {
 var n = this.ioRead (b, off, len);
+if (n > 0) this.nBytes += n;
+var nBytesRead = n;
+if (n > 0 && n < len) {
+while (nBytesRead < len && n > 0) {
+n = this.ioRead (b, nBytesRead, len - nBytesRead);
+if (n > 0) {
 this.nBytes += n;
-return n;
+nBytesRead += n;
+}}
+}return nBytesRead;
 }, "~A,~N,~N");
 Clazz.defineMethod (c$, "ioRead", 
  function (b, off, len) {
-var m = 0;
-while (len > 0) {
 var n = this.stream.read (b, off, len);
-m += n;
 if (n > 0 && this.out != null) this.writeBytes (b, off, n);
-if (n >= len) break;
-off += n;
-len -= n;
-}
-return m;
+return n;
 }, "~A,~N,~N");
 Clazz.defineMethod (c$, "writeBytes", 
 function (b, off, n) {
@@ -155,11 +158,11 @@ this.writeInt ((b & 0xFFFFFFFF));
 Clazz.defineMethod (c$, "readLEInt", 
  function () {
 this.ioRead (this.t8, 0, 4);
-return JU.BC.bytesToInt (this.t8, 0, false);
+return this.bytesToInt (this.t8, 0, false);
 });
 Clazz.overrideMethod (c$, "readFloat", 
 function () {
-return JU.BC.intToFloat (this.readInt ());
+return this.intToFloat (this.readInt ());
 });
 Clazz.overrideMethod (c$, "readDouble", 
 function () {
@@ -183,15 +186,11 @@ try {
 if (offset == this.nBytes) return;
 if (offset < this.nBytes) {
 this.stream.reset ();
-if (this.out != null && this.nBytes != 0) this.out.reset ();
 this.nBytes = 0;
 } else {
 offset -= this.nBytes;
-}if (this.out == null) {
-this.stream.skipBytes (offset);
-} else {
-this.readByteArray ( Clazz.newByteArray (offset, 0), 0, offset);
-}this.nBytes += offset;
+}this.stream.skipBytes (offset);
+this.nBytes += offset;
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 System.out.println (e.toString ());

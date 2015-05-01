@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.dialog");
-Clazz.load (["JSV.dialog.JSVDialog"], "JSV.dialog.ViewsDialog", ["JU.Lst", "$.PT", "$.SB", "JSV.common.Annotation"], function () {
+Clazz.load (["JSV.dialog.JSVDialog"], "JSV.dialog.ViewsDialog", ["JU.List", "$.PT", "$.SB", "JSV.common.Annotation"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.treeNodes = null;
 this.checkBoxes = null;
@@ -20,8 +20,8 @@ return JSV.dialog.ViewsDialog.posXY;
 });
 Clazz.defineMethod (c$, "addUniqueControls", 
 function () {
-this.checkBoxes =  new JU.Lst ();
-this.treeNodes =  new JU.Lst ();
+this.checkBoxes =  new JU.List ();
+this.treeNodes =  new JU.List ();
 this.dialog.addButton ("btnSelectAll", "Select All");
 this.dialog.addButton ("btnSelectNone", "Select None");
 this.txt2 = this.dialog.addTextField ("txtOffset", "Offset", "" + this.vwr.parameters.viewOffset, "%", null, true);
@@ -162,8 +162,8 @@ return this.callbackAD (id, msg);
 }, "~S,~S");
 Clazz.overrideMethod (c$, "applyFromFields", 
 function () {
-this.apply ( Clazz.newArray (-1, [this.dialog.getText (this.txt2)]));
+this.apply ([this.dialog.getText (this.txt2)]);
 });
 Clazz.defineStatics (c$,
-"posXY",  Clazz.newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });

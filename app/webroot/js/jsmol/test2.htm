@@ -21,8 +21,6 @@
 
 <script type="text/javascript">
 
-Jmol._isAsync = false;
-
 Jmol.getProfile() // records repeat calls to overridden or overloaded Java methods
 
 var jmolApplet0; // set up in HTML table, below
@@ -36,7 +34,7 @@ jmol_isReady = function(applet) {
 }		
 
 Info = {
-	width: 400,
+	width: 300,
 	height: 300,
 	debug: false,
 	color: "#F0F0F0",
@@ -54,7 +52,7 @@ Info = {
 	disableInitialConsole: false,
 	readyFunction: jmol_isReady,
   allowjavascript: true,
-	script: "set antialiasDisplay;set showtiming;load async data/caffeine.mol;"
+	script: "set antialiasDisplay;load data/caffeine.mol;"
 	//,defaultModel: ":dopamine"
   //,noscript: true
 	//console: "none", // default will be jmolApplet0_infodiv
@@ -99,7 +97,7 @@ var lastPrompt=0;
 
 <br>
 <a href="javascript:Jmol.script(jmolApplet0,'console')">console</a>
-<a href="javascript:Jmol.script(jmolApplet0,'image')">image</a>
+<a href="javascript:Jmol.script(jmolApplet0,'write PNGJ jmol.png')">image</a>
 display
 <a href="javascript:Jmol.script(jmolApplet0,'set antialiasDisplay false')">faster</a>
 <a href="javascript:Jmol.script(jmolApplet0,'set antialiasDisplay true')">sharper</a>
@@ -284,8 +282,7 @@ Enter "!" and a command into the search box and press ENTER to execute a <a targ
  <a href="javascript:Jmol.search(jmolApplet0,'$caffeine',';moveto /* time, axisAngle */ 0.0 { -18 -17 1000 179.69} /* zoom, translation */  100.0 0.0 0.0  /* center, rotationRadius */ {-0.44874999999999954 0.18930000000000002 -0.06529999999999997} 5.536731293601459 /* navigation center, translation, depth */ {0 0 0} -4.041090898432742 -1.7041175988342825 0;calculate partialCharge;isosurface vdw map mep translucent')">load $caffeine (NCI, with MMFF94 mep)</a>
  <br /> 
  <a href="javascript:Jmol.loadFile(jmolApplet0,'==HEM')">load ==HEM (RCSB ligand)</a>
- <div id=xjmolApplet0_Image_app_holder></div>
- <div id=xjmolApplet0_Image_holder></div>
+
 </td></tr></table>
 </td>
 </tr></table>

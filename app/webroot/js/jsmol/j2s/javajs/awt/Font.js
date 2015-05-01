@@ -96,10 +96,10 @@ Clazz.defineStatics (c$,
 "FONT_FACE_SANS", 0,
 "FONT_FACE_SERIF", 1,
 "FONT_FACE_MONO", 2,
-"fontFaces",  Clazz.newArray (-1, ["SansSerif", "Serif", "Monospaced", ""]),
+"fontFaces", ["SansSerif", "Serif", "Monospaced", ""],
 "FONT_STYLE_PLAIN", 0,
 "FONT_STYLE_BOLD", 1,
 "FONT_STYLE_ITALIC", 2,
 "FONT_STYLE_BOLDITALIC", 3,
-"fontStyles",  Clazz.newArray (-1, ["Plain", "Bold", "Italic", "BoldItalic"]));
+"fontStyles", ["Plain", "Bold", "Italic", "BoldItalic"]);
 });

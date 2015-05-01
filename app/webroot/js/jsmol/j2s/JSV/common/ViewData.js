@@ -22,7 +22,7 @@ this.scaleData =  new Array (this.nSpectra);
 for (var j = 0; j < this.nSpectra; j++) this.scaleData[j] =  new JSV.common.ScaleData (startList[j], endList[j]);
 
 this.init (spectra, yPt1, yPt2, isContinuous);
-}, "JU.Lst,~N,~N,~A,~A,~B,~B");
+}, "JU.List,~N,~N,~A,~A,~B,~B");
 Clazz.makeConstructor (c$, 
 function (spectra, yPt1, yPt2, isContinuous) {
 this.nSpectra = spectra.size ();
@@ -30,7 +30,7 @@ var n = spectra.get (0).getXYCoords ().length;
 this.scaleData =  new Array (1);
 this.scaleData[0] =  new JSV.common.ScaleData (0, n - 1);
 this.init (spectra, yPt1, yPt2, isContinuous);
-}, "JU.Lst,~N,~N,~B");
+}, "JU.List,~N,~N,~B");
 Clazz.defineMethod (c$, "init", 
  function (spectra, yPt1, yPt2, isContinuous) {
 this.thisScale = this.scaleData[this.iThisScale = 0];
@@ -55,11 +55,11 @@ for (var i = 0; i < this.scaleData.length; i++) {
 this.scaleData[i].setMinMax (minX, maxX, minY, maxY);
 this.scaleData[i].setScale (isContinuous, isInverted);
 }
-}, "JU.Lst,~N,~N,~B");
+}, "JU.List,~N,~N,~B");
 Clazz.defineMethod (c$, "newSpectrum", 
 function (spectra) {
 this.init (spectra, 0, 0, false);
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "setXRangeForSubSpectrum", 
 function (xyCoords) {
 this.setXRange (0, xyCoords, this.scaleData[0].minX, this.scaleData[0].maxX, 0, xyCoords.length - 1);

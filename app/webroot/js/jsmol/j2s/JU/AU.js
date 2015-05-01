@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JU");
-Clazz.load (null, "JU.AU", ["java.util.Arrays", "JU.Lst"], function () {
+Clazz.load (null, "JU.AU", ["java.util.Arrays", "JU.List"], function () {
 c$ = Clazz.declareType (JU, "AU");
 c$.ensureLength = Clazz.defineMethod (c$, "ensureLength", 
 function (array, minimumLength) {
@@ -214,7 +214,7 @@ if (v.size () == 1) return v.get (0);
 var keys = v.toArray ( new Array (v.size ()));
 java.util.Arrays.sort (keys);
 return keys[n % keys.length];
-}, "JU.Lst,~N");
+}, "JU.List,~N");
 c$.createArrayOfArrayList = Clazz.defineMethod (c$, "createArrayOfArrayList", 
 function (size) {
 return  new Array (size);
@@ -271,7 +271,7 @@ return Clazz.newArray(n, null);
 }}, "~N");
 c$.removeMapKeys = Clazz.defineMethod (c$, "removeMapKeys", 
 function (map, root) {
-var list =  new JU.Lst ();
+var list =  new JU.List ();
 for (var key, $key = map.keySet ().iterator (); $key.hasNext () && ((key = $key.next ()) || true);) if (key.startsWith (root)) list.addLast (key);
 
 for (var i = list.size (); --i >= 0; ) map.remove (list.get (i));

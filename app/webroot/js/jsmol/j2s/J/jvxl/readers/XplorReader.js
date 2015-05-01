@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.MapFileReader"], "J.jvxl.readers.XplorReader", ["JU.SB", "JU.Logger", "JV.Viewer"], function () {
+Clazz.load (["J.jvxl.readers.MapFileReader"], "J.jvxl.readers.XplorReader", ["JU.SB", "JW.Logger", "JV.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.nBlock = 0;
 this.linePt = 2147483647;
@@ -22,7 +22,7 @@ this.jvxlFileHeaderBuffer =  new JU.SB ();
 var nLines = this.parseIntStr (this.getLine ());
 for (var i = nLines; --i >= 0; ) {
 this.line = this.br.readLine ().trim ();
-JU.Logger.info ("XplorReader: " + this.line);
+JW.Logger.info ("XplorReader: " + this.line);
 this.jvxlFileHeaderBuffer.append ("# ").append (this.line).appendC ('\n');
 }
 this.jvxlFileHeaderBuffer.append ("Xplor data\nJmol " + JV.Viewer.getJmolVersion () + '\n');
@@ -51,18 +51,18 @@ this.nBlock = this.voxelCounts[2] * this.voxelCounts[1];
 });
 Clazz.defineMethod (c$, "getLine", 
  function () {
-this.rd ();
-while (this.line != null && (this.line.length == 0 || this.line.indexOf ("REMARKS") >= 0 || this.line.indexOf ("XPLOR:") >= 0)) this.rd ();
+this.readLine ();
+while (this.line != null && (this.line.length == 0 || this.line.indexOf ("REMARKS") >= 0 || this.line.indexOf ("XPLOR:") >= 0)) this.readLine ();
 
 return this.line;
 });
 Clazz.overrideMethod (c$, "nextVoxel", 
 function () {
 if (this.linePt >= this.line.length) {
-this.rd ();
+this.readLine ();
 this.linePt = 0;
 if ((this.nRead % this.nBlock) == 0) {
-this.rd ();
+this.readLine ();
 }}if (this.line == null) return 0;
 var val = this.parseFloatRange (this.line, this.linePt, this.linePt + 12);
 this.linePt += 12;

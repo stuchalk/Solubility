@@ -102,11 +102,6 @@ function (i) {
 {
 return this.s.charAt(i);
 }}, "~N");
-Clazz.defineMethod (c$, "charCodeAt", 
-function (i) {
-{
-return this.s.charCodeAt(i);
-}}, "~N");
 Clazz.defineMethod (c$, "setLength", 
 function (n) {
 {

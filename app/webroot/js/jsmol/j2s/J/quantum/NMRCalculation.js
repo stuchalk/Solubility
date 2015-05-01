@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.quantum");
-Clazz.load (["J.api.JmolNMRInterface", "java.util.Hashtable"], "J.quantum.NMRCalculation", ["java.lang.Double", "$.Float", "$.NullPointerException", "JU.BS", "$.Lst", "$.PT", "$.V3", "J.io.JmolBinary", "JU.Escape", "$.Logger", "$.Tensor"], function () {
+Clazz.load (["J.api.JmolNMRInterface", "java.util.Hashtable"], "J.quantum.NMRCalculation", ["java.lang.Character", "$.Double", "$.Float", "$.NullPointerException", "JU.BS", "$.List", "$.PT", "$.V3", "J.io.JmolBinary", "JW.Escape", "$.Logger", "$.Tensor"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.isotopeData = null;
@@ -23,16 +23,16 @@ function (efg) {
 if (efg == null) return 0;
 var a = this.vwr.ms.at[efg.atomIndex1];
 return (this.getIsotopeData (a, 2) * efg.eigenValues[2] * 2.349647144641375E8);
-}, "JU.Tensor");
+}, "JW.Tensor");
 Clazz.defineMethod (c$, "getInteractionTensorList", 
  function (type, bsA) {
 if (type != null) type = type.toLowerCase ();
-var bsModels = this.vwr.ms.getModelBS (bsA, false);
+var bsModels = this.vwr.getModelBitSet (bsA, false);
 var bs1 = this.getAtomSiteBS (bsA);
 var iAtom = (bs1.cardinality () == 1 ? bs1.nextSetBit (0) : -1);
-var list =  new JU.Lst ();
+var list =  new JU.List ();
 for (var i = bsModels.nextSetBit (0); i >= 0; i = bsModels.nextSetBit (i + 1)) {
-var tensors = this.vwr.ms.getInfo (i, "interactionTensors");
+var tensors = this.vwr.getModelAuxiliaryInfoValue (i, "interactionTensors");
 if (tensors == null) continue;
 var n = tensors.size ();
 for (var j = 0; j < n; j++) {
@@ -59,10 +59,10 @@ Clazz.overrideMethod (c$, "getUniqueTensorSet",
 function (bsAtoms) {
 var bs =  new JU.BS ();
 var atoms = this.vwr.ms.at;
-for (var i = this.vwr.ms.mc; --i >= 0; ) {
+for (var i = this.vwr.getModelCount (); --i >= 0; ) {
 var bsModelAtoms = this.vwr.getModelUndeletedAtomsBitSet (i);
 bsModelAtoms.and (bsAtoms);
-if (this.vwr.ms.getUnitCell (i) == null) continue;
+if (this.vwr.getModelUnitCell (i) == null) continue;
 for (var j = bsModelAtoms.nextSetBit (0); j >= 0; j = bsModelAtoms.nextSetBit (j + 1)) if (atoms[j].atomSite != atoms[j].i + 1) bsModelAtoms.clear (j);
 
 bs.or (bsModelAtoms);
@@ -90,7 +90,7 @@ return bs;
 Clazz.defineMethod (c$, "getJCouplingHz", 
 function (a1, a2, type, isc) {
 return this.getIsoOrAnisoHz (true, a1, a2, type, isc);
-}, "JM.Atom,JM.Atom,~S,JU.Tensor");
+}, "JM.Atom,JM.Atom,~S,JW.Tensor");
 Clazz.overrideMethod (c$, "getIsoOrAnisoHz", 
 function (isIso, a1, a2, type, isc) {
 if (isc == null) {
@@ -106,10 +106,10 @@ isc = list.get (0);
 a1 = this.vwr.ms.at[isc.atomIndex1];
 a2 = this.vwr.ms.at[isc.atomIndex2];
 }return (this.getIsotopeData (a1, 1) * this.getIsotopeData (a2, 1) * (isIso ? isc.isotropy () : isc.anisotropy ()) * 0.0167840302932219);
-}, "~B,JM.Atom,JM.Atom,~S,JU.Tensor");
+}, "~B,JM.Atom,JM.Atom,~S,JW.Tensor");
 Clazz.defineMethod (c$, "getISCtype", 
  function (a1, type) {
-var tensors = this.vwr.ms.getInfo (a1.mi, "interactionTensors");
+var tensors = this.vwr.getModelAuxiliaryInfoValue (a1.mi, "interactionTensors");
 if (tensors == null) return null;
 type = (type == null ? "" : type.toLowerCase ());
 var pt = -1;
@@ -119,7 +119,7 @@ return type;
 }, "JM.Atom,~S");
 Clazz.overrideMethod (c$, "getDipolarConstantHz", 
 function (a1, a2) {
-if (JU.Logger.debugging) JU.Logger.debug (a1 + " g=" + this.getIsotopeData (a1, 1) + "; " + a2 + " g=" + this.getIsotopeData (a2, 1));
+if (JW.Logger.debugging) JW.Logger.debug (a1 + " g=" + this.getIsotopeData (a1, 1) + "; " + a2 + " g=" + this.getIsotopeData (a2, 1));
 var v = (-this.getIsotopeData (a1, 1) * this.getIsotopeData (a2, 1) / Math.pow (a1.distance (a2), 3) * 1054.5717253362893);
 return (v == 0 || a1 === a2 ? NaN : v);
 }, "JM.Atom,JM.Atom");
@@ -141,34 +141,34 @@ Clazz.defineMethod (c$, "getData",
  function () {
 var br = null;
 try {
-var debugging = JU.Logger.debugging;
+var debugging = JW.Logger.debugging;
 br = J.io.JmolBinary.getBufferedReaderForResource (this.vwr, this, "J/quantum/", "nmr_data.txt");
 this.isotopeData =  new java.util.Hashtable ();
 var line;
 while ((line = br.readLine ()) != null) {
-if (debugging) JU.Logger.info (line);
+if (debugging) JW.Logger.info (line);
 if (line.indexOf ("#") >= 0) continue;
 var tokens = JU.PT.getTokens (line);
 var name = tokens[0];
 var defaultIso = tokens[2] + name;
-if (debugging) JU.Logger.info (name + " default isotope " + defaultIso);
+if (debugging) JW.Logger.info (name + " default isotope " + defaultIso);
 for (var i = 3; i < tokens.length; i += 3) {
 var n = Integer.parseInt (tokens[i]);
 var isoname = n + name;
-var dataGQ =  Clazz.newDoubleArray (-1, [n, Double.parseDouble (tokens[i + 1]), Double.parseDouble (tokens[i + 2])]);
-if (debugging) JU.Logger.info (isoname + "  " + JU.Escape.eAD (dataGQ));
+var dataGQ = [n, Double.parseDouble (tokens[i + 1]), Double.parseDouble (tokens[i + 2])];
+if (debugging) JW.Logger.info (isoname + "  " + JW.Escape.eAD (dataGQ));
 this.isotopeData.put (isoname, dataGQ);
 }
 var defdata = this.isotopeData.get (defaultIso);
 if (defdata == null) {
-JU.Logger.error ("Cannot find default NMR data in nmr_data.txt for " + defaultIso);
+JW.Logger.error ("Cannot find default NMR data in nmr_data.txt for " + defaultIso);
 throw  new NullPointerException ();
 }defdata[0] = -defdata[0];
 this.isotopeData.put (name, defdata);
 }
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.error ("Exception " + e.toString () + " reading " + "nmr_data.txt");
+JW.Logger.error ("Exception " + e.toString () + " reading " + "nmr_data.txt");
 } else {
 throw e;
 }
@@ -190,11 +190,11 @@ var map =  new java.util.Hashtable ();
 map.put ("isotopes", this.isotopeData);
 map.put ("shiftRefsPPM", this.shiftRefsPPM);
 return map;
-}if (JU.PT.isDigit (what.charAt (0))) return this.isotopeData.get (what);
-var info =  new JU.Lst ();
+}if (Character.isDigit (what.charAt (0))) return this.isotopeData.get (what);
+var info =  new JU.List ();
 for (var e, $e = this.isotopeData.entrySet ().iterator (); $e.hasNext () && ((e = $e.next ()) || true);) {
 var key = e.getKey ();
-if (JU.PT.isDigit (key.charAt (0)) && key.endsWith (what)) info.addLast (e.getValue ());
+if (Character.isDigit (key.charAt (0)) && key.endsWith (what)) info.addLast (e.getValue ());
 }
 return info;
 }, "~S");
@@ -230,12 +230,12 @@ Clazz.overrideMethod (c$, "getTensorInfo",
 function (tensorType, infoType, bs) {
 if ("".equals (tensorType)) tensorType = null;
 infoType = (infoType == null ? ";all." : ";" + infoType + ".");
-var data =  new JU.Lst ();
+var data =  new JU.List ();
 var list1;
 if (";dc.".equals (infoType)) {
 var atoms = this.vwr.ms.at;
 for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) for (var j = bs.nextSetBit (i + 1); j >= 0; j = bs.nextSetBit (j + 1)) {
-list1 =  new JU.Lst ();
+list1 =  new JU.List ();
 list1.addLast (Integer.$valueOf (atoms[i].i));
 list1.addLast (Integer.$valueOf (atoms[j].i));
 list1.addLast (Float.$valueOf (this.getDipolarConstantHz (atoms[i], atoms[j])));
@@ -250,7 +250,7 @@ var list = this.getInteractionTensorList (tensorType, bs);
 var n = (list == null ? 0 : list.size ());
 for (var i = 0; i < n; i++) {
 var t = list.get (i);
-list1 =  new JU.Lst ();
+list1 =  new JU.List ();
 list1.addLast (Integer.$valueOf (t.atomIndex1));
 list1.addLast (Integer.$valueOf (t.atomIndex2));
 list1.addLast (isEta || isJ ? Float.$valueOf (this.getIsoOrAnisoHz (isJ, null, null, null, t)) : t.getInfo (infoType));
@@ -258,7 +258,7 @@ data.addLast (list1);
 }
 if (tensorType != null) return data;
 }var isChi = tensorType != null && tensorType.startsWith ("efg") && infoType.equals (";chi.");
-var isFloat = (isChi || JU.Tensor.isFloatInfo (infoType));
+var isFloat = (isChi || JW.Tensor.isFloatInfo (infoType));
 for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) {
 if (tensorType == null) {
 var a = this.vwr.ms.getAtomTensorList (i);

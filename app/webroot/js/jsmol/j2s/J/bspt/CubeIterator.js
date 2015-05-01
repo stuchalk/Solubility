@@ -37,7 +37,7 @@ this.stack[0] = this.bspt.eleRoot;
 this.sp = 1;
 this.findLeftLeaf ();
 this.tHemisphere = hemisphereOnly;
-}, "JU.T3,~N,~B");
+}, "JU.P3,~N,~B");
 Clazz.defineMethod (c$, "release", 
 function () {
 this.set (this.bspt);
@@ -98,5 +98,5 @@ Clazz.defineMethod (c$, "isWithinRadius",
  function (t) {
 this.dx = t.x - this.cx;
 return ((!this.tHemisphere || this.dx >= 0) && (this.dx = Math.abs (this.dx)) <= this.radius && (this.dy = Math.abs (t.y - this.cy)) <= this.radius && (this.dz = Math.abs (t.z - this.cz)) <= this.radius);
-}, "JU.T3");
+}, "JU.P3");
 });

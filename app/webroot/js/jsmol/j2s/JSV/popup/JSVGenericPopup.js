@@ -139,7 +139,7 @@ if (atoms != null) this.menuCreateItem (menu, title, "select visible & (@" + JU.
 }
 this.menuEnable (menu, true);
 return true;
-}, "javajs.api.SC,JU.Lst");
+}, "javajs.api.SC,JU.List");
 Clazz.defineMethod (c$, "updateAboutSubmenu", 
  function () {
 var menu = this.htMenus.get ("aboutComputedMenu");
@@ -152,7 +152,7 @@ return false;
 }, "~S");
 Clazz.overrideMethod (c$, "setCompoundMenu", 
 function (panelNodes, allowCompoundMenu) {
-}, "JU.Lst,~B");
+}, "JU.List,~B");
 Clazz.overrideMethod (c$, "setEnabled", 
 function (allowMenu, zoomEnabled) {
 this.allowMenu = allowMenu;

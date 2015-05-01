@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (null, "J.jvxl.readers.Parameters", ["java.lang.Float", "java.util.Hashtable", "JU.A4", "$.Lst", "$.M3", "$.P3", "$.P4", "$.V3", "JU.Escape", "$.Logger"], function () {
+Clazz.load (null, "J.jvxl.readers.Parameters", ["java.lang.Float", "java.util.Hashtable", "JU.A4", "$.List", "$.M3", "$.P3", "$.P4", "$.V3", "JW.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.state = 0;
 this.testFlags = 0;
@@ -139,7 +139,6 @@ this.points = null;
 this.volumeData = null;
 this.contactPair = null;
 this.mapLattice = null;
-this.extendGrid = 0;
 this.isMapped = false;
 this.showTiming = false;
 this.pointSize = 0;
@@ -161,9 +160,9 @@ this.bsIgnore = null;
 this.bsSelected = null;
 this.bsSolvent = null;
 this.calculationType = "";
-this.center =  new JU.P3 ();
-this.resetForMapping (true);
+this.center = JU.P3.new3 (3.4028235E38, 3.4028235E38, 3.4028235E38);
 this.colorBySign = this.colorByPhase = this.colorBySets = false;
+this.colorDensity = false;
 this.colorEncoder = null;
 this.colorNeg = -65536;
 this.colorNegLCAO = -8388480;
@@ -182,14 +181,15 @@ this.dataXYReversed = false;
 this.distance = 3.4028235E38;
 this.doFullMolecular = false;
 this.envelopeRadius = 10;
-this.extendGrid = 0;
 this.fileIndex = 1;
 this.readAllData = true;
 this.fileName = "";
 this.fullyLit = false;
+this.func = null;
 this.functionInfo = null;
 this.iAddGridPoints = false;
 this.insideOut = false;
+this.intersection = null;
 this.isAngstroms = false;
 this.isBicolorMap = this.isCutoffAbsolute = this.isPositiveOnly = false;
 this.isCavity = false;
@@ -197,13 +197,14 @@ this.isColorReversed = false;
 this.isSquared = false;
 this.isSquaredLinear = false;
 this.isContoured = false;
-this.isEccentric = false;
+this.isEccentric = this.isAnisotropic = false;
 this.isMapped = false;
 this.isPeriodic = false;
 this.isSilent = false;
-this.logCube = this.logCompression = false;
-this.logMessages = JU.Logger.debugging;
 this.mapLattice = null;
+this.logCube = this.logCompression = false;
+this.logMessages = JW.Logger.debugging;
+this.mappedDataMin = 3.4028235E38;
 this.mep_calcType = -1;
 this.minSet = 0;
 this.modelIndex = -1;
@@ -230,31 +231,15 @@ this.thisContour = -1;
 this.title = null;
 this.usePropertyForColorRange = true;
 this.vertexSource = null;
-});
-Clazz.defineMethod (c$, "resetForMapping", 
-function (haveSurface) {
-if (!haveSurface) this.state = 2;
-this.center.x = NaN;
-this.colorDensity = false;
-this.func = null;
-this.intersection = null;
-this.isAnisotropic = false;
-this.isMapped = true;
-this.mappedDataMin = 3.4028235E38;
-this.origin = null;
-this.parameters = null;
-this.points = null;
-this.qmOrbitalType = 0;
-this.steps = null;
 this.volumeData = null;
-}, "~B");
+});
 Clazz.defineMethod (c$, "setAnisotropy", 
 function (pt) {
 this.anisotropy[0] = pt.x;
 this.anisotropy[1] = pt.y;
 this.anisotropy[2] = pt.z;
 this.isAnisotropic = true;
-if (Float.isNaN (this.center.x)) this.center.set (0, 0, 0);
+if (this.center.x == 3.4028235E38) this.center.set (0, 0, 0);
 }, "JU.P3");
 Clazz.defineMethod (c$, "setEccentricity", 
 function (info) {
@@ -266,8 +251,10 @@ var z = JU.V3.new3 (0, 0, 1);
 ecc.add (z);
 ecc.normalize ();
 if (Float.isNaN (ecc.x)) ecc.set (1, 0, 0);
+this.eccentricityMatrix = JU.M3.newM3 (null);
+this.eccentricityMatrix.setAA (JU.A4.newVA (ecc, 3.141592653589793));
 this.eccentricityMatrixInverse =  new JU.M3 ();
-this.eccentricityMatrixInverse.invertM (this.eccentricityMatrix =  new JU.M3 ().setAA (JU.A4.newVA (ecc, 3.141592653589793)));
+this.eccentricityMatrixInverse.invertM (this.eccentricityMatrix);
 this.isEccentric = this.isAnisotropic = true;
 this.eccentricityScale = c;
 this.eccentricityRatio = fab_c;
@@ -275,7 +262,7 @@ if (fab_c > 1) this.eccentricityScale *= fab_c;
 this.anisotropy[0] = fab_c * c;
 this.anisotropy[1] = fab_c * c;
 this.anisotropy[2] = c;
-if (Float.isNaN (this.center.x)) this.center.set (0, 0, 0);
+if (this.center.x == 3.4028235E38) this.center.set (0, 0, 0);
 }, "JU.P4");
 Clazz.defineMethod (c$, "setPlane", 
 function (plane) {
@@ -310,7 +297,7 @@ this.distance = 0.3 * (Float.isNaN (this.scale) ? 1 : this.scale);
 this.cutoff = 1.4E-45;
 this.isCutoffAbsolute = false;
 this.isSilent = !this.logMessages;
-if (Float.isNaN (this.center.x)) this.center.set (0, 0, 0);
+if (this.center.x == 3.4028235E38) this.center.set (0, 0, 0);
 if (this.resolution == 3.4028235E38) this.resolution = 6;
 }, "~A");
 Clazz.defineMethod (c$, "setLobe", 
@@ -325,7 +312,7 @@ this.script = this.getScriptParams () + " LOBE {" + v.x + " " + v.y + " " + v.z 
 }, "JU.P4");
 Clazz.defineMethod (c$, "getScriptParams", 
  function () {
-return " center " + JU.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale);
+return " center " + JW.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale);
 });
 Clazz.defineMethod (c$, "setLp", 
 function (v) {
@@ -335,7 +322,7 @@ if (this.cutoff == 3.4028235E38) {
 this.cutoff = 0.14;
 if (this.isSquared) this.cutoff = this.cutoff * this.cutoff;
 }this.isSilent = !this.logMessages;
-this.script = " center " + JU.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale) + " LP {" + v.x + " " + v.y + " " + v.z + " " + v.w + "};";
+this.script = " center " + JW.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale) + " LP {" + v.x + " " + v.y + " " + v.z + " " + v.w + "};";
 }, "JU.P4");
 Clazz.defineMethod (c$, "setRadical", 
 function (v) {
@@ -345,7 +332,7 @@ if (this.cutoff == 3.4028235E38) {
 this.cutoff = 0.14;
 if (this.isSquared) this.cutoff = this.cutoff * this.cutoff;
 }this.isSilent = !this.logMessages;
-this.script = " center " + JU.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale) + " RAD {" + v.x + " " + v.y + " " + v.z + " " + v.w + "};";
+this.script = " center " + JW.Escape.eP (this.center) + (Float.isNaN (this.scale) ? "" : " scale " + this.scale) + " RAD {" + v.x + " " + v.y + " " + v.z + " " + v.w + "};";
 }, "JU.P4");
 Clazz.defineMethod (c$, "setLcao", 
 function (type, colorPtr) {
@@ -404,14 +391,14 @@ this.dataType = 8;
 this.functionInfo = value;
 this.cutoff = 1.4E-45;
 this.isEccentric = this.isAnisotropic = false;
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "setFunctionXYZ", 
 function (value) {
 this.dataType = 9;
 this.functionInfo = value;
 if (this.cutoff == 3.4028235E38) this.cutoff = 1.4E-45;
 this.isEccentric = this.isAnisotropic = false;
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "setAtomicOrbital", 
 function (nlmZprs) {
 this.dataType = 1294;
@@ -460,7 +447,7 @@ if (isPromolecular) this.dataType = 1844;
 this.qm_marginAngstroms = 2;
 this.qmOrbitalType = (isPromolecular ? 3 : 4);
 if (isPromolecular) {
-if (this.parameters == null || this.parameters.length < 2) this.parameters =  Clazz.newFloatArray (-1, [this.cutoff, 2]);
+if (this.parameters == null || this.parameters.length < 2) this.parameters = [this.cutoff, 2];
 }if (this.cutoff == 3.4028235E38 || this.cutoff == 0) this.cutoff = 0.3;
 if (this.isSquared) this.cutoff *= this.cutoff;
 if (this.title == null) this.title =  new Array (0);
@@ -473,8 +460,8 @@ this.qm_moNumber = (linearCombination == null ? Math.abs (iMo) : Clazz.floatToIn
 this.qmOrbitalType = (this.moData.containsKey ("haveVolumeData") ? 5 : this.moData.containsKey ("gaussians") ? 1 : this.moData.containsKey ("slaters") ? 2 : 0);
 var isElectronDensity = (iMo <= 0 && linearCombination == null);
 if (this.qmOrbitalType == 0) {
-JU.Logger.error ("MO ERROR: No basis functions found in file for MO calculation. (GAUSSIAN 'gfprint' keyword may be missing?)");
-this.title =  Clazz.newArray (-1, ["no basis functions found in file"]);
+JW.Logger.error ("MO ERROR: No basis functions found in file for MO calculation. (GAUSSIAN 'gfprint' keyword may be missing?)");
+this.title = ["no basis functions found in file"];
 } else {
 var mos = this.moData.get ("mos");
 this.qmOrbitalCount = mos.size ();
@@ -515,9 +502,26 @@ this.mappedDataMax = 1;
 this.valueMappedToRed = this.mappedDataMin;
 this.valueMappedToBlue = this.mappedDataMax;
 }}, "J.jvxl.readers.SurfaceReader,~B");
+Clazz.defineMethod (c$, "resetForMapping", 
+function (haveSurface) {
+if (!haveSurface) this.state = 2;
+this.isMapped = true;
+this.qmOrbitalType = 0;
+this.parameters = null;
+this.colorDensity = false;
+this.mappedDataMin = 3.4028235E38;
+this.intersection = null;
+this.func = null;
+this.points = null;
+this.origin = null;
+this.steps = null;
+this.volumeData = null;
+this.center.x = 3.4028235E38;
+this.isAnisotropic = false;
+}, "~B");
 Clazz.defineMethod (c$, "addSlabInfo", 
 function (slabObject) {
-if (this.slabInfo == null) this.slabInfo =  new JU.Lst ();
+if (this.slabInfo == null) this.slabInfo =  new JU.List ();
 this.slabInfo.addLast (slabObject);
 }, "~A");
 Clazz.defineStatics (c$,

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["JSV.common.Parameters"], "JSV.common.ColorParameters", ["java.util.Hashtable", "$.StringTokenizer", "JU.CU", "$.Lst", "JSV.common.ScriptToken"], function () {
+Clazz.load (["JSV.common.Parameters"], "JSV.common.ColorParameters", ["java.util.Hashtable", "$.StringTokenizer", "JU.CU", "$.List", "JSV.common.ScriptToken"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.titleFontName = null;
 this.displayFontName = null;
@@ -104,7 +104,7 @@ if (plotColorsStr == null) {
 this.plotColors[0] = this.getElementColor (JSV.common.ScriptToken.PLOTCOLOR);
 return this.plotColors;
 }var st =  new java.util.StringTokenizer (plotColorsStr, ",;.- ");
-var colors =  new JU.Lst ();
+var colors =  new JU.List ();
 try {
 while (st.hasMoreTokens ()) colors.addLast (this.getColorFromString (st.nextToken ()));
 
@@ -140,5 +140,5 @@ Clazz.defineStatics (c$,
 "BLUE", null,
 "WHITE", null);
 c$.defaultPlotColors = c$.prototype.defaultPlotColors =  new Array (8);
-c$.defaultPlotColorNames = c$.prototype.defaultPlotColorNames =  Clazz.newArray (-1, ["black", "darkGreen", "darkred", "orange", "magenta", "cyan", "maroon", "darkGray"]);
+c$.defaultPlotColorNames = c$.prototype.defaultPlotColorNames = ["black", "darkGreen", "darkred", "orange", "magenta", "cyan", "maroon", "darkGray"];
 });

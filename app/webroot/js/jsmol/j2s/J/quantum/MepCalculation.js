@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.quantum");
-Clazz.load (["J.api.MepCalculationInterface", "J.quantum.QuantumCalculation"], "J.quantum.MepCalculation", ["java.lang.Float", "java.util.Hashtable", "JU.PT", "$.Rdr", "J.io.JmolBinary", "JU.Logger"], function () {
+Clazz.load (["J.api.MepCalculationInterface", "J.quantum.QuantumCalculation"], "J.quantum.MepCalculation", ["java.lang.Float", "java.util.Hashtable", "JU.PT", "$.Rdr", "J.io.JmolBinary", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.distanceMode = 0;
 this.potentials = null;
@@ -31,7 +31,7 @@ f = NaN;
 } else {
 f = this.getTabulatedPotential (atoms[i]);
 if (Float.isNaN (f)) f = 0;
-}if (JU.Logger.debugging) JU.Logger.debug (atoms[i].getInfo () + " " + f);
+}if (JW.Logger.debugging) JW.Logger.debug (atoms[i].getInfo () + " " + f);
 potentials[i] = f;
 }
 }, "~A,~A,JU.BS,JU.BS,JU.BS,~S");
@@ -67,7 +67,7 @@ function () {
 for (var atomIndex = this.qmAtoms.length; --atomIndex >= 0; ) {
 if ((this.thisAtom = this.qmAtoms[atomIndex]) == null) continue;
 var x0 = this.potentials[atomIndex];
-if (JU.Logger.debugging) JU.Logger.debug ("process map for atom " + atomIndex + this.thisAtom + "  charge=" + x0);
+if (JW.Logger.debugging) JW.Logger.debug ("process map for atom " + atomIndex + this.thisAtom + "  charge=" + x0);
 this.thisAtom.setXYZ (this, true);
 for (var ix = this.xMax; --ix >= this.xMin; ) {
 var dX = this.X2[ix];
@@ -118,13 +118,13 @@ while ((line = br.readLine ()) != null) {
 if (line.startsWith ("#")) continue;
 var vs = JU.PT.getTokens (line);
 if (vs.length < 2) continue;
-if (JU.Logger.debugging) JU.Logger.debug (line);
+if (JW.Logger.debugging) JW.Logger.debug (line);
 this.htAtomicPotentials.put (vs[0], Float.$valueOf (JU.PT.parseFloat (vs[1])));
 }
 br.close ();
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.error ("Exception " + e.toString () + " in getResource " + resourceName);
+JW.Logger.error ("Exception " + e.toString () + " in getResource " + resourceName);
 try {
 br.close ();
 } catch (ee) {

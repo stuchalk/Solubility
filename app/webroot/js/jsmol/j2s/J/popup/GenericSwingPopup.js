@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.popup");
-Clazz.load (["javajs.api.GenericMenuInterface", "java.util.Hashtable", "JU.Lst"], "J.popup.GenericSwingPopup", ["java.util.StringTokenizer", "JU.PT", "$.SB", "JU.Logger"], function () {
+Clazz.load (["javajs.api.GenericMenuInterface", "java.util.Hashtable", "JU.List"], "J.popup.GenericSwingPopup", ["java.util.StringTokenizer", "JU.PT", "$.SB", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.helper = null;
 this.strMenuStructure = null;
@@ -24,7 +24,7 @@ Clazz.instantialize (this, arguments);
 Clazz.prepareFields (c$, function () {
 this.htCheckbox =  new java.util.Hashtable ();
 this.htMenus =  new java.util.Hashtable ();
-this.SignedOnly =  new JU.Lst ();
+this.SignedOnly =  new JU.List ();
 });
 Clazz.defineMethod (c$, "initSwing", 
 function (title, bundle, applet, isJS, isSigned, isWebGL) {
@@ -51,7 +51,7 @@ Clazz.defineMethod (c$, "addMenuItems",
 function (parentId, key, menu, popupResourceBundle) {
 var id = parentId + "." + key;
 var value = popupResourceBundle.getStructure (key);
-if (JU.Logger.debugging) JU.Logger.debug (id + " --- " + value);
+if (JW.Logger.debugging) JW.Logger.debug (id + " --- " + value);
 if (value == null) {
 this.menuCreateItem (menu, "#" + key, "", "");
 return;
@@ -118,7 +118,7 @@ this.htCheckbox.put (key + "::" + this.htCheckbox.size (), checkboxMenuItem);
 }, "~S,javajs.api.SC");
 Clazz.defineMethod (c$, "updateButton", 
 function (b, entry, script) {
-var ret =  Clazz.newArray (-1, [entry]);
+var ret = [entry];
 var icon = this.getEntryIcon (ret);
 entry = ret[0];
 b.init (entry, icon, script, this.thisPopup);
@@ -181,7 +181,7 @@ if (!item.isEnabled ()) return;
 if (what.indexOf ("##") < 0) {
 var pt = what.indexOf (":");
 if (pt < 0) {
-JU.Logger.error ("check box " + item + " IS " + what);
+JW.Logger.error ("check box " + item + " IS " + what);
 return;
 }var basename = what.substring (0, pt);
 if (this.appIsSpecialCheckBox (item, basename, what, TF)) return;

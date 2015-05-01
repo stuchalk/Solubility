@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shape");
-Clazz.load (["JU.MeshSurface"], "J.shape.Mesh", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.AU", "$.BS", "$.M3", "$.M4", "$.Measure", "$.P3", "$.PT", "$.SB", "$.V3", "JS.T", "JU.BSUtil", "$.C", "$.Escape", "$.Normix"], function () {
+Clazz.load (["JW.MeshSurface", "JU.P3", "$.V3"], "J.shape.Mesh", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.AU", "$.BS", "$.M3", "$.M4", "$.PT", "$.SB", "J.script.T", "JW.BSUtil", "$.C", "$.Escape", "$.Measure", "$.Normix"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.title = null;
 this.meshColix = 0;
@@ -21,8 +21,6 @@ this.width = 0;
 this.ptCenter = null;
 this.linkedMesh = null;
 this.vertexColorMap = null;
-this.vAB = null;
-this.vTemp = null;
 this.color = 0;
 this.useColix = true;
 this.unitCell = null;
@@ -42,6 +40,9 @@ this.frontOnly = false;
 this.isTwoSided = true;
 this.havePlanarContours = false;
 this.bsTemp = null;
+this.vAB = null;
+this.vAC = null;
+this.vTemp = null;
 this.colorDensity = false;
 this.cappingObject = null;
 this.slabbingObject = null;
@@ -50,23 +51,29 @@ this.connections = null;
 this.recalcAltVertices = false;
 this.symopColixes = null;
 Clazz.instantialize (this, arguments);
-}, J.shape, "Mesh", JU.MeshSurface);
+}, J.shape, "Mesh", JW.MeshSurface);
+Clazz.prepareFields (c$, function () {
+this.ptCenter = JU.P3.new3 (0, 0, 0);
+this.vAB =  new JU.V3 ();
+this.vAC =  new JU.V3 ();
+this.vTemp =  new JU.V3 ();
+});
 Clazz.defineMethod (c$, "setVisibilityFlags", 
 function (n) {
 this.visibilityFlags = n;
 }, "~N");
+Clazz.makeConstructor (c$, 
+function () {
+Clazz.superConstructor (this, J.shape.Mesh, []);
+});
 Clazz.defineMethod (c$, "mesh1", 
-function (vwr, thisID, colix, index) {
+function (thisID, colix, index) {
 if ("+PREVIOUS_MESH+".equals (thisID)) thisID = null;
-this.vwr = vwr;
 this.thisID = thisID;
 this.colix = colix;
 this.index = index;
-this.ptCenter =  new JU.P3 ();
-this.vAB =  new JU.V3 ();
-this.vTemp =  new JU.V3 ();
 return this;
-}, "JV.Viewer,~S,~N,~N");
+}, "~S,~N,~N");
 Clazz.defineMethod (c$, "clear", 
 function (meshType) {
 this.clearMesh (meshType);
@@ -79,6 +86,7 @@ this.bsSlabDisplay = null;
 this.bsSlabGhost = null;
 this.symops = null;
 this.symopColixes = null;
+this.bsTransPolygons = null;
 this.cappingObject = null;
 this.colix = 23;
 this.colorDensity = false;
@@ -95,6 +103,7 @@ this.lattice = null;
 this.mat4 = null;
 this.normixes = null;
 this.pis = null;
+this.polygonTranslucencies = null;
 this.scale3d = 0;
 this.showContourLines = false;
 this.showPoints = false;
@@ -108,7 +117,6 @@ this.unitCell = null;
 this.useColix = true;
 this.vertexCount0 = this.polygonCount0 = this.vc = this.pc = 0;
 this.vs = null;
-this.vertexSource = null;
 this.volumeRenderPointSize = 0.15;
 this.meshType = meshType;
 }, "~S");
@@ -124,10 +132,10 @@ this.setLighting (lighting);
 Clazz.defineMethod (c$, "setNormixes", 
 function (normals) {
 this.normixes =  Clazz.newShortArray (this.normixCount, 0);
-if (this.bsTemp == null) this.bsTemp = JU.Normix.newVertexBitSet ();
+if (this.bsTemp == null) this.bsTemp = JW.Normix.newVertexBitSet ();
 if (this.haveXyPoints) for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = 9999;
 
- else for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = JU.Normix.getNormixV (normals[i], this.bsTemp);
+ else for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = JW.Normix.getNormixV (normals[i], this.bsTemp);
 
 return this.normixes;
 }, "~A");
@@ -163,40 +171,39 @@ if (lighting == 1073741964) for (var i = this.normixCount; --i >= 0; ) this.norm
 }, "~N");
 Clazz.defineMethod (c$, "invertNormixes", 
  function () {
-JU.Normix.setInverseNormixes ();
-for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = JU.Normix.getInverseNormix (this.normixes[i]);
+JW.Normix.setInverseNormixes ();
+for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = JW.Normix.getInverseNormix (this.normixes[i]);
 
 });
 Clazz.defineMethod (c$, "setTranslucent", 
 function (isTranslucent, iLevel) {
-this.colix = JU.C.getColixTranslucent3 (this.colix, isTranslucent, iLevel);
+this.colix = JW.C.getColixTranslucent3 (this.colix, isTranslucent, iLevel);
 }, "~B,~N");
 Clazz.defineMethod (c$, "sumVertexNormals", 
 function (vertices, normals) {
-J.shape.Mesh.sumVertexNormals2 (this, vertices, normals);
+this.sumVertexNormals2 (vertices, normals);
 }, "~A,~A");
-c$.sumVertexNormals2 = Clazz.defineMethod (c$, "sumVertexNormals2", 
-function (m, vertices, normals) {
-var adjustment = m.checkByteCount;
-var min = m.getMinDistance2ForVertexGrouping ();
-for (var i = m.pc; --i >= 0; ) {
+Clazz.defineMethod (c$, "sumVertexNormals2", 
+function (vertices, normals) {
+var adjustment = this.checkByteCount;
+var min = this.getMinDistance2ForVertexGrouping ();
+for (var i = this.pc; --i >= 0; ) {
 try {
-var face = m.setABC (i);
-if (face == null) continue;
-var vA = vertices[face[0]];
-var vB = vertices[face[1]];
-var vC = vertices[face[2]];
+if (!this.setABC (i)) continue;
+var vA = vertices[this.iA];
+var vB = vertices[this.iB];
+var vC = vertices[this.iC];
 if (vA.distanceSquared (vB) < min || vB.distanceSquared (vC) < min || vA.distanceSquared (vC) < min) continue;
-JU.Measure.calcNormalizedNormal (vA, vB, vC, m.vTemp, m.vAB);
-if (m.isTriangleSet) {
-normals[i].setT (m.vTemp);
-} else {
-var l = m.vTemp.length ();
-if (l > 0.9 && l < 1.1) for (var j = face.length - adjustment; --j >= 0; ) {
-var k = face[j];
-normals[k].add (m.vTemp);
+JW.Measure.calcNormalizedNormal (vA, vB, vC, this.vTemp, this.vAB, this.vAC);
+if (this.isTriangleSet) {
+normals[i].setT (this.vTemp);
+continue;
+}var l = this.vTemp.length ();
+if (l > 0.9 && l < 1.1) for (var j = this.pis[i].length - adjustment; --j >= 0; ) {
+var k = this.pis[i][j];
+normals[k].add (this.vTemp);
 }
-}} catch (e) {
+} catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 System.out.println (e);
 } else {
@@ -204,7 +211,7 @@ throw e;
 }
 }
 }
-}, "J.shape.Mesh,~A,~A");
+}, "~A,~A");
 Clazz.defineMethod (c$, "getMinDistance2ForVertexGrouping", 
 function () {
 return 1e-8;
@@ -212,18 +219,17 @@ return 1e-8;
 Clazz.defineMethod (c$, "getState", 
 function (type) {
 var s =  new JU.SB ();
-if (this.isValid) {
 s.append (type);
-if (!type.equals ("mo") && !type.equals ("nbo")) s.append (" ID ").append (JU.PT.esc (this.thisID));
-if (this.lattice != null) s.append (" lattice ").append (JU.Escape.eP (this.lattice));
-if (this.meshColix != 0) s.append (" color mesh ").append (JU.C.getHexCode (this.meshColix));
+if (!type.equals ("mo")) s.append (" ID ").append (JU.PT.esc (this.thisID));
+if (this.lattice != null) s.append (" lattice ").append (JW.Escape.eP (this.lattice));
+if (this.meshColix != 0) s.append (" color mesh ").append (JW.C.getHexCode (this.meshColix));
 s.append (this.getRendering ());
 if (!this.visible) s.append (" hidden");
 if (this.bsDisplay != null) {
 s.append (";\n  ").append (type);
-if (!type.equals ("mo") && !type.equals ("nbo")) s.append (" ID ").append (JU.PT.esc (this.thisID));
-s.append (" display " + JU.Escape.eBS (this.bsDisplay));
-}}return s.toString ();
+if (!type.equals ("mo")) s.append (" ID ").append (JU.PT.esc (this.thisID));
+s.append (" display " + JW.Escape.eBS (this.bsDisplay));
+}return s.toString ();
 }, "~S");
 Clazz.defineMethod (c$, "getRendering", 
 function () {
@@ -234,7 +240,7 @@ s.append (this.showPoints ? " dots" : " noDots");
 s.append (this.frontOnly ? " frontOnly" : " notFrontOnly");
 if (this.showContourLines) s.append (" contourlines");
 if (this.showTriangles) s.append (" triangles");
-s.append (" ").append (JS.T.nameOf (this.lighting));
+s.append (" ").append (J.script.T.nameOf (this.lighting));
 return s.toString ();
 });
 Clazz.defineMethod (c$, "getOffsetVertices", 
@@ -266,18 +272,18 @@ return this.altVertices;
 Clazz.defineMethod (c$, "setShowWithin", 
 function (showWithinPoints, showWithinDistance2, isWithinNot) {
 if (showWithinPoints.size () == 0) {
-this.bsDisplay = (isWithinNot ? JU.BSUtil.newBitSet2 (0, this.vc) : null);
+this.bsDisplay = (isWithinNot ? JW.BSUtil.newBitSet2 (0, this.vc) : null);
 return;
 }this.bsDisplay =  new JU.BS ();
 for (var i = 0; i < this.vc; i++) if (J.shape.Mesh.checkWithin (this.vs[i], showWithinPoints, showWithinDistance2, isWithinNot)) this.bsDisplay.set (i);
 
-}, "JU.Lst,~N,~B");
+}, "JU.List,~N,~B");
 c$.checkWithin = Clazz.defineMethod (c$, "checkWithin", 
 function (pti, withinPoints, withinDistance2, isWithinNot) {
 if (withinPoints.size () != 0) for (var i = withinPoints.size (); --i >= 0; ) if (pti.distanceSquared (withinPoints.get (i)) <= withinDistance2) return !isWithinNot;
 
 return isWithinNot;
-}, "JU.T3,JU.Lst,~N,~B");
+}, "JU.P3,JU.List,~N,~B");
 Clazz.defineMethod (c$, "getVertexIndexFromNumber", 
 function (vertexIndex) {
 if (--vertexIndex < 0) vertexIndex = this.vc + vertexIndex;
@@ -290,7 +296,7 @@ return this.getVisibleVBS ();
 Clazz.defineMethod (c$, "getVisibleVBS", 
 function () {
 var bs =  new JU.BS ();
-if (this.pc == 0 && this.bsSlabDisplay != null) JU.BSUtil.copy2 (this.bsSlabDisplay, bs);
+if (this.pc == 0 && this.bsSlabDisplay != null) JW.BSUtil.copy2 (this.bsSlabDisplay, bs);
  else for (var i = this.pc; --i >= 0; ) if (this.bsSlabDisplay == null || this.bsSlabDisplay.get (i)) {
 var vertexIndexes = this.pis[i];
 if (vertexIndexes == null) continue;

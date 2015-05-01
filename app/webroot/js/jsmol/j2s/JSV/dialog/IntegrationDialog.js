@@ -22,7 +22,7 @@ this.dialog.addButton ("btnNormalize", "Normalize");
 });
 Clazz.overrideMethod (c$, "applyFromFields", 
 function () {
-this.apply ( Clazz.newArray (-1, [this.dialog.getText (this.txt1), this.dialog.getText (this.txt2)]));
+this.apply ([this.dialog.getText (this.txt1), this.dialog.getText (this.txt2)]);
 });
 Clazz.overrideMethod (c$, "callback", 
 function (id, msg) {
@@ -76,5 +76,5 @@ this.iRowColSelected = -1;
 this.applyFromFields ();
 });
 Clazz.defineStatics (c$,
-"posXY",  Clazz.newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });

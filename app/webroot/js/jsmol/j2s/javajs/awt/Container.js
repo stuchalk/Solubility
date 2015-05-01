@@ -1,5 +1,5 @@
 Clazz.declarePackage ("javajs.awt");
-Clazz.load (["javajs.awt.Component"], "javajs.awt.Container", ["JU.Lst"], function () {
+Clazz.load (["javajs.awt.Component"], "javajs.awt.Container", ["JU.List"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.list = null;
 this.cList = null;
@@ -26,7 +26,7 @@ return this.addComponent (component);
 }, "javajs.awt.Component");
 Clazz.defineMethod (c$, "addComponent", 
 function (component) {
-if (this.list == null) this.list =  new JU.Lst ();
+if (this.list == null) this.list =  new JU.List ();
 this.list.addLast (component);
 this.cList = null;
 component.parent = this;

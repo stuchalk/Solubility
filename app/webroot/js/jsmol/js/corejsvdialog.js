@@ -1,15 +1,11 @@
 (function(Clazz
-,Clazz_newLongArray
-,Clazz_doubleToByte
 ,Clazz_doubleToInt
-,Clazz_doubleToLong
 ,Clazz_declarePackage
 ,Clazz_instanceOf
 ,Clazz_load
 ,Clazz_instantialize
 ,Clazz_decorateAsClass
 ,Clazz_floatToInt
-,Clazz_floatToLong
 ,Clazz_makeConstructor
 ,Clazz_defineEnumConstant
 ,Clazz_exceptionOf
@@ -86,7 +82,7 @@ this.dialog.addButton ("btnNormalize", "Normalize");
 });
 Clazz_overrideMethod (c$, "applyFromFields", 
 function () {
-this.apply ( Clazz_newArray (-1, [this.dialog.getText (this.txt1), this.dialog.getText (this.txt2)]));
+this.apply ([this.dialog.getText (this.txt1), this.dialog.getText (this.txt2)]);
 });
 Clazz_overrideMethod (c$, "callback", 
 function (id, msg) {
@@ -140,7 +136,7 @@ this.iRowColSelected = -1;
 this.applyFromFields ();
 });
 Clazz_defineStatics (c$,
-"posXY",  Clazz_newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });
 Clazz_declarePackage ("JSV.dialog");
 Clazz_load (["JSV.dialog.JSVDialog"], "JSV.dialog.PeakListDialog", ["JSV.common.Annotation"], function () {
@@ -158,7 +154,7 @@ Clazz_defineMethod (c$, "addUniqueControls",
 function () {
 this.txt1 = this.dialog.addTextField ("txtThreshold", "Threshold", null, "", "", true);
 this.setThreshold (NaN);
-this.combo1 = this.dialog.addSelectOption ("cmbInterpolation", "Interpolation",  Clazz_newArray (-1, ["parabolic", "none"]), 0, true);
+this.combo1 = this.dialog.addSelectOption ("cmbInterpolation", "Interpolation", ["parabolic", "none"], 0, true);
 });
 Clazz_overrideMethod (c$, "callback", 
 function (id, msg) {
@@ -166,7 +162,7 @@ if (id.equals ("cmbInterpolation") || id.equals ("txtThreshold")) id = "btnApply
 return this.callbackAD (id, msg);
 }, "~S,~S");
 Clazz_defineStatics (c$,
-"posXY",  Clazz_newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });
 Clazz_declarePackage ("JSV.dialog");
 Clazz_load (["JSV.dialog.JSVDialog"], "JSV.dialog.MeasurementsDialog", ["JSV.common.Annotation"], function () {
@@ -188,7 +184,7 @@ function (id, msg) {
 return this.callbackAD (id, msg);
 }, "~S,~S");
 Clazz_defineStatics (c$,
-"posXY",  Clazz_newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });
 Clazz_declarePackage ("JSV.dialog");
 Clazz_load (["JSV.dialog.JSVDialog"], "JSV.dialog.OverlayLegendDialog", ["JSV.common.Annotation"], function () {
@@ -210,10 +206,10 @@ function (id, msg) {
 return false;
 }, "~S,~S");
 Clazz_defineStatics (c$,
-"posXY",  Clazz_newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });
 Clazz_declarePackage ("JSV.dialog");
-Clazz_load (["JSV.dialog.JSVDialog"], "JSV.dialog.ViewsDialog", ["JU.Lst", "$.PT", "$.SB", "JSV.common.Annotation"], function () {
+Clazz_load (["JSV.dialog.JSVDialog"], "JSV.dialog.ViewsDialog", ["JU.List", "$.PT", "$.SB", "JSV.common.Annotation"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.treeNodes = null;
 this.checkBoxes = null;
@@ -234,8 +230,8 @@ return JSV.dialog.ViewsDialog.posXY;
 });
 Clazz_defineMethod (c$, "addUniqueControls", 
 function () {
-this.checkBoxes =  new JU.Lst ();
-this.treeNodes =  new JU.Lst ();
+this.checkBoxes =  new JU.List ();
+this.treeNodes =  new JU.List ();
 this.dialog.addButton ("btnSelectAll", "Select All");
 this.dialog.addButton ("btnSelectNone", "Select None");
 this.txt2 = this.dialog.addTextField ("txtOffset", "Offset", "" + this.vwr.parameters.viewOffset, "%", null, true);
@@ -376,10 +372,10 @@ return this.callbackAD (id, msg);
 }, "~S,~S");
 Clazz_overrideMethod (c$, "applyFromFields", 
 function () {
-this.apply ( Clazz_newArray (-1, [this.dialog.getText (this.txt2)]));
+this.apply ([this.dialog.getText (this.txt2)]);
 });
 Clazz_defineStatics (c$,
-"posXY",  Clazz_newIntArray (-1, [-2147483648, 0]));
+"posXY", [-2147483648, 0]);
 });
 Clazz_declarePackage ("JSV.js2d");
 Clazz_load (["JSV.dialog.DialogManager"], "JSV.js2d.JsDialogManager", ["javajs.awt.Dimension", "javajs.swing.JDialog", "$.JEditorPane", "$.JLabel", "$.JScrollPane", "$.JTable", "JU.PT", "JSV.js2d.DialogTableModel", "$.JsDialog"], function () {
@@ -409,7 +405,7 @@ return  Clazz_newIntArray (2, 0);
 Clazz_overrideMethod (c$, "getOptionFromDialog", 
 function (frame, items, jsvp, dialogName, labelName) {
 var i = -1;
-var applet = this.vwr.html5Applet;
+var applet = this.vwr.applet;
 {
 i = applet.getOption(items, dialogName, labelName);
 }return i;
@@ -419,7 +415,7 @@ function (frame, spectrum) {
 var dialog =  new javajs.swing.JDialog ();
 dialog.setTitle ("Header Information");
 var rowData = spectrum.getHeaderRowDataAsArray ();
-var columnNames =  Clazz_newArray (-1, ["Label", "Description"]);
+var columnNames = ["Label", "Description"];
 var tableModel =  new JSV.js2d.DialogTableModel (columnNames, rowData, false, true);
 var table =  new javajs.swing.JTable (tableModel);
 table.setPreferredScrollableViewportSize ( new javajs.awt.Dimension (400, 195));
@@ -880,17 +876,13 @@ return this.tableCellAlignLeft ? 2 : column == 0 ? 0 : 4;
 Clazz_declarePackage ("JSV.api");
 Clazz_declareInterface (JSV.api, "PlatformDialog");
 })(Clazz
-,Clazz.newLongArray
-,Clazz.doubleToByte
 ,Clazz.doubleToInt
-,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
-,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

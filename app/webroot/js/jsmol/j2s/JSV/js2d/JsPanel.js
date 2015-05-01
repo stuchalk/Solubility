@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.js2d");
-Clazz.load (["JSV.api.JSVPanel"], "JSV.js2d.JsPanel", ["javajs.awt.Font", "JSV.common.JSViewer", "$.PanelData", "JU.Logger"], function () {
+Clazz.load (["JSV.api.JSVPanel"], "JSV.js2d.JsPanel", ["javajs.awt.Font", "JSV.common.JSViewer", "$.PanelData", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.apiPlatform = null;
 this.pd = null;
@@ -11,7 +11,7 @@ Clazz.instantialize (this, arguments);
 }, JSV.js2d, "JsPanel", null, JSV.api.JSVPanel);
 Clazz.overrideMethod (c$, "finalize", 
 function () {
-JU.Logger.info ("JSVPanel " + this + " finalized");
+JW.Logger.info ("JSVPanel " + this + " finalized");
 });
 Clazz.overrideMethod (c$, "getApiPlatform", 
 function () {
@@ -32,7 +32,7 @@ function (viewer, spectra) {
 var p =  new JSV.js2d.JsPanel (viewer, true);
 p.pd.initMany (spectra, viewer.initialStartIndex, viewer.initialEndIndex);
 return p;
-}, "JSV.common.JSViewer,JU.Lst");
+}, "JSV.common.JSViewer,JU.List");
 Clazz.makeConstructor (c$, 
  function (viewer, withPd) {
 this.vwr = viewer;
@@ -74,8 +74,8 @@ return ret;
 }, "~S,~S,~S");
 Clazz.overrideMethod (c$, "showMessage", 
 function (msg, title) {
-JU.Logger.info (msg);
-var applet = this.vwr.html5Applet;
+JW.Logger.info (msg);
+var applet = this.vwr.applet;
 {
 applet._showStatus(msg, title);
 }this.getFocusNow (true);
@@ -116,7 +116,7 @@ this.vwr.repaintDone ();
 Clazz.overrideMethod (c$, "printPanel", 
 function (pl, os, title) {
 pl.title = title;
-pl.date = this.apiPlatform.getDateFormat ("8824");
+pl.date = this.apiPlatform.getDateFormat (true);
 this.pd.setPrint (pl, "Helvetica");
 try {
 (JSV.common.JSViewer.getInterface ("JSV.common.PDFWriter")).createPdfDocument (this, pl, os);

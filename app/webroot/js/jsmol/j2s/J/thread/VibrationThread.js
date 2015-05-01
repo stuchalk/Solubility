@@ -4,6 +4,10 @@ c$ = Clazz.decorateAsClass (function () {
 this.transformManager = null;
 Clazz.instantialize (this, arguments);
 }, J.thread, "VibrationThread", J.thread.JmolThread);
+Clazz.makeConstructor (c$, 
+function () {
+Clazz.superConstructor (this, J.thread.VibrationThread, []);
+});
 Clazz.overrideMethod (c$, "setManager", 
 function (manager, vwr, options) {
 this.transformManager = manager;
@@ -34,7 +38,7 @@ mode = -2;
 } else {
 var t = (elapsed % this.transformManager.vibrationPeriodMs) / this.transformManager.vibrationPeriodMs;
 this.transformManager.setVibrationT (t);
-this.vwr.refresh (3, "VibrationThread");
+this.vwr.refresh (3, "VibrationThread:run()");
 mode = (this.checkInterrupted (this.transformManager.vibrationThread) ? -2 : 0);
 }break;
 case -2:

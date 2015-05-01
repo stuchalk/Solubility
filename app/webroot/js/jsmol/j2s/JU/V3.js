@@ -1,9 +1,6 @@
 Clazz.declarePackage ("JU");
 Clazz.load (["JU.T3"], "JU.V3", null, function () {
 c$ = Clazz.declareType (JU, "V3", JU.T3);
-Clazz.makeConstructor (c$, 
-function () {
-});
 c$.newV = Clazz.defineMethod (c$, "newV", 
 function (t) {
 return JU.V3.new3 (t.x, t.y, t.z);
@@ -20,6 +17,10 @@ v.y = y;
 v.z = z;
 return v;
 }, "~N,~N,~N");
+Clazz.defineMethod (c$, "cross", 
+function (v1, v2) {
+this.set (v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
+}, "JU.V3,JU.V3");
 Clazz.defineMethod (c$, "angle", 
 function (v1) {
 var xx = this.y * v1.z - this.z * v1.y;

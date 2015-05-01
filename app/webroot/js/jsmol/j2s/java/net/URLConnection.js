@@ -1,5 +1,5 @@
 Clazz.declarePackage ("java.net");
-Clazz.load (null, "java.net.URLConnection", ["java.lang.IllegalStateException", "$.NullPointerException", "java.net.UnknownServiceException", "JU.Lst"], function () {
+Clazz.load (null, "java.net.URLConnection", ["java.lang.IllegalStateException", "$.NullPointerException", "java.net.UnknownServiceException", "JU.List"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.url = null;
 this.doInput = true;
@@ -46,11 +46,11 @@ Clazz.defineMethod (c$, "setRequestProperty",
 function (key, value) {
 if (this.connected) throw  new IllegalStateException ("Already connected");
 if (key == null) throw  new NullPointerException ("key is null");
-if (this.requests == null) this.requests =  new JU.Lst ();
+if (this.requests == null) this.requests =  new JU.List ();
 for (var i = this.requests.size (); --i >= 0; ) if (this.requests.get (i)[0].equals (key)) {
 this.requests.get (i)[1] = value;
 return;
 }
-this.requests.addLast ( Clazz.newArray (-1, [key, value]));
+this.requests.addLast ([key, value]);
 }, "~S,~S");
 });

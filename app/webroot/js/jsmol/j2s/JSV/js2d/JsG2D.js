@@ -1,12 +1,12 @@
 Clazz.declarePackage ("JSV.js2d");
-Clazz.load (["J.api.GenericGraphics"], "JSV.js2d.JsG2D", ["javajs.awt.Color", "JU.CU"], function () {
+Clazz.load (["JSV.api.JSVGraphics"], "JSV.js2d.JsG2D", ["javajs.awt.Color", "JU.CU"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.windowWidth = 0;
 this.windowHeight = 0;
 this.isShifted = false;
 this.inPath = false;
 Clazz.instantialize (this, arguments);
-}, JSV.js2d, "JsG2D", null, J.api.GenericGraphics);
+}, JSV.js2d, "JsG2D", null, JSV.api.JSVGraphics);
 Clazz.makeConstructor (c$, 
 function () {
 });

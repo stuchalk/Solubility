@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.tree");
-Clazz.load (["JSV.api.JSVTreeNode"], "JSV.tree.SimpleTreeNode", ["JU.Lst", "JSV.tree.SimpleTreeEnumeration"], function () {
+Clazz.load (["JSV.api.JSVTreeNode"], "JSV.tree.SimpleTreeNode", ["JU.List", "JSV.tree.SimpleTreeEnumeration"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.panelNode = null;
 this.index = 0;
@@ -12,7 +12,7 @@ Clazz.makeConstructor (c$,
 function (text, panelNode) {
 this.text = text;
 this.panelNode = panelNode;
-this.$children =  new JU.Lst ();
+this.$children =  new JU.List ();
 }, "~S,JSV.common.PanelNode");
 Clazz.overrideMethod (c$, "getPanelNode", 
 function () {
@@ -36,7 +36,7 @@ return this.$children.size ();
 });
 Clazz.overrideMethod (c$, "getPath", 
 function () {
-var o =  new JU.Lst ();
+var o =  new JU.List ();
 var node = this;
 o.addLast (node);
 while ((node = node.prevNode) != null) o.add (0, node);

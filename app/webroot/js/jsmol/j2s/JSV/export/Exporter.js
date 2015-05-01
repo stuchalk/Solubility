@@ -65,7 +65,7 @@ return null;
 throw e;
 }
 }
-}, "JSV.common.JSViewer,JU.Lst,~B");
+}, "JSV.common.JSViewer,JU.List,~B");
 Clazz.defineMethod (c$, "exportSpectrumOrImage", 
  function (viewer, eType, index, out) {
 var spec;

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (["JSV.api.SourceReader", "JU.SB"], "JSV.source.XMLReader", ["java.io.IOException", "JU.Lst", "JSV.common.Coordinate", "$.Spectrum", "JSV.source.JDXReader", "$.XMLParser", "JU.Logger"], function () {
+Clazz.load (["JSV.api.SourceReader", "JU.SB"], "JSV.source.XMLReader", ["java.io.IOException", "JU.List", "JSV.common.Coordinate", "$.Spectrum", "JSV.source.JDXReader", "$.XMLParser", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.source = null;
 this.filePath = "";
@@ -74,7 +74,7 @@ throw  new java.io.IOException (errMsg);
 });
 Clazz.defineMethod (c$, "populateVariables", 
 function () {
-var LDRTable =  new JU.Lst ();
+var LDRTable =  new JU.List ();
 var spectrum =  new JSV.common.Spectrum ();
 spectrum.setTitle (this.title);
 spectrum.setJcampdx ("5.01");
@@ -135,7 +135,7 @@ while (this.parser.hasNext ()) {
 if (this.parser.nextEvent () != 1) continue;
 var theTag = this.parser.getTagName ();
 var requiresEndTag = this.parser.requiresEndTag ();
-if (JU.Logger.debugging) JU.Logger.info (this.tagName);
+if (JW.Logger.debugging) JW.Logger.info (this.tagName);
 for (var i = i0; i <= i1; i++) if (theTag.equals (JSV.source.XMLReader.tagNames[i])) {
 this.process (i, requiresEndTag);
 break;
@@ -169,7 +169,7 @@ if (!this.processTag (tagId)) return;
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 var msg = "error reading " + this.tagName + " section: " + e + "\n" + e.getStackTrace ();
-JU.Logger.error (msg);
+JW.Logger.error (msg);
 this.errorLog.append (msg + "\n");
 } else {
 throw e;
@@ -177,7 +177,7 @@ throw e;
 }
 }, "~N,~B");
 Clazz.defineStatics (c$,
-"tagNames",  Clazz.newArray (-1, ["audittrail", "experimentstepset", "sampleset", "xx result", "spectrum", "metadatalist", "conditionlist", "parameterlist", "sample", "spectrumdata", "peaklist", "author", "peaklist"]),
+"tagNames", ["audittrail", "experimentstepset", "sampleset", "xx result", "spectrum", "metadatalist", "conditionlist", "parameterlist", "sample", "spectrumdata", "peaklist", "author", "peaklist"],
 "AML_0", 0,
 "AML_AUDITTRAIL", 0,
 "AML_EXPERIMENTSTEPSET", 1,

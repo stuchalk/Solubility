@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shapespecial");
-Clazz.load (["J.shape.AtomShape", "JU.BS", "J.atomdata.RadiusData"], "J.shapespecial.Dots", ["java.util.Hashtable", "JU.M3", "$.SB", "J.c.VDW", "J.geodesic.EnvelopeCalculation", "JU.BSUtil", "$.C", "$.Escape"], function () {
+Clazz.load (["J.shape.AtomShape", "JU.BS", "J.atomdata.RadiusData"], "J.shapespecial.Dots", ["java.util.Hashtable", "JU.M3", "$.SB", "J.c.VDW", "J.geodesic.EnvelopeCalculation", "JW.BSUtil", "$.C", "$.Escape"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.ec = null;
 this.isSurface = false;
@@ -74,7 +74,7 @@ this.ec.setMads (this.mads);
 if (this.colixes == null) {
 this.colixes =  Clazz.newShortArray (this.ac, 0);
 this.paletteIDs =  Clazz.newByteArray (this.ac, 0);
-}this.colixes[this.thisAtom] = JU.C.getColix (this.thisArgb);
+}this.colixes[this.thisAtom] = JW.C.getColix (this.thisArgb);
 this.bsOn.set (this.thisAtom);
 return;
 }if ("refreshTrajectories" === propertyName) {
@@ -88,7 +88,7 @@ return;
 }if (propertyName === "deleteModelAtoms") {
 var firstAtomDeleted = ((value)[2])[1];
 var nAtomsDeleted = ((value)[2])[2];
-JU.BSUtil.deleteBits (this.bsOn, bs);
+JW.BSUtil.deleteBits (this.bsOn, bs);
 this.ec.deleteAtoms (firstAtomDeleted, nAtomsDeleted);
 }this.setPropAS (propertyName, value, bs);
 }, "~S,~O,JU.BS");
@@ -158,7 +158,7 @@ this.paletteIDs =  Clazz.newByteArray (this.ac, 0);
 }this.ec.calculate (rd, maxRadius, this.bsOn, this.bsIgnore, !this.vwr.getBoolean (603979830), this.vwr.getBoolean (603979829), this.isSurface, true);
 this.rdLast = rd;
 }, "J.atomdata.RadiusData,JU.BS");
-Clazz.overrideMethod (c$, "setAtomClickability", 
+Clazz.overrideMethod (c$, "setModelClickability", 
 function () {
 for (var i = this.ac; --i >= 0; ) {
 var atom = this.atoms[i];
@@ -172,15 +172,15 @@ var dotsConvexMaps = this.ec.getDotsConvexMaps ();
 if (dotsConvexMaps == null || this.ec.getDotsConvexMax () == 0) return "";
 var s =  new JU.SB ();
 var temp =  new java.util.Hashtable ();
-var ac = this.vwr.ms.ac;
+var ac = this.vwr.getAtomCount ();
 var type = (this.isSurface ? "geoSurface " : "dots ");
 for (var i = 0; i < ac; i++) {
 if (!this.bsOn.get (i) || dotsConvexMaps[i] == null) continue;
-if (this.bsColixSet != null && this.bsColixSet.get (i)) JU.BSUtil.setMapBitSet (temp, i, i, J.shape.Shape.getColorCommand (type, this.paletteIDs[i], this.colixes[i], this.translucentAllowed));
+if (this.bsColixSet != null && this.bsColixSet.get (i)) JW.BSUtil.setMapBitSet (temp, i, i, J.shape.Shape.getColorCommand (type, this.paletteIDs[i], this.colixes[i], this.translucentAllowed));
 var bs = dotsConvexMaps[i];
 if (!bs.isEmpty ()) {
 var r = this.ec.getAppropriateRadius (i);
-J.shape.Shape.appendCmd (s, type + i + " radius " + r + " " + JU.Escape.eBS (bs));
+J.shape.Shape.appendCmd (s, type + i + " radius " + r + " " + JW.Escape.eBS (bs));
 }}
 return s.append (this.vwr.getCommands (temp, null, "select")).toString ();
 });

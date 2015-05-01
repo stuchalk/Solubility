@@ -1,15 +1,11 @@
 (function(Clazz
-,Clazz_newLongArray
-,Clazz_doubleToByte
 ,Clazz_doubleToInt
-,Clazz_doubleToLong
 ,Clazz_declarePackage
 ,Clazz_instanceOf
 ,Clazz_load
 ,Clazz_instantialize
 ,Clazz_decorateAsClass
 ,Clazz_floatToInt
-,Clazz_floatToLong
 ,Clazz_makeConstructor
 ,Clazz_defineEnumConstant
 ,Clazz_exceptionOf
@@ -63,26 +59,20 @@
 var $t$;
 //var c$;
 Clazz_declarePackage ("J.adapter.smarter");
-Clazz_load (["JU.P3"], "J.adapter.smarter.XtalSymmetry", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.BS", "$.Lst", "$.M3", "$.M4", "$.P3i", "$.PT", "$.SB", "$.V3", "J.adapter.smarter.Atom", "JU.BSUtil", "$.Logger"], function () {
+Clazz_load (["JU.P3"], "J.adapter.smarter.XtalSymmetry", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.BS", "$.M3", "$.M4", "$.P3i", "$.PT", "$.SB", "$.V3", "J.adapter.smarter.Atom", "J.api.Interface", "JW.BSUtil", "$.Escape", "$.Logger"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.asc = null;
-this.acr = null;
 this.symmetry = null;
-this.unitCellParams = null;
-this.baseUnitCell = null;
+this.notionalUnitCell = null;
 this.symmetryRange = 0;
 this.doCentroidUnitCell = false;
 this.centroidPacked = false;
-this.packingError = 0;
-this.filterSymop = null;
 this.applySymmetryToBonds = false;
 this.latticeCells = null;
 this.ptSupercell = null;
-this.matSupercell = null;
-this.trajectoryUnitCells = null;
+this.fmatSupercell = null;
 this.doNormalize = true;
 this.doPackUnitCell = false;
-this.baseSymmetry = null;
 this.rminx = 0;
 this.rminy = 0;
 this.rminz = 0;
@@ -105,26 +95,24 @@ this.noSymmetryCount = 0;
 this.firstSymmetryAtom = 0;
 this.ptTemp = null;
 this.mTemp = null;
-this.nVib = 0;
 Clazz_instantialize (this, arguments);
 }, J.adapter.smarter, "XtalSymmetry");
 Clazz_prepareFields (c$, function () {
-this.unitCellParams =  Clazz_newFloatArray (6, 0);
+this.notionalUnitCell =  Clazz_newFloatArray (6, 0);
 this.ptOffset =  new JU.P3 ();
 });
 Clazz_makeConstructor (c$, 
 function () {
 });
 Clazz_defineMethod (c$, "set", 
-function (reader) {
-this.acr = reader;
-this.asc = reader.asc;
+function (asc) {
+this.asc = asc;
 this.getSymmetry ();
 return this;
-}, "J.adapter.smarter.AtomSetCollectionReader");
+}, "J.adapter.smarter.AtomSetCollection");
 Clazz_defineMethod (c$, "getSymmetry", 
 function () {
-return (this.symmetry == null ? (this.symmetry = this.acr.getInterface ("JS.Symmetry")) : this.symmetry);
+return (this.symmetry == null ? (this.symmetry = J.api.Interface.getSymmetry ()) : this.symmetry);
 });
 Clazz_defineMethod (c$, "setSymmetry", 
 function (symmetry) {
@@ -133,210 +121,133 @@ return (this.symmetry = symmetry);
 Clazz_defineMethod (c$, "setSymmetryRange", 
  function (factor) {
 this.symmetryRange = factor;
-this.asc.setInfo ("symmetryRange", Float.$valueOf (factor));
+this.asc.setAtomSetCollectionAuxiliaryInfo ("symmetryRange", Float.$valueOf (factor));
 }, "~N");
 Clazz_defineMethod (c$, "setLatticeCells", 
- function () {
-this.latticeCells = this.acr.latticeCells;
+function (acr) {
+this.latticeCells = acr.latticeCells;
 var isLatticeRange = (this.latticeCells[0] <= 555 && this.latticeCells[1] >= 555 && (this.latticeCells[2] == 0 || this.latticeCells[2] == 1 || this.latticeCells[2] == -1));
 this.doNormalize = this.latticeCells[0] != 0 && (!isLatticeRange || this.latticeCells[2] == 1);
-this.applySymmetryToBonds = this.acr.applySymmetryToBonds;
-this.doPackUnitCell = this.acr.doPackUnitCell;
-this.doCentroidUnitCell = this.acr.doCentroidUnitCell;
-this.centroidPacked = this.acr.centroidPacked;
-this.filterSymop = this.acr.filterSymop;
-if (this.acr.strSupercell == null) this.setSupercellFromPoint (this.acr.ptSupercell);
-});
+this.applySymmetryToBonds = acr.applySymmetryToBonds;
+this.doPackUnitCell = acr.doPackUnitCell;
+this.doCentroidUnitCell = acr.doCentroidUnitCell;
+this.centroidPacked = acr.centroidPacked;
+if (acr.strSupercell != null) this.setSuperCell (acr.strSupercell);
+ else this.ptSupercell = acr.ptSupercell;
+}, "J.adapter.smarter.AtomSetCollectionReader");
 Clazz_defineMethod (c$, "setSupercellFromPoint", 
 function (pt) {
 this.ptSupercell = pt;
-if (pt == null) {
-this.matSupercell = null;
-return;
-}this.matSupercell =  new JU.M4 ();
-this.matSupercell.m00 = pt.x;
-this.matSupercell.m11 = pt.y;
-this.matSupercell.m22 = pt.z;
-this.matSupercell.m33 = 1;
-JU.Logger.info ("Using supercell \n" + this.matSupercell);
+JW.Logger.info ("Using supercell " + JW.Escape.eP (pt));
 }, "JU.P3");
-Clazz_defineMethod (c$, "setUnitCell", 
+Clazz_defineMethod (c$, "setSuperCell", 
+ function (supercell) {
+if (this.fmatSupercell != null) return;
+this.fmatSupercell =  Clazz_newFloatArray (16, 0);
+if (this.symmetry.getMatrixFromString (supercell, this.fmatSupercell, true, 0) == null) {
+this.fmatSupercell = null;
+return;
+}JW.Logger.info ("Using supercell \n" + JU.M4.newA16 (this.fmatSupercell));
+}, "~S");
+Clazz_defineMethod (c$, "setNotionalUnitCell", 
  function (info, matUnitCellOrientation, unitCellOffset) {
-this.unitCellParams =  Clazz_newFloatArray (info.length, 0);
+this.notionalUnitCell =  Clazz_newFloatArray (info.length, 0);
 this.unitCellOffset = unitCellOffset;
-for (var i = 0; i < info.length; i++) this.unitCellParams[i] = info[i];
+for (var i = 0; i < info.length; i++) this.notionalUnitCell[i] = info[i];
 
 this.asc.haveUnitCell = true;
-this.asc.setCurrentModelInfo ("unitCellParams", this.unitCellParams);
-if (this.asc.isTrajectory) {
-if (this.trajectoryUnitCells == null) {
-this.trajectoryUnitCells =  new JU.Lst ();
-this.asc.setInfo ("unitCells", this.trajectoryUnitCells);
-}this.trajectoryUnitCells.addLast (this.unitCellParams);
-}this.asc.setGlobalBoolean (2);
-this.getSymmetry ().setUnitCell (this.unitCellParams, false);
+this.asc.setAtomSetAuxiliaryInfo ("notionalUnitcell", this.notionalUnitCell);
+this.asc.setGlobalBoolean (2);
+this.getSymmetry ().setUnitCell (this.notionalUnitCell);
 if (unitCellOffset != null) {
 this.symmetry.setOffsetPt (unitCellOffset);
-this.asc.setCurrentModelInfo ("unitCellOffset", unitCellOffset);
+this.asc.setAtomSetAuxiliaryInfo ("unitCellOffset", unitCellOffset);
 }if (matUnitCellOrientation != null) {
-this.symmetry.initializeOrientation (matUnitCellOrientation);
-this.asc.setCurrentModelInfo ("matUnitCellOrientation", matUnitCellOrientation);
+this.symmetry.setUnitCellOrientation (matUnitCellOrientation);
+this.asc.setAtomSetAuxiliaryInfo ("matUnitCellOrientation", matUnitCellOrientation);
 }}, "~A,JU.M3,JU.P3");
 Clazz_defineMethod (c$, "addSpaceGroupOperation", 
-function (xyz, andSetLattice) {
-if (andSetLattice) this.setLatticeCells ();
+function (acr, xyz) {
+if (acr != null) this.setLatticeCells (acr);
 this.symmetry.setSpaceGroup (this.doNormalize);
 return this.symmetry.addSpaceGroupOperation (xyz, 0);
-}, "~S,~B");
+}, "J.adapter.smarter.AtomSetCollectionReader,~S");
 Clazz_defineMethod (c$, "setLatticeParameter", 
 function (latt) {
 this.symmetry.setSpaceGroup (this.doNormalize);
 this.symmetry.setLattice (latt);
 }, "~N");
 Clazz_defineMethod (c$, "applySymmetryFromReader", 
-function (readerSymmetry) {
-this.asc.setCoordinatesAreFractional (this.acr.iHaveFractionalCoordinates);
-this.setUnitCell (this.acr.unitCellParams, this.acr.matUnitCellOrientation, this.acr.unitCellOffset);
-this.setAtomSetSpaceGroupName (this.acr.sgName);
-this.setSymmetryRange (this.acr.symmetryRange);
-if (this.acr.doConvertToFractional || this.acr.fileCoordinatesAreFractional) {
-this.setLatticeCells ();
+function (acr, readerSymmetry) {
+this.asc.setCoordinatesAreFractional (acr.iHaveFractionalCoordinates);
+this.setNotionalUnitCell (acr.notionalUnitCell, acr.matUnitCellOrientation, acr.unitCellOffset);
+this.asc.setAtomSetSpaceGroupName (acr.spaceGroup);
+this.setSymmetryRange (acr.symmetryRange);
+if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
+this.setLatticeCells (acr);
 var doApplySymmetry = true;
-if (this.acr.ignoreFileSpaceGroupName || !this.acr.iHaveSymmetryOperators) {
-if (!this.acr.merging || readerSymmetry == null) readerSymmetry = this.acr.getNewSymmetry ();
-doApplySymmetry = readerSymmetry.createSpaceGroup (this.acr.desiredSpaceGroupIndex, (this.acr.sgName.indexOf ("!") >= 0 ? "P1" : this.acr.sgName), this.acr.unitCellParams);
+if (acr.ignoreFileSpaceGroupName || !acr.iHaveSymmetryOperators) {
+if (!acr.merging || readerSymmetry == null) readerSymmetry = acr.getNewSymmetry ();
+doApplySymmetry = readerSymmetry.createSpaceGroup (acr.desiredSpaceGroupIndex, (acr.spaceGroup.indexOf ("!") >= 0 ? "P1" : acr.spaceGroup), acr.notionalUnitCell);
 } else {
-this.acr.doPreSymmetry ();
+acr.doPreSymmetry ();
 readerSymmetry = null;
-}this.packingError = this.acr.packingError;
-if (doApplySymmetry) {
+}if (doApplySymmetry) {
 if (readerSymmetry != null) this.symmetry.setSpaceGroupFrom (readerSymmetry);
-this.applySymmetryLattice (this.acr.ms, this.acr.strSupercell);
-if (readerSymmetry != null && this.filterSymop == null) this.setAtomSetSpaceGroupName (readerSymmetry.getSpaceGroupName ());
-}}if (this.acr.iHaveFractionalCoordinates && this.acr.merging && readerSymmetry != null) {
-var atoms = this.asc.atoms;
-for (var i = this.asc.getLastAtomSetAtomIndex (), n = this.asc.ac; i < n; i++) readerSymmetry.toCartesian (atoms[i], true);
-
+this.applySymmetryLattice (acr.ms);
+if (readerSymmetry != null) this.asc.setAtomSetSpaceGroupName (readerSymmetry.getSpaceGroupName ());
+}}if (acr.iHaveFractionalCoordinates && acr.merging && readerSymmetry != null) {
+this.asc.toCartesian (readerSymmetry);
 this.asc.setCoordinatesAreFractional (false);
-this.acr.addVibrations = false;
+acr.addVibrations = false;
 }return this.symmetry;
-}, "J.api.SymmetryInterface");
-Clazz_defineMethod (c$, "setAtomSetSpaceGroupName", 
- function (spaceGroupName) {
-this.asc.setCurrentModelInfo ("spaceGroup", spaceGroupName + "");
-}, "~S");
+}, "J.adapter.smarter.AtomSetCollectionReader,J.api.SymmetryInterface");
 Clazz_defineMethod (c$, "applySymmetryLattice", 
- function (ms, supercell) {
+ function (ms) {
 if (!this.asc.coordinatesAreFractional || this.symmetry.getSpaceGroup () == null) return;
 var maxX = this.latticeCells[0];
 var maxY = this.latticeCells[1];
 var maxZ = Math.abs (this.latticeCells[2]);
-this.firstSymmetryAtom = this.asc.getLastAtomSetAtomIndex ();
-var bsAtoms = null;
-this.rminx = this.rminy = this.rminz = 3.4028235E38;
-this.rmaxx = this.rmaxy = this.rmaxz = -3.4028235E38;
-var oabc = null;
-var offset = null;
-var pt0 = null;
-this.nVib = 0;
-var va = null;
-var vb = null;
-var vc = null;
-this.baseSymmetry = this.symmetry;
-if (supercell != null && supercell.indexOf (",") >= 0) {
-oabc = this.symmetry.getV0abc (supercell);
-if (oabc != null) {
-this.minXYZ =  new JU.P3i ();
-this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
-this.symmetry.setMinMaxLatticeParameters (this.minXYZ, this.maxXYZ);
-pt0 = JU.P3.newP (oabc[0]);
-va = JU.P3.newP (oabc[1]);
-vb = JU.P3.newP (oabc[2]);
-vc = JU.P3.newP (oabc[3]);
-var pa =  new JU.P3 ();
-var pb =  new JU.P3 ();
-var pc =  new JU.P3 ();
-if (this.acr.forcePacked) {
-pa.setT (va);
-pb.setT (vb);
-pc.setT (vc);
-pa.scale (this.packingError);
-pb.scale (this.packingError);
-pc.scale (this.packingError);
-}oabc[0].scaleAdd2 (this.minXYZ.x, va, oabc[0]);
-oabc[0].scaleAdd2 (this.minXYZ.y, vb, oabc[0]);
-oabc[0].scaleAdd2 (this.minXYZ.z, vc, oabc[0]);
-oabc[0].sub (pa);
-oabc[0].sub (pb);
-oabc[0].sub (pc);
-var pt = JU.P3.newP (oabc[0]);
-this.symmetry.toFractional (pt, true);
-this.setSymmetryMinMax (pt);
-oabc[1].scale (this.maxXYZ.x - this.minXYZ.x);
-oabc[2].scale (this.maxXYZ.y - this.minXYZ.y);
-oabc[3].scale (this.maxXYZ.z - this.minXYZ.z);
-oabc[1].scaleAdd2 (2, pa, oabc[1]);
-oabc[2].scaleAdd2 (2, pb, oabc[2]);
-oabc[3].scaleAdd2 (2, pc, oabc[3]);
-for (var i = 0; i < 3; i++) {
-for (var j = i + 1; j < 4; j++) {
-pt.add2 (oabc[i], oabc[j]);
-if (i != 0) pt.add (oabc[0]);
-this.symmetry.toFractional (pt, false);
-this.setSymmetryMinMax (pt);
-}
-}
-this.symmetry.toCartesian (pt, false);
-pt.add (oabc[1]);
-this.symmetry.toFractional (pt, false);
-this.setSymmetryMinMax (pt);
-this.minXYZ = JU.P3i.new3 (Clazz_doubleToInt (Math.floor (this.rminx + 0.001)), Clazz_doubleToInt (Math.floor (this.rminy + 0.001)), Clazz_doubleToInt (Math.floor (this.rminz + 0.001)));
-this.maxXYZ = JU.P3i.new3 (Clazz_doubleToInt (Math.ceil (this.rmaxx - 0.001)), Clazz_doubleToInt (Math.ceil (this.rmaxy - 0.001)), Clazz_doubleToInt (Math.ceil (this.rmaxz - 0.001)));
-}}if (this.rminx == 3.4028235E38) {
-this.matSupercell = null;
-supercell = null;
-oabc = null;
-} else {
-JU.Logger.info ("setting min/max for original lattice to " + this.minXYZ + " and " + this.maxXYZ);
-var doPack0 = this.doPackUnitCell;
-this.doPackUnitCell = doPack0;
-if (this.asc.bsAtoms == null) this.asc.bsAtoms = JU.BSUtil.setAll (this.asc.ac);
-bsAtoms = this.asc.bsAtoms;
-this.applyAllSymmetry (ms, null);
-this.doPackUnitCell = doPack0;
+if (this.fmatSupercell != null) {
+this.rminx = 3.4028235E38;
+this.rminy = 3.4028235E38;
+this.rminz = 3.4028235E38;
+this.rmaxx = -3.4028235E38;
+this.rmaxy = -3.4028235E38;
+this.rmaxz = -3.4028235E38;
+var ptx = this.setSym (0, 1, 2);
+var pty = this.setSym (4, 5, 6);
+var ptz = this.setSym (8, 9, 10);
+this.minXYZ = JU.P3i.new3 (Clazz_floatToInt (this.rminx), Clazz_floatToInt (this.rminy), Clazz_floatToInt (this.rminz));
+this.maxXYZ = JU.P3i.new3 (Clazz_floatToInt (this.rmaxx), Clazz_floatToInt (this.rmaxy), Clazz_floatToInt (this.rmaxz));
+this.applyAllSymmetry (ms);
 var atoms = this.asc.atoms;
 var atomCount = this.asc.ac;
 var iAtomFirst = this.asc.getLastAtomSetAtomIndex ();
 for (var i = iAtomFirst; i < atomCount; i++) this.symmetry.toCartesian (atoms[i], true);
 
-this.symmetry = null;
-this.symmetry = this.getSymmetry ();
-this.setUnitCell ( Clazz_newFloatArray (-1, [0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]), null, offset);
-this.setAtomSetSpaceGroupName (oabc == null ? "P1" : "cell=" + supercell);
+this.setNotionalUnitCell ([0, 0, 0, 0, 0, 0, ptx.x, ptx.y, ptx.z, pty.x, pty.y, pty.z, ptz.x, ptz.y, ptz.z], null, this.asc.getAtomSetAuxiliaryInfoValue (-1, "unitCellOffset"));
+this.asc.setAtomSetSpaceGroupName ("P1");
 this.symmetry.setSpaceGroup (this.doNormalize);
 this.symmetry.addSpaceGroupOperation ("x,y,z", 0);
-if (pt0 != null) this.symmetry.toFractional (pt0, true);
-for (var i = iAtomFirst; i < atomCount; i++) {
-this.symmetry.toFractional (atoms[i], true);
-if (pt0 != null) atoms[i].sub (pt0);
-}
+for (var i = iAtomFirst; i < atomCount; i++) this.symmetry.toFractional (atoms[i], true);
+
 this.asc.haveAnisou = false;
-this.asc.setCurrentModelInfo ("matUnitCellOrientation", null);
+this.asc.setAtomSetAuxiliaryInfo ("matUnitCellOrientation", null);
+this.doPackUnitCell = false;
 }this.minXYZ =  new JU.P3i ();
 this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
-if (oabc == null) {
-this.minXYZ =  new JU.P3i ();
-this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
-this.applyAllSymmetry (ms, bsAtoms);
-} else if (this.acr.forcePacked || this.doPackUnitCell) {
-this.symmetry.setMinMaxLatticeParameters (this.minXYZ, this.maxXYZ);
-var bs = this.asc.bsAtoms;
-var atoms = this.asc.atoms;
-if (bs == null) bs = this.asc.bsAtoms = JU.BSUtil.newBitSet2 (0, this.asc.ac);
-for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) {
-if (!this.isWithinCell (this.dtype, atoms[i], this.minXYZ.x, this.maxXYZ.x, this.minXYZ.y, this.maxXYZ.y, this.minXYZ.z, this.maxXYZ.z, this.packingError)) bs.clear (i);
-}
-}}, "J.adapter.smarter.MSInterface,~S");
+this.applyAllSymmetry (ms);
+this.fmatSupercell = null;
+}, "J.adapter.smarter.MSInterface");
+Clazz_defineMethod (c$, "setSym", 
+ function (i, j, k) {
+var pt =  new JU.P3 ();
+pt.set (this.fmatSupercell[i], this.fmatSupercell[j], this.fmatSupercell[k]);
+this.setSymmetryMinMax (pt);
+this.symmetry.toCartesian (pt, false);
+return pt;
+}, "~N,~N,~N");
 Clazz_defineMethod (c$, "setSymmetryMinMax", 
  function (c) {
 if (this.rminx > c.x) this.rminx = c.x;
@@ -354,19 +265,123 @@ Clazz_defineMethod (c$, "isWithinCell",
 function (dtype, pt, minX, maxX, minY, maxY, minZ, maxZ, slop) {
 return (pt.x > minX - slop && pt.x < maxX + slop && (dtype < 2 || pt.y > minY - slop && pt.y < maxY + slop) && (dtype < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
 }, "~N,JU.P3,~N,~N,~N,~N,~N,~N,~N");
+Clazz_defineMethod (c$, "symmetryAddAtoms", 
+ function (transX, transY, transZ, baseCount, pt, iCellOpPt, cartesians, ms) {
+var isBaseCell = (baseCount == 0);
+var addBonds = (this.bondCount0 > this.asc.bondIndex0 && this.applySymmetryToBonds);
+var atomMap = (addBonds ?  Clazz_newIntArray (this.noSymmetryCount, 0) : null);
+if (this.doPackUnitCell) this.ptOffset.set (transX, transY, transZ);
+var range2 = this.symmetryRange * this.symmetryRange;
+var checkRangeNoSymmetry = (this.symmetryRange < 0);
+var checkRange111 = (this.symmetryRange > 0);
+var checkSymmetryMinMax = (isBaseCell && checkRange111);
+checkRange111 = new Boolean (checkRange111 & !isBaseCell).valueOf ();
+var nOperations = this.symmetry.getSpaceGroupOperationCount ();
+if (nOperations == 1) this.asc.checkSpecial = false;
+var checkSpecial = this.asc.checkSpecial;
+var checkSymmetryRange = (checkRangeNoSymmetry || checkRange111);
+var checkDistances = (checkSpecial || checkSymmetryRange);
+var addCartesian = (checkSpecial || checkSymmetryMinMax);
+var symmetry = this.symmetry;
+if (checkRangeNoSymmetry) baseCount = this.noSymmetryCount;
+var atomMax = this.firstSymmetryAtom + this.noSymmetryCount;
+var ptAtom =  new JU.P3 ();
+var code = null;
+var subSystemId = '\u0000';
+for (var iSym = 0; iSym < nOperations; iSym++) {
+if (isBaseCell && iSym == 0 || this.latticeOnly && iSym > 0 && iSym != this.latticeOp) continue;
+var pt0 = (checkSpecial ? pt : checkRange111 ? baseCount : 0);
+for (var i = this.firstSymmetryAtom; i < atomMax; i++) {
+var a = this.asc.atoms[i];
+if (a.ignoreSymmetry) continue;
+if (this.asc.bsAtoms != null && !this.asc.bsAtoms.get (i)) continue;
+if (ms == null) {
+symmetry.newSpaceGroupPoint (iSym, a, ptAtom, transX, transY, transZ);
+} else {
+symmetry = ms.getAtomSymmetry (a, this.symmetry);
+symmetry.newSpaceGroupPoint (iSym, a, ptAtom, transX, transY, transZ);
+code = symmetry.getSpaceGroupOperationCode (iSym);
+if (code != null) {
+subSystemId = code.charAt (0);
+symmetry = ms.getSymmetryFromCode (code);
+if (symmetry.getSpaceGroupOperationCount () == 0) this.finalizeSymmetry (symmetry);
+}}var special = null;
+var cartesian = JU.P3.newP (ptAtom);
+symmetry.toCartesian (cartesian, false);
+if (this.doPackUnitCell) {
+symmetry.toUnitCell (cartesian, this.ptOffset);
+ptAtom.setT (cartesian);
+symmetry.toFractional (ptAtom, false);
+if (!this.isWithinCell (this.dtype, ptAtom, this.minXYZ0.x, this.maxXYZ0.x, this.minXYZ0.y, this.maxXYZ0.y, this.minXYZ0.z, this.maxXYZ0.z, 0.02)) continue;
+}if (checkSymmetryMinMax) this.setSymmetryMinMax (cartesian);
+if (checkDistances) {
+var minDist2 = 3.4028235E38;
+if (checkSymmetryRange && !this.isInSymmetryRange (cartesian)) continue;
+var j0 = (this.checkAll ? this.asc.ac : pt0);
+var name = a.atomName;
+var id = (code == null ? a.altLoc : subSystemId);
+for (var j = j0; --j >= 0; ) {
+var d2 = cartesian.distanceSquared (cartesians[j]);
+if (checkSpecial && d2 < 0.0001) {
+special = this.asc.atoms[this.firstSymmetryAtom + j];
+if ((special.atomName == null || special.atomName.equals (name)) && special.altLoc == id) break;
+special = null;
+}if (checkRange111 && j < baseCount && d2 < minDist2) minDist2 = d2;
+}
+if (checkRange111 && minDist2 > range2) continue;
+}var atomSite = a.atomSite;
+if (special != null) {
+if (addBonds) atomMap[atomSite] = special.index;
+special.bsSymmetry.set (iCellOpPt + iSym);
+special.bsSymmetry.set (iSym);
+} else {
+if (addBonds) atomMap[atomSite] = this.asc.ac;
+var atom1 = this.asc.newCloneAtom (a);
+atom1.setT (ptAtom);
+atom1.atomSite = atomSite;
+if (code != null) atom1.altLoc = subSystemId;
+atom1.bsSymmetry = JW.BSUtil.newAndSetBit (iCellOpPt + iSym);
+atom1.bsSymmetry.set (iSym);
+if (addCartesian) cartesians[pt++] = cartesian;
+var tensors = a.tensors;
+if (tensors != null) {
+atom1.tensors = null;
+for (var j = tensors.size (); --j >= 0; ) {
+var t = tensors.get (j);
+if (t == null) continue;
+if (nOperations == 1) atom1.addTensor (t.copyTensor (), null, false);
+ else this.addRotatedTensor (atom1, t, iSym, false, symmetry);
+}
+}}}
+if (addBonds) {
+var bonds = this.asc.bonds;
+var atoms = this.asc.atoms;
+for (var bondNum = this.asc.bondIndex0; bondNum < this.bondCount0; bondNum++) {
+var bond = bonds[bondNum];
+var atom1 = atoms[bond.atomIndex1];
+var atom2 = atoms[bond.atomIndex2];
+if (atom1 == null || atom2 == null) continue;
+var iAtom1 = atomMap[atom1.atomSite];
+var iAtom2 = atomMap[atom2.atomSite];
+if (iAtom1 >= atomMax || iAtom2 >= atomMax) this.asc.addNewBondWithOrder (iAtom1, iAtom2, bond.order);
+}
+}}
+return pt;
+}, "~N,~N,~N,~N,~N,~N,~A,J.adapter.smarter.MSInterface");
 Clazz_defineMethod (c$, "applyAllSymmetry", 
- function (ms, bsAtoms) {
+ function (ms) {
 if (this.asc.ac == 0) return;
 this.noSymmetryCount = (this.asc.baseSymmetryAtomCount == 0 ? this.asc.getLastAtomSetAtomCount () : this.asc.baseSymmetryAtomCount);
+this.firstSymmetryAtom = this.asc.getLastAtomSetAtomIndex ();
 this.asc.setTensors ();
 this.bondCount0 = this.asc.bondCount;
 this.finalizeSymmetry (this.symmetry);
 var operationCount = this.symmetry.getSpaceGroupOperationCount ();
 this.dtype = Clazz_floatToInt (this.symmetry.getUnitCellInfoType (6));
 this.symmetry.setMinMaxLatticeParameters (this.minXYZ, this.maxXYZ);
-if (this.doCentroidUnitCell) this.asc.setInfo ("centroidMinMax",  Clazz_newIntArray (-1, [this.minXYZ.x, this.minXYZ.y, this.minXYZ.z, this.maxXYZ.x, this.maxXYZ.y, this.maxXYZ.z, (this.centroidPacked ? 1 : 0)]));
+if (this.doCentroidUnitCell) this.asc.setAtomSetCollectionAuxiliaryInfo ("centroidMinMax", [this.minXYZ.x, this.minXYZ.y, this.minXYZ.z, this.maxXYZ.x, this.maxXYZ.y, this.maxXYZ.z, (this.centroidPacked ? 1 : 0)]);
 if (this.ptSupercell != null) {
-this.asc.setCurrentModelInfo ("supercell", this.ptSupercell);
+this.asc.setAtomSetAuxiliaryInfo ("supercell", this.ptSupercell);
 switch (this.dtype) {
 case 3:
 this.minXYZ.z *= Clazz_floatToInt (Math.abs (this.ptSupercell.z));
@@ -407,23 +422,24 @@ this.unitCellTranslations =  new Array (nCells);
 var iCell = 0;
 var cell555Count = 0;
 var absRange = Math.abs (this.symmetryRange);
-var checkCartesianRange = (this.symmetryRange != 0);
+var checkSymmetryRange = (this.symmetryRange != 0);
 var checkRangeNoSymmetry = (this.symmetryRange < 0);
 var checkRange111 = (this.symmetryRange > 0);
-if (checkCartesianRange) {
-this.rminx = this.rminy = this.rminz = 3.4028235E38;
-this.rmaxx = this.rmaxy = this.rmaxz = -3.4028235E38;
+if (checkSymmetryRange) {
+this.rminx = 3.4028235E38;
+this.rminy = 3.4028235E38;
+this.rminz = 3.4028235E38;
+this.rmaxx = -3.4028235E38;
+this.rmaxy = -3.4028235E38;
+this.rmaxz = -3.4028235E38;
 }var symmetry = this.symmetry;
 var lastSymmetry = symmetry;
 this.latticeOp = symmetry.getLatticeOp ();
 this.checkAll = (this.asc.atomSetCount == 1 && this.asc.checkSpecial && this.latticeOp >= 0);
 this.latticeOnly = (this.asc.checkLatticeOnly && this.latticeOp >= 0);
-var pttemp = null;
 var op = symmetry.getSpaceGroupOperation (0);
-if (this.doPackUnitCell) {
-pttemp =  new JU.P3 ();
-this.ptOffset.set (0, 0, 0);
-}for (var tx = this.minXYZ.x; tx < this.maxXYZ.x; tx++) for (var ty = this.minXYZ.y; ty < this.maxXYZ.y; ty++) for (var tz = this.minXYZ.z; tz < this.maxXYZ.z; tz++) {
+if (this.doPackUnitCell) this.ptOffset.set (0, 0, 0);
+for (var tx = this.minXYZ.x; tx < this.maxXYZ.x; tx++) for (var ty = this.minXYZ.y; ty < this.maxXYZ.y; ty++) for (var tz = this.minXYZ.z; tz < this.maxXYZ.z; tz++) {
 this.unitCellTranslations[iCell] = JU.V3.new3 (tx, ty, tz);
 unitCells[iCell++] = 555 + tx * 100 + ty * 10 + tz;
 if (tx != 0 || ty != 0 || tz != 0 || cartesians.length == 0) continue;
@@ -439,18 +455,11 @@ op.rotTrans (c);
 symmetry.toCartesian (c, false);
 if (this.doPackUnitCell) {
 symmetry.toUnitCell (c, this.ptOffset);
-pttemp.setT (c);
-symmetry.toFractional (pttemp, false);
-if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (pttemp, 100000.0);
-if (bsAtoms == null) atom.setT (pttemp);
- else if (atom.distance (pttemp) < 0.0001) bsAtoms.set (atom.index);
- else {
-bsAtoms.clear (atom.index);
-continue;
-}}if (bsAtoms != null) atom.bsSymmetry.clearAll ();
-atom.bsSymmetry.set (iCell * operationCount);
+atom.setT (c);
+symmetry.toFractional (atom, false);
+}atom.bsSymmetry.set (iCell * operationCount);
 atom.bsSymmetry.set (0);
-if (checkCartesianRange) this.setSymmetryMinMax (c);
+if (checkSymmetryRange) this.setSymmetryMinMax (c);
 if (pt < cartesianCount) cartesians[pt] = c;
 }
 if (checkRangeNoSymmetry) {
@@ -478,152 +487,35 @@ if (tx != 0 || ty != 0 || tz != 0) pt = this.symmetryAddAtoms (tx, ty, tz, cell5
 }
 
 
-if (iCell * this.noSymmetryCount == this.asc.ac - this.firstSymmetryAtom) this.duplicateAtomProperties (iCell);
+if (iCell * this.noSymmetryCount == this.asc.ac - this.firstSymmetryAtom) this.appendAtomProperties (iCell);
 this.setSymmetryOps ();
-this.asc.setCurrentModelInfo ("presymmetryAtomIndex", Integer.$valueOf (this.firstSymmetryAtom));
-this.asc.setCurrentModelInfo ("presymmetryAtomCount", Integer.$valueOf (this.noSymmetryCount));
-this.asc.setCurrentModelInfo ("latticeDesignation", symmetry.getLatticeDesignation ());
-this.asc.setCurrentModelInfo ("unitCellRange", unitCells);
-this.asc.setCurrentModelInfo ("unitCellTranslations", this.unitCellTranslations);
-this.baseUnitCell = this.unitCellParams;
-this.unitCellParams =  Clazz_newFloatArray (6, 0);
+this.asc.setAtomSetAuxiliaryInfo ("presymmetryAtomIndex", Integer.$valueOf (this.firstSymmetryAtom));
+this.asc.setAtomSetAuxiliaryInfo ("presymmetryAtomCount", Integer.$valueOf (this.noSymmetryCount));
+this.asc.setAtomSetAuxiliaryInfo ("latticeDesignation", symmetry.getLatticeDesignation ());
+this.asc.setAtomSetAuxiliaryInfo ("unitCellRange", unitCells);
+this.asc.setAtomSetAuxiliaryInfo ("unitCellTranslations", this.unitCellTranslations);
+this.notionalUnitCell =  Clazz_newFloatArray (6, 0);
 this.reset ();
-}, "J.adapter.smarter.MSInterface,JU.BS");
-Clazz_defineMethod (c$, "symmetryAddAtoms", 
- function (transX, transY, transZ, baseCount, pt, iCellOpPt, cartesians, ms) {
-var isBaseCell = (baseCount == 0);
-var addBonds = (this.bondCount0 > this.asc.bondIndex0 && this.applySymmetryToBonds);
-var atomMap = (addBonds ?  Clazz_newIntArray (this.noSymmetryCount, 0) : null);
-if (this.doPackUnitCell) this.ptOffset.set (transX, transY, transZ);
-var range2 = this.symmetryRange * this.symmetryRange;
-var checkRangeNoSymmetry = (this.symmetryRange < 0);
-var checkRange111 = (this.symmetryRange > 0);
-var checkSymmetryMinMax = (isBaseCell && checkRange111);
-checkRange111 = new Boolean (checkRange111 & !isBaseCell).valueOf ();
-var nOperations = this.symmetry.getSpaceGroupOperationCount ();
-var checkSpecial = (nOperations == 1 && !this.doPackUnitCell ? false : this.asc.checkSpecial);
-var checkSymmetryRange = (checkRangeNoSymmetry || checkRange111);
-var checkDistances = (checkSpecial || checkSymmetryRange);
-var addCartesian = (checkSpecial || checkSymmetryMinMax);
-var symmetry = this.symmetry;
-if (checkRangeNoSymmetry) baseCount = this.noSymmetryCount;
-var atomMax = this.firstSymmetryAtom + this.noSymmetryCount;
-var ptAtom =  new JU.P3 ();
-var code = null;
-var subSystemId = '\u0000';
-for (var iSym = 0; iSym < nOperations; iSym++) {
-if (isBaseCell && iSym == 0 || this.latticeOnly && iSym > 0 && iSym != this.latticeOp) continue;
-var pt0 = (checkSpecial ? pt : checkRange111 ? baseCount : 0);
-var spinOp = (this.asc.vibScale == 0 ? symmetry.getSpinOp (iSym) : this.asc.vibScale);
-for (var i = this.firstSymmetryAtom; i < atomMax; i++) {
-var a = this.asc.atoms[i];
-if (a.ignoreSymmetry) continue;
-if (this.asc.bsAtoms != null && !this.asc.bsAtoms.get (i)) continue;
-if (ms == null) {
-symmetry.newSpaceGroupPoint (iSym, a, ptAtom, transX, transY, transZ);
-} else {
-symmetry = ms.getAtomSymmetry (a, this.symmetry);
-symmetry.newSpaceGroupPoint (iSym, a, ptAtom, transX, transY, transZ);
-code = symmetry.getSpaceGroupOperationCode (iSym);
-if (code != null) {
-subSystemId = code.charAt (0);
-symmetry = ms.getSymmetryFromCode (code);
-if (symmetry.getSpaceGroupOperationCount () == 0) this.finalizeSymmetry (symmetry);
-}}if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (ptAtom, 100000.0);
-var cartesian = JU.P3.newP (ptAtom);
-symmetry.toCartesian (cartesian, false);
-if (this.doPackUnitCell) {
-symmetry.toUnitCell (cartesian, this.ptOffset);
-ptAtom.setT (cartesian);
-symmetry.toFractional (ptAtom, false);
-if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (ptAtom, 100000.0);
-if (!this.isWithinCell (this.dtype, ptAtom, this.minXYZ0.x, this.maxXYZ0.x, this.minXYZ0.y, this.maxXYZ0.y, this.minXYZ0.z, this.maxXYZ0.z, this.packingError)) continue;
-}if (checkSymmetryMinMax) this.setSymmetryMinMax (cartesian);
-var special = null;
-if (checkDistances) {
-var minDist2 = 3.4028235E38;
-if (checkSymmetryRange && !this.isInSymmetryRange (cartesian)) continue;
-var j0 = (this.checkAll ? this.asc.ac : pt0);
-var name = a.atomName;
-var id = (code == null ? a.altLoc : subSystemId);
-for (var j = j0; --j >= 0; ) {
-var pc = cartesians[j];
-if (pc == null) continue;
-var d2 = cartesian.distanceSquared (pc);
-if (checkSpecial && d2 < 0.0001) {
-special = this.asc.atoms[this.firstSymmetryAtom + j];
-if ((special.atomName == null || special.atomName.equals (name)) && special.altLoc == id) break;
-special = null;
-}if (checkRange111 && j < baseCount && d2 < minDist2) minDist2 = d2;
-}
-if (checkRange111 && minDist2 > range2) continue;
-}var atomSite = a.atomSite;
-if (special != null) {
-if (addBonds) atomMap[atomSite] = special.index;
-special.bsSymmetry.set (iCellOpPt + iSym);
-special.bsSymmetry.set (iSym);
-} else {
-if (addBonds) atomMap[atomSite] = this.asc.ac;
-var atom1 = this.asc.newCloneAtom (a);
-if (this.asc.bsAtoms != null) this.asc.bsAtoms.set (atom1.index);
-atom1.setT (ptAtom);
-if (spinOp != 0 && atom1.vib != null) {
-symmetry.getSpaceGroupOperation (iSym).rotate (atom1.vib);
-atom1.vib.scale (spinOp);
-}atom1.atomSite = atomSite;
-if (code != null) atom1.altLoc = subSystemId;
-atom1.bsSymmetry = JU.BSUtil.newAndSetBit (iCellOpPt + iSym);
-atom1.bsSymmetry.set (iSym);
-if (addCartesian) cartesians[pt++] = cartesian;
-var tensors = a.tensors;
-if (tensors != null) {
-atom1.tensors = null;
-for (var j = tensors.size (); --j >= 0; ) {
-var t = tensors.get (j);
-if (t == null) continue;
-if (nOperations == 1) atom1.addTensor (t.copyTensor (), null, false);
- else this.addRotatedTensor (atom1, t, iSym, false, symmetry);
-}
-}}}
-if (addBonds) {
-var bonds = this.asc.bonds;
-var atoms = this.asc.atoms;
-for (var bondNum = this.asc.bondIndex0; bondNum < this.bondCount0; bondNum++) {
-var bond = bonds[bondNum];
-var atom1 = atoms[bond.atomIndex1];
-var atom2 = atoms[bond.atomIndex2];
-if (atom1 == null || atom2 == null) continue;
-var iAtom1 = atomMap[atom1.atomSite];
-var iAtom2 = atomMap[atom2.atomSite];
-if (iAtom1 >= atomMax || iAtom2 >= atomMax) this.asc.addNewBondWithOrder (iAtom1, iAtom2, bond.order);
-}
-}}
-return pt;
-}, "~N,~N,~N,~N,~N,~N,~A,J.adapter.smarter.MSInterface");
-Clazz_defineMethod (c$, "duplicateAtomProperties", 
+}, "J.adapter.smarter.MSInterface");
+Clazz_defineMethod (c$, "appendAtomProperties", 
  function (nTimes) {
 var p = this.asc.getAtomSetAuxiliaryInfoValue (-1, "atomProperties");
-if (p != null) for (var entry, $entry = p.entrySet ().iterator (); $entry.hasNext () && ((entry = $entry.next ()) || true);) {
+if (p == null) {
+return;
+}for (var entry, $entry = p.entrySet ().iterator (); $entry.hasNext () && ((entry = $entry.next ()) || true);) {
 var key = entry.getKey ();
-var val = entry.getValue ();
-if (Clazz_instanceOf (val, String)) {
-var data = val;
+var data = entry.getValue ();
 var s =  new JU.SB ();
 for (var i = nTimes; --i >= 0; ) s.append (data);
 
 p.put (key, s.toString ());
-} else {
-var f = val;
-var fnew =  Clazz_newFloatArray (f.length * nTimes, 0);
-for (var i = nTimes; --i >= 0; ) System.arraycopy (f, 0, fnew, i * f.length, f.length);
-
-}}
+}
 }, "~N");
 Clazz_defineMethod (c$, "finalizeSymmetry", 
  function (symmetry) {
 var name = this.asc.getAtomSetAuxiliaryInfoValue (-1, "spaceGroup");
-symmetry.setFinalOperations (name, this.asc.atoms, this.firstSymmetryAtom, this.noSymmetryCount, this.doNormalize, this.filterSymop);
-if (this.filterSymop != null || name == null || name.equals ("unspecified!")) this.setAtomSetSpaceGroupName (symmetry.getSpaceGroupName ());
+symmetry.setFinalOperations (name, this.asc.atoms, this.firstSymmetryAtom, this.noSymmetryCount, this.doNormalize);
+if (name == null || name.equals ("unspecified!")) this.asc.setAtomSetSpaceGroupName (symmetry.getSpaceGroupName ());
 }, "J.api.SymmetryInterface");
 Clazz_defineMethod (c$, "setSymmetryOps", 
  function () {
@@ -632,27 +524,24 @@ if (operationCount > 0) {
 var symmetryList =  new Array (operationCount);
 for (var i = 0; i < operationCount; i++) symmetryList[i] = "" + this.symmetry.getSpaceGroupXyz (i, this.doNormalize);
 
-this.asc.setCurrentModelInfo ("symmetryOperations", symmetryList);
-this.asc.setCurrentModelInfo ("symmetryOps", this.symmetry.getSymmetryOperations ());
-}this.asc.setCurrentModelInfo ("symmetryCount", Integer.$valueOf (operationCount));
+this.asc.setAtomSetAuxiliaryInfo ("symmetryOperations", symmetryList);
+}this.asc.setAtomSetAuxiliaryInfo ("symmetryCount", Integer.$valueOf (operationCount));
 });
 Clazz_defineMethod (c$, "applySymmetryBio", 
-function (thisBiomolecule, unitCellParams, applySymmetryToBonds, filter) {
+function (thisBiomolecule, notionalUnitCell, applySymmetryToBonds, filter) {
 if (this.latticeCells != null && this.latticeCells[0] != 0) {
-JU.Logger.error ("Cannot apply biomolecule when lattice cells are indicated");
+JW.Logger.error ("Cannot apply biomolecule when lattice cells are indicated");
 return;
 }var particleMode = (filter.indexOf ("BYCHAIN") >= 0 ? 1 : filter.indexOf ("BYSYMOP") >= 0 ? 2 : 0);
 this.doNormalize = false;
 var biomts = thisBiomolecule.get ("biomts");
-var biomtchains = thisBiomolecule.get ("chains");
 if (biomts.size () < 2) return;
-if (biomtchains.get (0).equals (biomtchains.get (1))) biomtchains = null;
 this.symmetry = null;
-if (!Float.isNaN (unitCellParams[0])) this.setUnitCell (unitCellParams, null, this.unitCellOffset);
+if (!Float.isNaN (notionalUnitCell[0])) this.setNotionalUnitCell (notionalUnitCell, null, this.unitCellOffset);
 this.getSymmetry ().setSpaceGroup (this.doNormalize);
-this.addSpaceGroupOperation ("x,y,z", false);
+this.addSpaceGroupOperation (null, "x,y,z");
 var name = thisBiomolecule.get ("name");
-this.setAtomSetSpaceGroupName (this.acr.sgName = name);
+this.asc.setAtomSetSpaceGroupName (name);
 var len = biomts.size ();
 this.applySymmetryToBonds = applySymmetryToBonds;
 this.bondCount0 = this.asc.bondCount;
@@ -704,25 +593,22 @@ for (var i = atomMax; --i >= this.firstSymmetryAtom; ) a.add (atoms[i]);
 a.scale (1 / (atomMax - this.firstSymmetryAtom));
 a.atomName = "Pt";
 a.radius = 16;
-this.asc.addAtom (a);
 this.firstSymmetryAtom = atomMax++;
 break;
 }
 if (filter.indexOf ("#<") >= 0) {
 len = Math.min (len, JU.PT.parseInt (filter.substring (filter.indexOf ("#<") + 2)) - 1);
 filter = JU.PT.rep (filter, "#<", "_<");
-}for (var iAtom = this.firstSymmetryAtom; iAtom < atomMax; iAtom++) atoms[iAtom].bsSymmetry = JU.BSUtil.newAndSetBit (0);
+}for (var iAtom = this.firstSymmetryAtom; iAtom < atomMax; iAtom++) atoms[iAtom].bsSymmetry = JW.BSUtil.newAndSetBit (0);
 
-for (var i = (biomtchains == null ? 1 : 0); i < len; i++) {
+for (var i = 1; i < len; i++) {
 if (filter.indexOf ("!#") >= 0) {
 if (filter.indexOf ("!#" + (i + 1) + ";") >= 0) continue;
 } else if (filter.indexOf ("#") >= 0 && filter.indexOf ("#" + (i + 1) + ";") < 0) {
 continue;
 }var mat = biomts.get (i);
-var chains = (biomtchains == null ? null : biomtchains.get (i));
 for (var iAtom = this.firstSymmetryAtom; iAtom < atomMax; iAtom++) {
 if (this.asc.bsAtoms != null && !this.asc.bsAtoms.get (iAtom)) continue;
-if (chains != null && chains.indexOf (":" + this.acr.vwr.getChainIDStr (atoms[iAtom].chainID) + ";") < 0) continue;
 try {
 var atomSite = atoms[iAtom].atomSite;
 var atom1;
@@ -731,7 +617,7 @@ atom1 = this.asc.newCloneAtom (atoms[iAtom]);
 if (this.asc.bsAtoms != null) this.asc.bsAtoms.set (atom1.index);
 atom1.atomSite = atomSite;
 mat.rotTrans (atom1);
-atom1.bsSymmetry = JU.BSUtil.newAndSetBit (i);
+atom1.bsSymmetry = JW.BSUtil.newAndSetBit (i);
 if (addBonds) {
 for (var bondNum = this.asc.bondIndex0; bondNum < this.bondCount0; bondNum++) {
 var bond = this.asc.bonds[bondNum];
@@ -749,15 +635,11 @@ throw e;
 }
 if (i > 0) this.symmetry.addBioMoleculeOperation (mat, false);
 }
-if (biomtchains != null) {
-if (this.asc.bsAtoms == null) this.asc.bsAtoms = JU.BSUtil.newBitSet2 (0, this.asc.ac);
-for (var iAtom = this.firstSymmetryAtom; iAtom < atomMax; iAtom++) this.asc.bsAtoms.clear (iAtom);
-
-}this.noSymmetryCount = atomMax - this.firstSymmetryAtom;
-this.asc.setCurrentModelInfo ("presymmetryAtomIndex", Integer.$valueOf (this.firstSymmetryAtom));
-this.asc.setCurrentModelInfo ("presymmetryAtomCount", Integer.$valueOf (this.noSymmetryCount));
-this.asc.setCurrentModelInfo ("biosymmetryCount", Integer.$valueOf (len));
-this.asc.setCurrentModelInfo ("biosymmetry", this.symmetry);
+this.noSymmetryCount = atomMax - this.firstSymmetryAtom;
+this.asc.setAtomSetAuxiliaryInfo ("presymmetryAtomIndex", Integer.$valueOf (this.firstSymmetryAtom));
+this.asc.setAtomSetAuxiliaryInfo ("presymmetryAtomCount", Integer.$valueOf (this.noSymmetryCount));
+this.asc.setAtomSetAuxiliaryInfo ("biosymmetryCount", Integer.$valueOf (len));
+this.asc.setAtomSetAuxiliaryInfo ("biosymmetry", this.symmetry);
 this.finalizeSymmetry (this.symmetry);
 this.setSymmetryOps ();
 this.reset ();
@@ -765,7 +647,7 @@ this.reset ();
 Clazz_defineMethod (c$, "reset", 
  function () {
 this.asc.coordinatesAreFractional = false;
-this.asc.setCurrentModelInfo ("hasSymmetry", Boolean.TRUE);
+this.asc.setAtomSetAuxiliaryInfo ("hasSymmetry", Boolean.TRUE);
 this.asc.setGlobalBoolean (1);
 });
 Clazz_defineMethod (c$, "addRotatedTensor", 
@@ -773,67 +655,16 @@ function (a, t, iSym, reset, symmetry) {
 if (this.ptTemp == null) {
 this.ptTemp =  new JU.P3 ();
 this.mTemp =  new JU.M3 ();
-}return a.addTensor ((this.acr.getInterface ("JU.Tensor")).setFromEigenVectors (symmetry.rotateAxes (iSym, t.eigenVectors, this.ptTemp, this.mTemp), t.eigenValues, t.isIsotropic ? "iso" : t.type, t.id, t), null, reset);
-}, "J.adapter.smarter.Atom,JU.Tensor,~N,~B,J.api.SymmetryInterface");
+}return a.addTensor ((J.api.Interface.getUtil ("Tensor")).setFromEigenVectors (symmetry.rotateAxes (iSym, t.eigenVectors, this.ptTemp, this.mTemp), t.eigenValues, t.isIsotropic ? "iso" : t.type, t.id), null, reset);
+}, "J.adapter.smarter.Atom,JW.Tensor,~N,~B,J.api.SymmetryInterface");
 Clazz_defineMethod (c$, "setTensors", 
 function () {
 var n = this.asc.ac;
 for (var i = this.asc.getLastAtomSetAtomIndex (); i < n; i++) {
 var a = this.asc.atoms[i];
-if (a.anisoBorU == null) continue;
-a.addTensor (this.symmetry.getTensor (this.acr.vwr, a.anisoBorU), null, false);
-if (Float.isNaN (a.bfactor)) a.bfactor = a.anisoBorU[7] * 100;
-a.anisoBorU = null;
+a.addTensor (this.symmetry.getTensor (a.anisoBorU), null, false);
 }
 });
-Clazz_defineMethod (c$, "setTimeReversal", 
-function (op, timeRev) {
-this.symmetry.setTimeReversal (op, timeRev);
-}, "~N,~N");
-Clazz_defineMethod (c$, "rotateToSuperCell", 
-function (t) {
-if (this.matSupercell != null) this.matSupercell.rotTrans (t);
-}, "JU.V3");
-Clazz_defineMethod (c$, "setSpinVectors", 
-function () {
-if (this.nVib > 0 || this.asc.iSet < 0 || !this.acr.vibsFractional) return this.nVib;
-var i0 = this.asc.getAtomSetAtomIndex (this.asc.iSet);
-var sym = this.getBaseSymmetry ();
-for (var i = this.asc.ac; --i >= i0; ) {
-var v = this.asc.atoms[i].vib;
-if (v != null) {
-if (v.modDim > 0) {
-(v).setMoment ();
-} else {
-v = v.clone ();
-sym.toCartesian (v, true);
-this.asc.atoms[i].vib = v;
-}this.nVib++;
-}}
-return this.nVib;
-});
-Clazz_defineMethod (c$, "scaleFractionalVibs", 
-function () {
-var params = this.getBaseSymmetry ().getUnitCellParams ();
-var ptScale = JU.P3.new3 (1 / params[0], 1 / params[1], 1 / params[2]);
-var i0 = this.asc.getAtomSetAtomIndex (this.asc.iSet);
-for (var i = this.asc.ac; --i >= i0; ) {
-var v = this.asc.atoms[i].vib;
-if (v != null) {
-v.scaleT (ptScale);
-}}
-});
-Clazz_defineMethod (c$, "getBaseSymmetry", 
-function () {
-return (this.baseSymmetry == null ? this.symmetry : this.baseSymmetry);
-});
-Clazz_defineMethod (c$, "finalizeUnitCell", 
-function (ptSupercell) {
-if (ptSupercell != null && this.baseUnitCell != null) {
-this.baseUnitCell[22] = Math.max (1, Clazz_floatToInt (ptSupercell.x));
-this.baseUnitCell[23] = Math.max (1, Clazz_floatToInt (ptSupercell.y));
-this.baseUnitCell[24] = Math.max (1, Clazz_floatToInt (ptSupercell.z));
-}}, "JU.P3");
 Clazz_defineStatics (c$,
 "PARTICLE_NONE", 0,
 "PARTICLE_CHAIN", 1,
@@ -841,27 +672,22 @@ Clazz_defineStatics (c$,
 });
 Clazz_declarePackage ("J.api");
 Clazz_declareInterface (J.api, "SymmetryInterface");
-Clazz_declarePackage ("JS");
-Clazz_load (["J.api.SymmetryInterface"], "JS.Symmetry", ["JU.BS", "$.Lst", "$.M3", "$.M4", "$.P3", "$.V3", "J.api.Interface", "JS.PointGroup", "$.SpaceGroup", "$.SymmetryInfo", "$.SymmetryOperation", "$.UnitCell", "JU.Escape", "$.Logger", "$.SimpleUnitCell"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["J.api.SymmetryInterface"], "J.symmetry.Symmetry", ["java.lang.Float", "java.util.Hashtable", "JU.BS", "$.P3", "$.SB", "JM.Atom", "J.symmetry.PointGroup", "$.SpaceGroup", "$.SymmetryInfo", "$.SymmetryOperation", "$.UnitCell", "JW.Escape", "$.Logger", "$.SimpleUnitCell"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.pointGroup = null;
 this.spaceGroup = null;
 this.symmetryInfo = null;
 this.unitCell = null;
 this.$isBio = false;
-this.desc = null;
 Clazz_instantialize (this, arguments);
-}, JS, "Symmetry", null, J.api.SymmetryInterface);
-Clazz_overrideMethod (c$, "isBio", 
-function () {
-return this.$isBio;
-});
+}, J.symmetry, "Symmetry", null, J.api.SymmetryInterface);
 Clazz_makeConstructor (c$, 
 function () {
 });
 Clazz_overrideMethod (c$, "setPointGroup", 
 function (siLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance) {
-this.pointGroup = JS.PointGroup.getPointGroup (siLast == null ? null : (siLast).pointGroup, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance);
+this.pointGroup = J.symmetry.PointGroup.getPointGroup (siLast == null ? null : (siLast).pointGroup, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance);
 return this;
 }, "J.api.SymmetryInterface,~A,JU.BS,~B,~N,~N");
 Clazz_overrideMethod (c$, "getPointGroupName", 
@@ -875,15 +701,15 @@ if (!asDraw && !asInfo && this.pointGroup.textInfo != null) return this.pointGro
  else if (asInfo && this.pointGroup.info != null) return this.pointGroup.info;
 return this.pointGroup.getInfo (modelIndex, asDraw, asInfo, type, index, scale);
 }, "~N,~B,~B,~S,~N,~N");
-Clazz_overrideMethod (c$, "setSpaceGroup", 
+Clazz_defineMethod (c$, "setSpaceGroup", 
 function (doNormalize) {
-if (this.spaceGroup == null) this.spaceGroup = (JS.SpaceGroup.getNull (true)).set (doNormalize);
+if (this.spaceGroup == null) this.spaceGroup = (J.symmetry.SpaceGroup.getNull (true)).set (doNormalize);
 }, "~B");
-Clazz_overrideMethod (c$, "addSpaceGroupOperation", 
+Clazz_defineMethod (c$, "addSpaceGroupOperation", 
 function (xyz, opId) {
 return this.spaceGroup.addSymmetry (xyz, opId, false);
 }, "~S,~N");
-Clazz_overrideMethod (c$, "addBioMoleculeOperation", 
+Clazz_defineMethod (c$, "addBioMoleculeOperation", 
 function (mat, isReverse) {
 this.$isBio = this.spaceGroup.isBio = true;
 return this.spaceGroup.addSymmetry ((isReverse ? "!" : "") + "[[bio" + mat, 0, false);
@@ -892,6 +718,10 @@ Clazz_overrideMethod (c$, "setLattice",
 function (latt) {
 this.spaceGroup.setLatticeParam (latt);
 }, "~N");
+Clazz_defineMethod (c$, "getSpaceGroupName", 
+function () {
+return (this.symmetryInfo != null ? this.symmetryInfo.spaceGroup : this.spaceGroup != null ? this.spaceGroup.getName () : "");
+});
 Clazz_defineMethod (c$, "getSpaceGroup", 
 function () {
 return this.spaceGroup;
@@ -902,29 +732,27 @@ this.spaceGroup = symmetry.getSpaceGroup ();
 }, "J.api.SymmetryInterface");
 Clazz_overrideMethod (c$, "createSpaceGroup", 
 function (desiredSpaceGroupIndex, name, object) {
-this.spaceGroup = JS.SpaceGroup.createSpaceGroup (desiredSpaceGroupIndex, name, object);
-if (this.spaceGroup != null && JU.Logger.debugging) JU.Logger.debug ("using generated space group " + this.spaceGroup.dumpInfo (null));
+this.spaceGroup = J.symmetry.SpaceGroup.createSpaceGroup (desiredSpaceGroupIndex, name, object);
+if (this.spaceGroup != null && JW.Logger.debugging) JW.Logger.debug ("using generated space group " + this.spaceGroup.dumpInfo (null));
 return this.spaceGroup != null;
 }, "~N,~S,~O");
-Clazz_overrideMethod (c$, "getSpaceGroupInfoStr", 
+Clazz_defineMethod (c$, "getSpaceGroupInfo", 
 function (name, cellInfo) {
-return JS.SpaceGroup.getInfo (name, cellInfo);
+return J.symmetry.SpaceGroup.getInfo (name, cellInfo);
 }, "~S,J.api.SymmetryInterface");
 Clazz_overrideMethod (c$, "getLatticeDesignation", 
 function () {
 return this.spaceGroup.getLatticeDesignation ();
 });
 Clazz_overrideMethod (c$, "setFinalOperations", 
-function (name, atoms, iAtomFirst, noSymmetryCount, doNormalize, filterSymop) {
-if (name != null && (name.startsWith ("bio") || name.indexOf (" *(") >= 0)) this.spaceGroup.name = name;
-if (filterSymop != null) {
-var lst =  new JU.Lst ();
-lst.addLast (this.spaceGroup.operations[0]);
-for (var i = 1; i < this.spaceGroup.operationCount; i++) if (filterSymop.contains (" " + (i + 1) + " ")) lst.addLast (this.spaceGroup.operations[i]);
-
-this.spaceGroup = JS.SpaceGroup.createSpaceGroup (-1, name + " *(" + filterSymop.trim () + ")", lst);
-}this.spaceGroup.setFinalOperations (atoms, iAtomFirst, noSymmetryCount, doNormalize);
-}, "~S,~A,~N,~N,~B,~S");
+function (name, atoms, iAtomFirst, noSymmetryCount, doNormalize) {
+if (name != null && name.startsWith ("bio")) this.spaceGroup.name = name;
+this.spaceGroup.setFinalOperations (atoms, iAtomFirst, noSymmetryCount, doNormalize);
+}, "~S,~A,~N,~N,~B");
+Clazz_overrideMethod (c$, "getSpaceGroupOperationCount", 
+function () {
+return (this.symmetryInfo != null ? this.symmetryInfo.symmetryOperations.length : this.spaceGroup != null && this.spaceGroup.finalOperations != null ? this.spaceGroup.finalOperations.length : 0);
+});
 Clazz_overrideMethod (c$, "getSpaceGroupOperation", 
 function (i) {
 return (i >= this.spaceGroup.operations.length ? null : this.spaceGroup.finalOperations == null ? this.spaceGroup.operations[i] : this.spaceGroup.finalOperations[i]);
@@ -933,7 +761,7 @@ Clazz_overrideMethod (c$, "getSpaceGroupXyz",
 function (i, doNormalize) {
 return this.spaceGroup.getXyz (i, doNormalize);
 }, "~N,~B");
-Clazz_overrideMethod (c$, "newSpaceGroupPoint", 
+Clazz_defineMethod (c$, "newSpaceGroupPoint", 
 function (i, atom1, atom2, transX, transY, transZ) {
 if (this.spaceGroup.finalOperations == null) {
 if (!this.spaceGroup.operations[i].isFinalized) this.spaceGroup.operations[i].doFinalize ();
@@ -945,54 +773,18 @@ Clazz_overrideMethod (c$, "rotateAxes",
 function (iop, axes, ptTemp, mTemp) {
 return (iop == 0 ? axes : this.spaceGroup.finalOperations[iop].rotateAxes (axes, this.unitCell, ptTemp, mTemp));
 }, "~N,~A,JU.P3,JU.M3");
-Clazz_overrideMethod (c$, "getSpaceGroupOperationCode", 
-function (iOp) {
-return this.spaceGroup.operations[iOp].subsystemCode;
-}, "~N");
-Clazz_overrideMethod (c$, "setTimeReversal", 
-function (op, val) {
-this.spaceGroup.operations[op].setTimeReversal (val);
-}, "~N,~N");
-Clazz_overrideMethod (c$, "getSpinOp", 
-function (op) {
-return this.spaceGroup.operations[op].getSpinOp ();
-}, "~N");
-Clazz_overrideMethod (c$, "addLatticeVectors", 
-function (lattvecs) {
-return this.spaceGroup.addLatticeVectors (lattvecs);
-}, "JU.Lst");
-Clazz_overrideMethod (c$, "getLatticeOp", 
-function () {
-return this.spaceGroup.latticeOp;
-});
-Clazz_overrideMethod (c$, "getOperationRsVs", 
-function (iop) {
-return (this.spaceGroup.finalOperations == null ? this.spaceGroup.operations : this.spaceGroup.finalOperations)[iop].rsvs;
-}, "~N");
-Clazz_overrideMethod (c$, "getSiteMultiplicity", 
-function (pt) {
-return this.spaceGroup.getSiteMultiplicity (pt, this.unitCell);
-}, "JU.P3");
-Clazz_overrideMethod (c$, "addOp", 
-function (code, rs, vs, sigma) {
-this.spaceGroup.isSSG = true;
-var s = JS.SymmetryOperation.getXYZFromRsVs (rs, vs, false);
-var i = this.spaceGroup.addSymmetry (s, -1, true);
-this.spaceGroup.operations[i].setSigma (code, sigma);
-return s;
-}, "~S,JU.Matrix,JU.Matrix,JU.Matrix");
+Clazz_defineMethod (c$, "getSymmetryOperationDescription", 
+function (modelSet, isym, cellInfo, pt1, pt2, id) {
+return this.spaceGroup.operations[isym].getDescription (modelSet, cellInfo, pt1, pt2, id);
+}, "JM.ModelSet,~N,J.api.SymmetryInterface,JU.P3,JU.P3,~S");
+Clazz_overrideMethod (c$, "fcoord", 
+function (p) {
+return J.symmetry.SymmetryOperation.fcoord (p);
+}, "JU.T3");
 Clazz_overrideMethod (c$, "getMatrixFromString", 
 function (xyz, rotTransMatrix, allowScaling, modDim) {
-return JS.SymmetryOperation.getMatrixFromString (null, xyz, rotTransMatrix, allowScaling);
+return J.symmetry.SymmetryOperation.getMatrixFromString (null, xyz, rotTransMatrix, allowScaling);
 }, "~S,~A,~B,~N");
-Clazz_overrideMethod (c$, "getSpaceGroupName", 
-function () {
-return (this.symmetryInfo != null ? this.symmetryInfo.sgName : this.spaceGroup != null ? this.spaceGroup.getName () : this.unitCell != null && this.unitCell.name.length > 0 ? "cell=" + this.unitCell.name : "");
-});
-Clazz_overrideMethod (c$, "getSpaceGroupOperationCount", 
-function () {
-return (this.symmetryInfo != null ? this.symmetryInfo.symmetryOperations.length : this.spaceGroup != null && this.spaceGroup.finalOperations != null ? this.spaceGroup.finalOperations.length : 0);
-});
 Clazz_overrideMethod (c$, "getCoordinatesAreFractional", 
 function () {
 return this.symmetryInfo == null || this.symmetryInfo.coordinatesAreFractional;
@@ -1001,64 +793,46 @@ Clazz_overrideMethod (c$, "getCellRange",
 function () {
 return this.symmetryInfo.cellRange;
 });
-Clazz_overrideMethod (c$, "getSymmetryInfoStr", 
+Clazz_defineMethod (c$, "getSymmetryInfoString", 
 function () {
-return this.symmetryInfo.infoStr;
+return this.symmetryInfo.symmetryInfoString;
 });
-Clazz_overrideMethod (c$, "getSymmetryOperations", 
+Clazz_defineMethod (c$, "getSymmetryOperations", 
 function () {
-return this.symmetryInfo == null ? this.spaceGroup.finalOperations : this.symmetryInfo.symmetryOperations;
+return this.symmetryInfo == null ? this.spaceGroup.getOperationList () : this.symmetryInfo.symmetryOperations;
 });
 Clazz_overrideMethod (c$, "isPeriodic", 
 function () {
 return (this.symmetryInfo == null ? false : this.symmetryInfo.isPeriodic ());
 });
 Clazz_overrideMethod (c$, "setSymmetryInfo", 
-function (modelIndex, modelAuxiliaryInfo, unitCellParams) {
-this.symmetryInfo =  new JS.SymmetryInfo ();
-var params = this.symmetryInfo.setSymmetryInfo (modelAuxiliaryInfo, unitCellParams);
-if (params == null) return;
-this.setUnitCell (params, modelAuxiliaryInfo.containsKey ("jmolData"));
-this.unitCell.moreInfo = modelAuxiliaryInfo.get ("moreUnitCellInfo");
+function (modelIndex, modelAuxiliaryInfo) {
+this.symmetryInfo =  new J.symmetry.SymmetryInfo ();
+var notionalUnitcell = this.symmetryInfo.setSymmetryInfo (modelAuxiliaryInfo);
+if (notionalUnitcell == null) return;
+this.setUnitCell (notionalUnitcell);
 modelAuxiliaryInfo.put ("infoUnitCell", this.getUnitCellAsArray (false));
 this.setOffsetPt (modelAuxiliaryInfo.get ("unitCellOffset"));
+if (modelAuxiliaryInfo.containsKey ("jmolData")) this.setUnitCellAllFractionalRelative (true);
 var matUnitCellOrientation = modelAuxiliaryInfo.get ("matUnitCellOrientation");
-if (matUnitCellOrientation != null) this.initializeOrientation (matUnitCellOrientation);
-if (JU.Logger.debugging) JU.Logger.debug ("symmetryInfos[" + modelIndex + "]:\n" + this.unitCell.dumpInfo (true));
-}, "~N,java.util.Map,~A");
+if (matUnitCellOrientation != null) this.setUnitCellOrientation (matUnitCellOrientation);
+if (JW.Logger.debugging) JW.Logger.debug ("symmetryInfos[" + modelIndex + "]:\n" + this.unitCell.dumpInfo (true));
+}, "~N,java.util.Map");
+Clazz_defineMethod (c$, "setUnitCell", 
+function (notionalUnitCell) {
+this.unitCell = J.symmetry.UnitCell.newA (notionalUnitCell);
+}, "~A");
 Clazz_overrideMethod (c$, "haveUnitCell", 
 function () {
 return (this.unitCell != null);
-});
-Clazz_overrideMethod (c$, "checkUnitCell", 
-function (uc, cell, ptTemp, isAbsolute) {
-uc.toFractional (ptTemp, isAbsolute);
-var slop = 0.02;
-return (ptTemp.x >= cell.x - 1 - slop && ptTemp.x <= cell.x + slop && ptTemp.y >= cell.y - 1 - slop && ptTemp.y <= cell.y + slop && ptTemp.z >= cell.z - 1 - slop && ptTemp.z <= cell.z + slop);
-}, "J.api.SymmetryInterface,JU.P3,JU.P3,~B");
-Clazz_overrideMethod (c$, "setUnitCell", 
-function (unitCellParams, setRelative) {
-this.unitCell = JS.UnitCell.newA (unitCellParams, setRelative);
-}, "~A,~B");
-Clazz_overrideMethod (c$, "unitCellEquals", 
-function (uc2) {
-return ((uc2)).unitCell.isSameAs (this.unitCell);
-}, "J.api.SymmetryInterface");
-Clazz_overrideMethod (c$, "getUnitCellState", 
-function () {
-return (this.unitCell == null ? "" : this.unitCell.getState ());
-});
-Clazz_overrideMethod (c$, "getMoreInfo", 
-function () {
-return this.unitCell.moreInfo;
 });
 Clazz_defineMethod (c$, "getUnitsymmetryInfo", 
 function () {
 return this.unitCell.dumpInfo (false);
 });
-Clazz_overrideMethod (c$, "initializeOrientation", 
-function (mat) {
-this.unitCell.initOrientation (mat);
+Clazz_overrideMethod (c$, "setUnitCellOrientation", 
+function (matUnitCellOrientation) {
+this.unitCell.setOrientation (matUnitCellOrientation);
 }, "JU.M3");
 Clazz_overrideMethod (c$, "unitize", 
 function (ptFrac) {
@@ -1068,9 +842,9 @@ Clazz_overrideMethod (c$, "toUnitCell",
 function (pt, offset) {
 this.unitCell.toUnitCell (pt, offset);
 }, "JU.P3,JU.P3");
-Clazz_overrideMethod (c$, "toCartesian", 
-function (fpt, ignoreOffset) {
-if (!this.$isBio) this.unitCell.toCartesian (fpt, ignoreOffset);
+Clazz_defineMethod (c$, "toCartesian", 
+function (fpt, isAbsolute) {
+if (!this.$isBio) this.unitCell.toCartesian (fpt, isAbsolute);
 }, "JU.T3,~B");
 Clazz_overrideMethod (c$, "toSupercell", 
 function (fpt) {
@@ -1080,20 +854,19 @@ Clazz_defineMethod (c$, "toFractional",
 function (pt, isAbsolute) {
 if (!this.$isBio) this.unitCell.toFractional (pt, isAbsolute);
 }, "JU.T3,~B");
-Clazz_overrideMethod (c$, "getUnitCellParams", 
+Clazz_defineMethod (c$, "getNotionalUnitCell", 
 function () {
-return this.unitCell.getUnitCellParams ();
+return this.unitCell.getNotionalUnitCell ();
 });
 Clazz_overrideMethod (c$, "getUnitCellAsArray", 
 function (vectorsOnly) {
 return this.unitCell.getUnitCellAsArray (vectorsOnly);
 }, "~B");
 Clazz_overrideMethod (c$, "getTensor", 
-function (vwr, parBorU) {
-if (parBorU == null) return null;
-if (this.unitCell == null) this.unitCell = JS.UnitCell.newA ( Clazz_newFloatArray (-1, [1, 1, 1, 90, 90, 90]), true);
-return this.unitCell.getTensor (vwr, parBorU);
-}, "JV.Viewer,~A");
+function (parBorU) {
+if (this.unitCell == null) this.unitCell = J.symmetry.UnitCell.newA ([1, 1, 1, 90, 90, 90]);
+return this.unitCell.getTensor (parBorU);
+}, "~A");
 Clazz_overrideMethod (c$, "getUnitCellVertices", 
 function () {
 return this.unitCell.getVertices ();
@@ -1102,6 +875,10 @@ Clazz_overrideMethod (c$, "getCartesianOffset",
 function () {
 return this.unitCell.getCartesianOffset ();
 });
+Clazz_overrideMethod (c$, "setCartesianOffset", 
+function (origin) {
+this.unitCell.setCartesianOffset (origin);
+}, "JU.T3");
 Clazz_overrideMethod (c$, "getFractionalOffset", 
 function () {
 return this.unitCell.getFractionalOffset ();
@@ -1109,11 +886,11 @@ return this.unitCell.getFractionalOffset ();
 Clazz_overrideMethod (c$, "setOffsetPt", 
 function (pt) {
 this.unitCell.setOffset (pt);
-}, "JU.T3");
+}, "JU.P3");
 Clazz_overrideMethod (c$, "setOffset", 
 function (nnn) {
 var pt =  new JU.P3 ();
-JU.SimpleUnitCell.ijkToPoint3f (nnn, pt, 0);
+JW.SimpleUnitCell.ijkToPoint3f (nnn, pt, 0);
 this.unitCell.setOffset (pt);
 }, "~N");
 Clazz_overrideMethod (c$, "getUnitCellMultiplier", 
@@ -1144,6 +921,10 @@ Clazz_overrideMethod (c$, "setMinMaxLatticeParameters",
 function (minXYZ, maxXYZ) {
 this.unitCell.setMinMaxLatticeParameters (minXYZ, maxXYZ);
 }, "JU.P3i,JU.P3i");
+Clazz_overrideMethod (c$, "setUnitCellAllFractionalRelative", 
+function (TF) {
+this.unitCell.setAllFractionalRelative (TF);
+}, "~B");
 Clazz_overrideMethod (c$, "checkDistance", 
 function (f1, f2, distance, dx, iRange, jRange, kRange, ptOffset) {
 return this.unitCell.checkDistance (f1, f2, distance, dx, iRange, jRange, kRange, ptOffset);
@@ -1153,15 +934,144 @@ function () {
 return this.unitCell.getUnitCellVectors ();
 });
 Clazz_overrideMethod (c$, "getUnitCell", 
-function (points, setRelative, name) {
-this.unitCell = JS.UnitCell.newP (points, setRelative);
-if (name != null) this.unitCell.name = name;
+function (points, setRelative) {
+this.unitCell = J.symmetry.UnitCell.newP (points, setRelative);
 return this;
-}, "~A,~B,~S");
+}, "~A,~B");
 Clazz_overrideMethod (c$, "isSupercell", 
 function () {
 return this.unitCell.isSupercell ();
 });
+Clazz_defineMethod (c$, "getSymmetryInfoString", 
+function (sginfo, symOp, drawID, labelOnly) {
+var infolist = sginfo.get ("operations");
+if (infolist == null) return "";
+var sb =  new JU.SB ();
+symOp--;
+for (var i = 0; i < infolist.length; i++) {
+if (infolist[i] == null || symOp >= 0 && symOp != i) continue;
+if (drawID != null) return infolist[i][3];
+if (sb.length () > 0) sb.appendC ('\n');
+if (!labelOnly) {
+if (symOp < 0) sb.appendI (i + 1).append ("\t");
+sb.append (infolist[i][0]).append ("\t");
+}sb.append (infolist[i][2]);
+}
+if (sb.length () == 0 && drawID != null) sb.append ("draw " + drawID + "* delete");
+return sb.toString ();
+}, "java.util.Map,~N,~S,~B");
+Clazz_defineMethod (c$, "getSpaceGroupInfo", 
+function (modelSet, modelIndex, spaceGroup, symOp, pt1, pt2, drawID) {
+var strOperations = null;
+var info = null;
+var cellInfo = null;
+var infolist = null;
+if (spaceGroup == null) {
+if (modelIndex <= 0) modelIndex = (Clazz_instanceOf (pt1, JM.Atom) ? (pt1).mi : modelSet.vwr.getCurrentModelIndex ());
+var isBio = false;
+if (modelIndex < 0) strOperations = "no single current model";
+ else if (!(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null) && (cellInfo = modelSet.getUnitCell (modelIndex)) == null) strOperations = "not applicable";
+if (strOperations != null) {
+info =  new java.util.Hashtable ();
+info.put ("spaceGroupInfo", strOperations);
+info.put ("symmetryInfo", "");
+} else if (pt1 == null && drawID == null && symOp != 0) {
+info = modelSet.getModelAuxiliaryInfoValue (modelIndex, "spaceGroupInfo");
+}if (info != null) return info;
+info =  new java.util.Hashtable ();
+if (pt1 == null && drawID == null && symOp == 0) modelSet.setModelAuxiliaryInfo (modelIndex, "spaceGroupInfo", info);
+spaceGroup = cellInfo.getSpaceGroupName ();
+var list = cellInfo.getSymmetryOperations ();
+var sg = (isBio ? (cellInfo).spaceGroup : null);
+var jf = "";
+if (list == null) {
+strOperations = "\n no symmetry operations employed";
+} else {
+if (isBio) this.spaceGroup = (J.symmetry.SpaceGroup.getNull (false)).set (false);
+ else this.setSpaceGroup (false);
+strOperations = "\n" + list.length + " symmetry operations employed:";
+infolist =  new Array (list.length);
+for (var i = 0; i < list.length; i++) {
+var iSym = (isBio ? this.addBioMoleculeOperation (sg.finalOperations[i], false) : this.addSpaceGroupOperation ("=" + list[i], i + 1));
+if (iSym < 0) continue;
+jf += ";" + list[i];
+infolist[i] = (symOp > 0 && symOp - 1 != iSym ? null : this.getSymmetryOperationDescription (modelSet, iSym, cellInfo, pt1, pt2, drawID));
+if (infolist[i] != null) strOperations += "\n" + (i + 1) + "\t" + infolist[i][0] + "\t" + infolist[i][2];
+}
+}jf = jf.substring (jf.indexOf (";") + 1);
+if (spaceGroup.indexOf ("[--]") >= 0) spaceGroup = jf;
+} else {
+info =  new java.util.Hashtable ();
+}info.put ("spaceGroupName", spaceGroup);
+if (infolist != null) {
+info.put ("operations", infolist);
+info.put ("symmetryInfo", strOperations);
+}if (!spaceGroup.startsWith ("bio")) {
+var data = this.getSpaceGroupInfo (spaceGroup, cellInfo);
+if (data == null || data.equals ("?")) data = "could not identify space group from name: " + spaceGroup + "\nformat: show spacegroup \"2\" or \"P 2c\" " + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"";
+info.put ("spaceGroupInfo", data);
+}return info;
+}, "JM.ModelSet,~N,~S,~N,JU.P3,JU.P3,~S");
+Clazz_overrideMethod (c$, "getSymmetryInfo", 
+function (modelSet, iModel, iAtom, uc, xyz, op, pt, pt2, id, type) {
+if (pt2 != null) return modelSet.getSymmetryInfoString (iModel, null, op, pt, pt2, (id == null ? "sym" : id), type == 1826248716);
+var symTemp = modelSet.getSymTemp (false);
+var isBio = uc.isBio ();
+var sym = uc;
+var iop = op;
+if (xyz == null) {
+var ops = sym.getSymmetryOperations ();
+if (ops == null || op == 0 || Math.abs (op) > ops.length) return "";
+if (op > 0) {
+xyz = ops[iop = op - 1];
+} else {
+xyz = ops[iop = -1 - op];
+}} else {
+iop = op = 0;
+}symTemp.setSpaceGroup (false);
+var iSym = (isBio ? symTemp.addBioMoleculeOperation (sym.spaceGroup.finalOperations[iop], op < 0) : symTemp.addSpaceGroupOperation ((op < 0 ? "!" : "=") + xyz, Math.abs (op)));
+if (iSym < 0) return "";
+var info;
+pt = JU.P3.newP (pt == null ? modelSet.at[iAtom] : pt);
+if (type == 135266320) {
+if (isBio) return "";
+symTemp.setUnitCell (uc.getNotionalUnitCell ());
+uc.toFractional (pt, false);
+if (Float.isNaN (pt.x)) return "";
+var sympt =  new JU.P3 ();
+symTemp.newSpaceGroupPoint (iSym, pt, sympt, 0, 0, 0);
+symTemp.toCartesian (sympt, false);
+return sympt;
+}info = (symTemp).getSymmetryOperationDescription (modelSet, iSym, uc, pt, pt2, (id == null ? "sym" : id));
+var ang = (info[9]).intValue ();
+switch (type) {
+case 135266306:
+return info;
+case 1073742001:
+var sinfo = [info[0], info[1], info[2], JW.Escape.eP (info[4]), JW.Escape.eP (info[5]), JW.Escape.eP (info[6]), JW.Escape.eP (info[7]), JW.Escape.eP (info[8]), "" + info[9], "" + JW.Escape.e (info[10])];
+return sinfo;
+case 1073741982:
+return info[0];
+default:
+case 1826248716:
+return info[2];
+case 135176:
+return info[3];
+case 1073742178:
+return info[5];
+case 12289:
+return info[6];
+case 135266320:
+return info[7];
+case 1073741854:
+case 135266319:
+return ((ang == 0) == (type == 135266319) ? info[8] : null);
+case 135266305:
+return info[9];
+case 12:
+return info[10];
+}
+}, "JM.ModelSet,~N,~N,J.api.SymmetryInterface,~S,~N,JU.P3,JU.P3,~S,~N");
 Clazz_overrideMethod (c$, "notInCentroid", 
 function (modelSet, bsAtoms, minmax) {
 try {
@@ -1206,105 +1116,55 @@ this.toFractional (center, false);
 if (centroidPacked) return (center.x + 0.000005 <= minmax[0] || center.x - 0.000005 > minmax[3] || center.y + 0.000005 <= minmax[1] || center.y - 0.000005 > minmax[4] || center.z + 0.000005 <= minmax[2] || center.z - 0.000005 > minmax[5]);
 return (center.x + 0.000005 <= minmax[0] || center.x + 0.00005 > minmax[3] || center.y + 0.000005 <= minmax[1] || center.y + 0.00005 > minmax[4] || center.z + 0.000005 <= minmax[2] || center.z + 0.00005 > minmax[5]);
 }, "JU.P3,~N,~A,~B");
-Clazz_defineMethod (c$, "getDesc", 
- function (modelSet) {
-return (this.desc == null ? (this.desc = (J.api.Interface.getInterface ("JS.SymmetryDesc", modelSet.vwr, "eval"))) : this.desc);
-}, "JM.ModelSet");
-Clazz_overrideMethod (c$, "getSymmetryInfoAtom", 
-function (modelSet, bsAtoms, xyz, op, pt, pt2, id, type) {
-return this.getDesc (modelSet).getSymmetryInfoAtom (bsAtoms, xyz, op, pt, pt2, id, type, modelSet);
-}, "JM.ModelSet,JU.BS,~S,~N,JU.P3,JU.P3,~S,~N");
-Clazz_overrideMethod (c$, "getSymmetryInfoString", 
-function (modelSet, modelIndex, symOp, pt1, pt2, drawID, type) {
-return this.getDesc (modelSet).getSymmetryInfoString (this, modelIndex, symOp, pt1, pt2, drawID, type, modelSet);
-}, "JM.ModelSet,~N,~N,JU.P3,JU.P3,~S,~S");
-Clazz_overrideMethod (c$, "getSpaceGroupInfo", 
-function (modelSet, sgName) {
-return this.getDesc (modelSet).getSpaceGroupInfo (this, -1, sgName, 0, null, null, null, modelSet);
-}, "JM.ModelSet,~S");
-Clazz_overrideMethod (c$, "getSymmetryInfo", 
-function (modelSet, iModel, iAtom, uc, xyz, op, pt, pt2, id, type) {
-return this.getDesc (modelSet).getSymmetryInfo (this, iModel, iAtom, uc, xyz, op, pt, pt2, id, type, modelSet);
-}, "JM.ModelSet,~N,~N,J.api.SymmetryInterface,~S,~N,JU.P3,JU.P3,~S,~N");
-Clazz_overrideMethod (c$, "fcoord", 
-function (p) {
-return JS.SymmetryOperation.fcoord (p);
-}, "JU.T3");
-Clazz_overrideMethod (c$, "getV0abc", 
-function (def) {
-if (this.unitCell == null) return null;
-var m;
-var isRev = false;
-if (Clazz_instanceOf (def, String)) {
-var sdef = def;
-if (sdef.indexOf (";") < 0) sdef += ";0,0,0";
-isRev = sdef.startsWith ("!");
-if (isRev) sdef = sdef.substring (1);
-var symTemp =  new JS.Symmetry ();
-symTemp.setSpaceGroup (false);
-var i = symTemp.addSpaceGroupOperation ("=" + sdef, 0);
-if (i < 0) return null;
-m = symTemp.getSpaceGroupOperation (i);
-(m).doFinalize ();
-} else {
-m = (Clazz_instanceOf (def, JU.M3) ? JU.M4.newMV (def,  new JU.P3 ()) : def);
-}var pts =  new Array (4);
-var pt =  new JU.P3 ();
-var m3 =  new JU.M3 ();
-m.getRotationScale (m3);
-m.getTranslation (pt);
-if (isRev) {
-m3.invert ();
-m3.transpose ();
-m3.rotate (pt);
-pt.scale (-1);
-} else {
-m3.transpose ();
-}this.unitCell.toCartesian (pt, false);
-pts[0] = JU.V3.newV (pt);
-pts[1] = JU.V3.new3 (1, 0, 0);
-pts[2] = JU.V3.new3 (0, 1, 0);
-pts[3] = JU.V3.new3 (0, 0, 1);
-for (var i = 1; i < 4; i++) {
-m3.rotate (pts[i]);
-this.unitCell.toCartesian (pts[i], true);
-}
-return pts;
-}, "~O");
-Clazz_overrideMethod (c$, "getQuaternionRotation", 
-function (abc) {
-return (this.unitCell == null ? null : this.unitCell.getQuaternionRotation (abc));
-}, "~S");
-Clazz_overrideMethod (c$, "getFractionalOrigin", 
+Clazz_overrideMethod (c$, "checkUnitCell", 
+function (uc, cell, ptTemp, isAbsolute) {
+uc.toFractional (ptTemp, isAbsolute);
+var slop = 0.02;
+return (ptTemp.x >= cell.x - 1 - slop && ptTemp.x <= cell.x + slop && ptTemp.y >= cell.y - 1 - slop && ptTemp.y <= cell.y + slop && ptTemp.z >= cell.z - 1 - slop && ptTemp.z <= cell.z + slop);
+}, "J.api.SymmetryInterface,JU.P3,JU.P3,~B");
+Clazz_overrideMethod (c$, "unitCellEquals", 
+function (uc2) {
+return ((uc2)).unitCell.isSameAs (this.unitCell);
+}, "J.api.SymmetryInterface");
+Clazz_overrideMethod (c$, "addLatticeVectors", 
+function (lattvecs) {
+return this.spaceGroup.addLatticeVectors (lattvecs);
+}, "JU.List");
+Clazz_overrideMethod (c$, "getLatticeOp", 
 function () {
-return this.unitCell.getFractionalOrigin ();
+return this.spaceGroup.latticeOp;
 });
-Clazz_overrideMethod (c$, "setAxes", 
-function (scale, axisPoints, fixedOrigin, originPoint) {
-var vertices = this.getUnitCellVertices ();
-var offset = this.getCartesianOffset ();
-if (fixedOrigin == null) originPoint.add2 (offset, vertices[0]);
- else offset = fixedOrigin;
-axisPoints[0].scaleAdd2 (scale, vertices[4], offset);
-axisPoints[1].scaleAdd2 (scale, vertices[2], offset);
-axisPoints[2].scaleAdd2 (scale, vertices[1], offset);
-}, "~N,~A,JU.P3,JU.P3");
-Clazz_overrideMethod (c$, "getState", 
-function (commands) {
-var pt = this.getFractionalOffset ();
-var loadUC = false;
-if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
-commands.append ("; set unitcell ").append (JU.Escape.eP (pt));
-loadUC = true;
-}pt = this.getUnitCellMultiplier ();
-if (pt != null) {
-commands.append ("; set unitcell ").append (JU.Escape.eP (pt));
-loadUC = true;
-}return loadUC;
-}, "JU.SB");
+Clazz_overrideMethod (c$, "getOperationRsVs", 
+function (iop) {
+return (this.spaceGroup.finalOperations == null ? this.spaceGroup.operations : this.spaceGroup.finalOperations)[iop].rsvs;
+}, "~N");
+Clazz_overrideMethod (c$, "getSiteMultiplicity", 
+function (pt) {
+return this.spaceGroup.getSiteMultiplicity (pt, this.unitCell);
+}, "JU.P3");
+Clazz_defineMethod (c$, "isBio", 
+function () {
+return this.$isBio;
 });
-Clazz_declarePackage ("JS");
-Clazz_load (["JU.P3", "$.V3"], "JS.PointGroup", ["java.lang.Float", "java.util.Hashtable", "JU.Lst", "$.PT", "$.Quat", "$.SB", "JU.BSUtil", "$.Escape", "$.Logger"], function () {
+Clazz_overrideMethod (c$, "addOp", 
+function (code, rs, vs, sigma) {
+this.spaceGroup.isSSG = true;
+var s = J.symmetry.SymmetryOperation.getXYZFromRsVs (rs, vs, false);
+var i = this.spaceGroup.addSymmetry (s, -1, true);
+this.spaceGroup.operations[i].setSigma (code, sigma);
+return s;
+}, "~S,JU.Matrix,JU.Matrix,JU.Matrix");
+Clazz_overrideMethod (c$, "getUnitCellState", 
+function () {
+return (this.unitCell == null ? "" : this.unitCell.getState ());
+});
+Clazz_overrideMethod (c$, "getSpaceGroupOperationCode", 
+function (iOp) {
+return this.spaceGroup.operations[iOp].subsystemCode;
+}, "~N");
+});
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["JU.P3", "$.V3"], "J.symmetry.PointGroup", ["java.lang.Float", "java.util.Hashtable", "JU.List", "$.Quat", "$.SB", "JW.BSUtil", "$.Escape", "$.Logger", "$.Txt"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.drawInfo = null;
 this.info = null;
@@ -1333,14 +1193,14 @@ this.bsAtoms = null;
 this.maxElement = 0;
 this.eCounts = null;
 this.nOps = 0;
-if (!Clazz_isClassDefined ("JS.PointGroup.Operation")) {
-JS.PointGroup.$PointGroup$Operation$ ();
+if (!Clazz_isClassDefined ("J.symmetry.PointGroup.Operation")) {
+J.symmetry.PointGroup.$PointGroup$Operation$ ();
 }
 Clazz_instantialize (this, arguments);
-}, JS, "PointGroup");
+}, J.symmetry, "PointGroup");
 Clazz_prepareFields (c$, function () {
-this.nAxes =  Clazz_newIntArray (JS.PointGroup.maxAxis, 0);
-this.axes =  new Array (JS.PointGroup.maxAxis);
+this.nAxes =  Clazz_newIntArray (J.symmetry.PointGroup.maxAxis, 0);
+this.axes =  new Array (J.symmetry.PointGroup.maxAxis);
 this.vTemp =  new JU.V3 ();
 this.center =  new JU.P3 ();
 });
@@ -1350,9 +1210,9 @@ return this.name;
 });
 c$.getPointGroup = Clazz_defineMethod (c$, "getPointGroup", 
 function (pgLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance) {
-var pg =  new JS.PointGroup ();
+var pg =  new J.symmetry.PointGroup ();
 return (pg.set (pgLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance) ? pg : pgLast);
-}, "JS.PointGroup,~A,JU.BS,~B,~N,~N");
+}, "J.symmetry.PointGroup,~A,JU.BS,~B,~N,~N");
 Clazz_makeConstructor (c$, 
  function () {
 });
@@ -1364,7 +1224,7 @@ for (var i = 0; i < this.nAtoms; i++) {
 if (this.elements[i] != pg.elements[i] || this.points[i].distance (pg.points[i]) != 0) return false;
 }
 return true;
-}, "JS.PointGroup");
+}, "J.symmetry.PointGroup");
 Clazz_defineMethod (c$, "set", 
  function (pgLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance) {
 this.distanceTolerance = distanceTolerance;
@@ -1372,7 +1232,7 @@ this.linearTolerance = linearTolerance;
 this.bsAtoms = bsAtoms;
 this.cosTolerance = (Math.cos (linearTolerance / 180 * 3.141592653589793));
 if (!this.getAtomsAndElements (atomset, bsAtoms)) {
-JU.Logger.error ("Too many atoms for point group calculation");
+JW.Logger.error ("Too many atoms for point group calculation");
 this.name = "point group not determined -- ac > 100 -- select fewer atoms and try again.";
 return true;
 }this.getElementCounts ();
@@ -1396,7 +1256,7 @@ this.addAxis (16, this.vTemp);
 this.principalAxis = this.axes[16][0];
 if (this.haveInversionCenter) {
 this.axes[0] =  new Array (1);
-this.principalPlane = this.axes[0][this.nAxes[0]++] = Clazz_innerTypeInstance (JS.PointGroup.Operation, this, null, this.vTemp);
+this.principalPlane = this.axes[0][this.nAxes[0]++] = Clazz_innerTypeInstance (J.symmetry.PointGroup.Operation, this, null, this.vTemp);
 }return true;
 }this.axes[0] =  new Array (15);
 var nPlanes = 0;
@@ -1462,7 +1322,7 @@ if (n < 14) n /= 2;
  else n -= 14;
 this.name = "C" + n + "h";
 }}return true;
-}, "JS.PointGroup,~A,JU.BS,~B,~N,~N");
+}, "J.symmetry.PointGroup,~A,JU.BS,~B,~N,~N");
 Clazz_defineMethod (c$, "setPrincipalAxis", 
  function (n, nPlanes) {
 var principalPlane = this.setPrincipalPlane (n, nPlanes);
@@ -1495,7 +1355,7 @@ return null;
 }, "~N,~N");
 Clazz_defineMethod (c$, "getAtomsAndElements", 
  function (atomset, bsAtoms) {
-var ac = JU.BSUtil.cardinalityOf (bsAtoms);
+var ac = JW.BSUtil.cardinalityOf (bsAtoms);
 if (ac > 100) return false;
 this.points =  new Array (ac);
 this.atoms =  new Array (ac);
@@ -1522,7 +1382,7 @@ Clazz_defineMethod (c$, "findInversionCenter",
 this.haveInversionCenter = this.checkOperation (null, this.center, -1);
 if (this.haveInversionCenter) {
 this.axes[1] =  new Array (1);
-this.axes[1][0] = Clazz_innerTypeInstance (JS.PointGroup.Operation, this, null);
+this.axes[1][0] = Clazz_innerTypeInstance (J.symmetry.PointGroup.Operation, this, null);
 }});
 Clazz_defineMethod (c$, "checkOperation", 
  function (q, center, iOrder) {
@@ -1536,7 +1396,7 @@ var a1 = this.points[i];
 var e1 = this.elements[i];
 if (q != null) {
 pt.sub2 (a1, center);
-q.transform2 (pt, pt).add (center);
+q.transformP2 (pt, pt).add (center);
 } else {
 pt.setT (a1);
 }if (isInversion) {
@@ -1610,15 +1470,15 @@ v2.normalize ();
 if (this.isParallel (v1, v2)) {
 this.getAllAxes (v1);
 continue;
-}if (this.nAxes[16] < JS.PointGroup.axesMaxN[16]) {
+}if (this.nAxes[16] < J.symmetry.PointGroup.axesMaxN[16]) {
 v3.ave (a1, a2);
 v3.sub (this.center);
 this.getAllAxes (v3);
 }var order = (6.283185307179586 / v1.angle (v2));
 var iOrder = Clazz_doubleToInt (Math.floor (order + 0.01));
 var isIntegerOrder = (order - iOrder <= 0.02);
-if (!isIntegerOrder || (iOrder = iOrder + 14) >= JS.PointGroup.maxAxis) continue;
-if (this.nAxes[iOrder] < JS.PointGroup.axesMaxN[iOrder]) {
+if (!isIntegerOrder || (iOrder = iOrder + 14) >= J.symmetry.PointGroup.maxAxis) continue;
+if (this.nAxes[iOrder] < J.symmetry.PointGroup.axesMaxN[iOrder]) {
 v3.cross (v1, v2);
 this.checkAxisOrder (iOrder, v3, this.center);
 }}
@@ -1658,7 +1518,7 @@ v1.add2 (this.points[i], this.points[j]);
 v1.add (this.points[k]);
 v1.normalize ();
 if (!this.isParallel (v1, v3)) this.getAllAxes (v1);
-if (this.nAxes[19] == JS.PointGroup.axesMaxN[19]) break out;
+if (this.nAxes[19] == J.symmetry.PointGroup.axesMaxN[19]) break out;
 }
 
 
@@ -1682,7 +1542,7 @@ return this.getHighestOrder ();
 });
 Clazz_defineMethod (c$, "getAllAxes", 
  function (v3) {
-for (var o = 16; o < JS.PointGroup.maxAxis; o++) if (this.nAxes[o] < JS.PointGroup.axesMaxN[o]) this.checkAxisOrder (o, v3, this.center);
+for (var o = 16; o < J.symmetry.PointGroup.maxAxis; o++) if (this.nAxes[o] < J.symmetry.PointGroup.axesMaxN[o]) this.checkAxisOrder (o, v3, this.center);
 
 }, "JU.V3");
 Clazz_defineMethod (c$, "getHighestOrder", 
@@ -1690,8 +1550,8 @@ Clazz_defineMethod (c$, "getHighestOrder",
 var n = 0;
 for (n = 14; --n > 1 && this.nAxes[n] == 0; ) {
 }
-if (n > 1) return (n + 14 < JS.PointGroup.maxAxis && this.nAxes[n + 14] > 0 ? n + 14 : n);
-for (n = JS.PointGroup.maxAxis; --n > 1 && this.nAxes[n] == 0; ) {
+if (n > 1) return (n + 14 < J.symmetry.PointGroup.maxAxis && this.nAxes[n + 14] > 0 ? n + 14 : n);
+for (n = J.symmetry.PointGroup.maxAxis; --n > 1 && this.nAxes[n] == 0; ) {
 }
 return n;
 });
@@ -1750,12 +1610,12 @@ return true;
 Clazz_defineMethod (c$, "addAxis", 
  function (iOrder, v) {
 if (this.haveAxis (iOrder, v)) return;
-if (this.axes[iOrder] == null) this.axes[iOrder] =  new Array (JS.PointGroup.axesMaxN[iOrder]);
-this.axes[iOrder][this.nAxes[iOrder]++] = Clazz_innerTypeInstance (JS.PointGroup.Operation, this, null, v, iOrder);
+if (this.axes[iOrder] == null) this.axes[iOrder] =  new Array (J.symmetry.PointGroup.axesMaxN[iOrder]);
+this.axes[iOrder][this.nAxes[iOrder]++] = Clazz_innerTypeInstance (J.symmetry.PointGroup.Operation, this, null, v, iOrder);
 }, "~N,JU.V3");
 Clazz_defineMethod (c$, "haveAxis", 
  function (iOrder, v) {
-if (this.nAxes[iOrder] == JS.PointGroup.axesMaxN[iOrder]) {
+if (this.nAxes[iOrder] == J.symmetry.PointGroup.axesMaxN[iOrder]) {
 return true;
 }if (this.nAxes[iOrder] > 0) for (var i = this.nAxes[iOrder]; --i >= 0; ) {
 if (this.isParallel (v, this.axes[iOrder][i].normalOrAxis)) return true;
@@ -1788,24 +1648,24 @@ nPlanes = this.getPlane (v3);
 }v3.sub2 (a2, a1);
 v3.normalize ();
 nPlanes = this.getPlane (v3);
-if (nPlanes == JS.PointGroup.axesMaxN[0]) return nPlanes;
+if (nPlanes == J.symmetry.PointGroup.axesMaxN[0]) return nPlanes;
 }
 }
-if (haveAxes) for (var i = 16; i < JS.PointGroup.maxAxis; i++) for (var j = 0; j < this.nAxes[i]; j++) nPlanes = this.getPlane (this.axes[i][j].normalOrAxis);
+if (haveAxes) for (var i = 16; i < J.symmetry.PointGroup.maxAxis; i++) for (var j = 0; j < this.nAxes[i]; j++) nPlanes = this.getPlane (this.axes[i][j].normalOrAxis);
 
 
 return nPlanes;
 });
 Clazz_defineMethod (c$, "getPlane", 
  function (v3) {
-if (!this.haveAxis (0, v3) && this.checkOperation (JU.Quat.newVA (v3, 180), this.center, -1)) this.axes[0][this.nAxes[0]++] = Clazz_innerTypeInstance (JS.PointGroup.Operation, this, null, v3);
+if (!this.haveAxis (0, v3) && this.checkOperation (JU.Quat.newVA (v3, 180), this.center, -1)) this.axes[0][this.nAxes[0]++] = Clazz_innerTypeInstance (J.symmetry.PointGroup.Operation, this, null, v3);
 return this.nAxes[0];
 }, "JU.V3");
 Clazz_defineMethod (c$, "findAdditionalAxes", 
  function (nPlanes) {
 var planes = this.axes[0];
 var Cn = 0;
-if (nPlanes > 1 && ((Cn = nPlanes + 14) < JS.PointGroup.maxAxis) && this.nAxes[Cn] == 0) {
+if (nPlanes > 1 && ((Cn = nPlanes + 14) < J.symmetry.PointGroup.maxAxis) && this.nAxes[Cn] == 0) {
 this.vTemp.cross (planes[0].normalOrAxis, planes[1].normalOrAxis);
 if (!this.checkAxisOrder (Cn, this.vTemp, this.center) && nPlanes > 2) {
 this.vTemp.cross (planes[1].normalOrAxis, planes[2].normalOrAxis);
@@ -1826,7 +1686,7 @@ var op;
 if (scaleFactor == 0) scaleFactor = 1;
 this.scale = scaleFactor;
 var nType =  Clazz_newIntArray (4, 2, 0);
-for (var i = 1; i < JS.PointGroup.maxAxis; i++) for (var j = this.nAxes[i]; --j >= 0; ) nType[this.axes[i][j].type][0]++;
+for (var i = 1; i < J.symmetry.PointGroup.maxAxis; i++) for (var j = this.nAxes[i]; --j >= 0; ) nType[this.axes[i][j].type][0]++;
 
 
 var sb =  new JU.SB ().append ("# ").appendI (this.nAtoms).append (" atoms\n");
@@ -1839,9 +1699,9 @@ var anyImproperAxis = (type.equalsIgnoreCase ("Sn"));
 sb.append ("set perspectivedepth off;\n");
 var m = "_" + modelIndex + "_";
 if (!haveType) sb.append ("draw pg0").append (m).append ("* delete;draw pgva").append (m).append ("* delete;draw pgvp").append (m).append ("* delete;");
-if (!haveType || type.equalsIgnoreCase ("Ci")) sb.append ("draw pg0").append (m).append (this.haveInversionCenter ? "inv " : " ").append (JU.Escape.eP (this.center)).append (this.haveInversionCenter ? "\"i\";\n" : ";\n");
+if (!haveType || type.equalsIgnoreCase ("Ci")) sb.append ("draw pg0").append (m).append (this.haveInversionCenter ? "inv " : " ").append (JW.Escape.eP (this.center)).append (this.haveInversionCenter ? "\"i\";\n" : ";\n");
 var offset = 0.1;
-for (var i = 2; i < JS.PointGroup.maxAxis; i++) {
+for (var i = 2; i < J.symmetry.PointGroup.maxAxis; i++) {
 if (i == 14) offset = 0.1;
 if (this.nAxes[i] == 0) continue;
 var label = this.axes[i][0].getLabel ();
@@ -1852,24 +1712,24 @@ if (index > 0 && j + 1 != index) continue;
 op = this.axes[i][j];
 v.add2 (op.normalOrAxis, this.center);
 if (op.type == 2) scale = -scale;
-sb.append ("draw pgva").append (m).append (label).append ("_").appendI (j + 1).append (" width 0.05 scale ").appendF (scale).append (" ").append (JU.Escape.eP (v));
+sb.append ("draw pgva").append (m).append (label).append ("_").appendI (j + 1).append (" width 0.05 scale ").appendF (scale).append (" ").append (JW.Escape.eP (v));
 v.scaleAdd2 (-2, op.normalOrAxis, v);
 var isPA = (this.principalAxis != null && op.index == this.principalAxis.index);
-sb.append (JU.Escape.eP (v)).append ("\"").append (label).append (isPA ? "*" : "").append ("\" color ").append (isPA ? "red" : op.type == 2 ? "blue" : "yellow").append (";\n");
+sb.append (JW.Escape.eP (v)).append ("\"").append (label).append (isPA ? "*" : "").append ("\" color ").append (isPA ? "red" : op.type == 2 ? "blue" : "yellow").append (";\n");
 }
 }
 if (!haveType || type.equalsIgnoreCase ("Cs")) for (var j = 0; j < this.nAxes[0]; j++) {
 if (index > 0 && j + 1 != index) continue;
 op = this.axes[0][j];
-sb.append ("draw pgvp").append (m).appendI (j + 1).append ("disk scale ").appendF (scaleFactor * this.radius * 2).append (" CIRCLE PLANE ").append (JU.Escape.eP (this.center));
+sb.append ("draw pgvp").append (m).appendI (j + 1).append ("disk scale ").appendF (scaleFactor * this.radius * 2).append (" CIRCLE PLANE ").append (JW.Escape.eP (this.center));
 v.add2 (op.normalOrAxis, this.center);
-sb.append (JU.Escape.eP (v)).append (" color translucent yellow;\n");
+sb.append (JW.Escape.eP (v)).append (" color translucent yellow;\n");
 v.add2 (op.normalOrAxis, this.center);
-sb.append ("draw pgvp").append (m).appendI (j + 1).append ("ring width 0.05 scale ").appendF (scaleFactor * this.radius * 2).append (" arc ").append (JU.Escape.eP (v));
+sb.append ("draw pgvp").append (m).appendI (j + 1).append ("ring width 0.05 scale ").appendF (scaleFactor * this.radius * 2).append (" arc ").append (JW.Escape.eP (v));
 v.scaleAdd2 (-2, op.normalOrAxis, v);
-sb.append (JU.Escape.eP (v));
+sb.append (JW.Escape.eP (v));
 v.add3 (0.011, 0.012, 0.013);
-sb.append (JU.Escape.eP (v)).append ("{0 360 0.5} color ").append (this.principalPlane != null && op.index == this.principalPlane.index ? "red" : "blue").append (";\n");
+sb.append (JW.Escape.eP (v)).append ("{0 360 0.5} color ").append (this.principalPlane != null && op.index == this.principalPlane.index ? "red" : "blue").append (";\n");
 }
 sb.append ("# name=").append (this.name);
 sb.append (", nCi=").appendI (this.haveInversionCenter ? 1 : 0);
@@ -1877,7 +1737,7 @@ sb.append (", nCs=").appendI (this.nAxes[0]);
 sb.append (", nCn=").appendI (nType[1][0]);
 sb.append (", nSn=").appendI (nType[2][0]);
 sb.append (": ");
-for (var i = JS.PointGroup.maxAxis; --i >= 2; ) if (this.nAxes[i] > 0) {
+for (var i = J.symmetry.PointGroup.maxAxis; --i >= 2; ) if (this.nAxes[i] > 0) {
 sb.append (" n").append (i < 14 ? "S" : "C").appendI (i % 14);
 sb.append ("=").appendI (this.nAxes[i]);
 }
@@ -1888,18 +1748,18 @@ return this.drawInfo;
 var nTotal = 1;
 var ctype = (this.haveInversionCenter ? "Ci" : "center");
 if (this.haveInversionCenter) nTotal++;
-if (this.info == null) sb.append ("\n\n").append (this.name).append ("\t").append (ctype).append ("\t").append (JU.Escape.eP (this.center));
+if (this.info == null) sb.append ("\n\n").append (this.name).append ("\t").append (ctype).append ("\t").append (JW.Escape.eP (this.center));
  else this.info.put (ctype, this.center);
-for (var i = JS.PointGroup.maxAxis; --i >= 0; ) {
+for (var i = J.symmetry.PointGroup.maxAxis; --i >= 0; ) {
 if (this.nAxes[i] > 0) {
-n = JS.PointGroup.nUnique[i];
+n = J.symmetry.PointGroup.nUnique[i];
 var label = this.axes[i][0].getLabel ();
 if (this.info == null) sb.append ("\n\n").append (this.name).append ("\tn").append (label).append ("\t").appendI (this.nAxes[i]).append ("\t").appendI (n);
  else this.info.put ("n" + label, Integer.$valueOf (this.nAxes[i]));
 n *= this.nAxes[i];
 nTotal += n;
 nType[this.axes[i][0].type][1] += n;
-var vinfo = (this.info == null ? null :  new JU.Lst ());
+var vinfo = (this.info == null ? null :  new JU.List ());
 for (var j = 0; j < this.nAxes[i]; j++) {
 if (vinfo == null) sb.append ("\n").append (this.name).append ("\t").append (label).append ("_").appendI (j + 1).append ("\t").appendO (this.axes[i][j].normalOrAxis);
  else vinfo.addLast (this.axes[i][j].normalOrAxis);
@@ -1913,16 +1773,16 @@ sb.append ("\n").append (this.name).append ("\tE\t  1\t  1");
 n = (this.haveInversionCenter ? 1 : 0);
 sb.append ("\n").append (this.name).append ("\tCi\t  ").appendI (n).append ("\t  ").appendI (n);
 sb.append ("\n").append (this.name).append ("\tCs\t");
-JU.PT.rightJustify (sb, "    ", this.nAxes[0] + "\t");
-JU.PT.rightJustify (sb, "    ", this.nAxes[0] + "\n");
+JW.Txt.rightJustify (sb, "    ", this.nAxes[0] + "\t");
+JW.Txt.rightJustify (sb, "    ", this.nAxes[0] + "\n");
 sb.append (this.name).append ("\tCn\t");
-JU.PT.rightJustify (sb, "    ", nType[1][0] + "\t");
-JU.PT.rightJustify (sb, "    ", nType[1][1] + "\n");
+JW.Txt.rightJustify (sb, "    ", nType[1][0] + "\t");
+JW.Txt.rightJustify (sb, "    ", nType[1][1] + "\n");
 sb.append (this.name).append ("\tSn\t");
-JU.PT.rightJustify (sb, "    ", nType[2][0] + "\t");
-JU.PT.rightJustify (sb, "    ", nType[2][1] + "\n");
+JW.Txt.rightJustify (sb, "    ", nType[2][0] + "\t");
+JW.Txt.rightJustify (sb, "    ", nType[2][1] + "\n");
 sb.append (this.name).append ("\t\tTOTAL\t");
-JU.PT.rightJustify (sb, "    ", nTotal + "\n");
+JW.Txt.rightJustify (sb, "    ", nTotal + "\n");
 this.textInfo = sb.toString ();
 return this.textInfo;
 }this.info.put ("name", this.name);
@@ -1952,29 +1812,29 @@ this.order = 0;
 this.index = 0;
 this.normalOrAxis = null;
 Clazz_instantialize (this, arguments);
-}, JS.PointGroup, "Operation");
+}, J.symmetry.PointGroup, "Operation");
 Clazz_makeConstructor (c$, 
 function () {
-this.index = ++this.b$["JS.PointGroup"].nOps;
+this.index = ++this.b$["J.symmetry.PointGroup"].nOps;
 this.type = 3;
 this.order = 1;
-if (JU.Logger.debugging) JU.Logger.debug ("new operation -- " + JS.PointGroup.typeNames[this.type]);
+if (JW.Logger.debugging) JW.Logger.debug ("new operation -- " + J.symmetry.PointGroup.typeNames[this.type]);
 });
 Clazz_makeConstructor (c$, 
 function (a, b) {
-this.index = ++this.b$["JS.PointGroup"].nOps;
+this.index = ++this.b$["J.symmetry.PointGroup"].nOps;
 this.type = (b < 14 ? 2 : 1);
 this.order = b % 14;
 this.normalOrAxis = JU.Quat.newVA (a, 180).getNormal ();
-if (JU.Logger.debugging) JU.Logger.debug ("new operation -- " + (this.order == b ? "S" : "C") + this.order + " " + this.normalOrAxis);
+if (JW.Logger.debugging) JW.Logger.debug ("new operation -- " + (this.order == b ? "S" : "C") + this.order + " " + this.normalOrAxis);
 }, "JU.V3,~N");
 Clazz_makeConstructor (c$, 
 function (a) {
 if (a == null) return;
-this.index = ++this.b$["JS.PointGroup"].nOps;
+this.index = ++this.b$["J.symmetry.PointGroup"].nOps;
 this.type = 0;
 this.normalOrAxis = JU.Quat.newVA (a, 180).getNormal ();
-if (JU.Logger.debugging) JU.Logger.debug ("new operation -- plane " + this.normalOrAxis);
+if (JW.Logger.debugging) JW.Logger.debug ("new operation -- plane " + this.normalOrAxis);
 }, "JU.V3");
 Clazz_defineMethod (c$, "getLabel", 
 function () {
@@ -1990,8 +1850,8 @@ return "C" + this.order;
 c$ = Clazz_p0p ();
 };
 Clazz_defineStatics (c$,
-"axesMaxN",  Clazz_newIntArray (-1, [15, 0, 0, 1, 3, 1, 10, 0, 1, 0, 6, 0, 1, 0, 0, 0, 15, 10, 6, 6, 10, 0, 1]),
-"nUnique",  Clazz_newIntArray (-1, [1, 0, 0, 2, 2, 4, 2, 0, 4, 0, 4, 0, 4, 0, 0, 0, 1, 2, 2, 4, 2, 0, 4]),
+"axesMaxN", [15, 0, 0, 1, 3, 1, 10, 0, 1, 0, 6, 0, 1, 0, 0, 0, 15, 10, 6, 6, 10, 0, 1],
+"nUnique", [1, 0, 0, 2, 2, 4, 2, 0, 4, 0, 4, 0, 4, 0, 0, 0, 1, 2, 2, 4, 2, 0, 4],
 "s3", 3,
 "s4", 4,
 "s5", 5,
@@ -2006,17 +1866,17 @@ Clazz_defineStatics (c$,
 "c5", 19,
 "c6", 20,
 "c8", 22);
-c$.maxAxis = c$.prototype.maxAxis = JS.PointGroup.axesMaxN.length;
+c$.maxAxis = c$.prototype.maxAxis = J.symmetry.PointGroup.axesMaxN.length;
 Clazz_defineStatics (c$,
 "ATOM_COUNT_MAX", 100,
 "OPERATION_PLANE", 0,
 "OPERATION_PROPER_AXIS", 1,
 "OPERATION_IMPROPER_AXIS", 2,
 "OPERATION_INVERSION_CENTER", 3,
-"typeNames",  Clazz_newArray (-1, ["plane", "proper axis", "improper axis", "center of inversion"]));
+"typeNames", ["plane", "proper axis", "improper axis", "center of inversion"]);
 });
-Clazz_declarePackage ("JS");
-Clazz_load (null, "JS.SpaceGroup", ["java.lang.Character", "java.util.Arrays", "$.Hashtable", "JU.AU", "$.Lst", "$.M4", "$.P3", "$.PT", "$.SB", "JS.HallInfo", "$.HallTranslation", "$.SymmetryOperation", "JU.Logger"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["java.util.Hashtable"], "J.symmetry.SpaceGroup", ["java.lang.Character", "java.util.Arrays", "JU.AU", "$.List", "$.M4", "$.P3", "$.PT", "$.SB", "J.symmetry.HallInfo", "$.HallTranslation", "$.SymmetryOperation", "JW.Logger"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.index = 0;
 this.isSSG = false;
@@ -2036,6 +1896,7 @@ this.intlTableNumberFull = null;
 this.intlTableNumberExt = null;
 this.hallInfo = null;
 this.latticeParameter = 0;
+this.latticeCode = '\0';
 this.operations = null;
 this.finalOperations = null;
 this.operationCount = 0;
@@ -2044,80 +1905,75 @@ this.xyzList = null;
 this.modDim = 0;
 this.doNormalize = true;
 this.isBio = false;
-this.isBilbao = false;
+this.operationList = null;
 Clazz_instantialize (this, arguments);
-}, JS, "SpaceGroup");
+}, J.symmetry, "SpaceGroup");
+Clazz_prepareFields (c$, function () {
+this.xyzList =  new java.util.Hashtable ();
+});
 c$.getNull = Clazz_defineMethod (c$, "getNull", 
 function (doInit) {
-JS.SpaceGroup.getSpaceGroups ();
-return  new JS.SpaceGroup (null, doInit);
+J.symmetry.SpaceGroup.getSpaceGroups ();
+return  new J.symmetry.SpaceGroup (null, doInit);
 }, "~B");
 Clazz_makeConstructor (c$, 
  function (cifLine, doInit) {
-this.index = ++JS.SpaceGroup.sgIndex;
-this.init (doInit && cifLine == null);
-if (doInit && cifLine != null) this.buildSpaceGroup (cifLine);
-}, "~S,~B");
+this.index = ++J.symmetry.SpaceGroup.sgIndex;
+if (!doInit) return;
+if (cifLine == null) {
+this.addSymmetry ("x,y,z", 0, false);
+} else {
+this.buildSpaceGroup (cifLine);
+}}, "~S,~B");
 Clazz_defineMethod (c$, "set", 
 function (doNormalize) {
 this.doNormalize = doNormalize;
 return this;
 }, "~B");
-Clazz_defineMethod (c$, "init", 
- function (addXYZ) {
-this.xyzList =  new java.util.Hashtable ();
-this.operationCount = 0;
-if (addXYZ) this.addSymmetry ("x,y,z", 0, false);
-}, "~B");
 c$.createSpaceGroup = Clazz_defineMethod (c$, "createSpaceGroup", 
 function (desiredSpaceGroupIndex, name, data) {
 var sg = null;
 if (desiredSpaceGroupIndex >= 0) {
-sg = JS.SpaceGroup.getSpaceGroups ()[desiredSpaceGroupIndex];
+sg = J.symmetry.SpaceGroup.getSpaceGroups ()[desiredSpaceGroupIndex];
 } else {
-if (Clazz_instanceOf (data, JU.Lst)) sg = JS.SpaceGroup.createSGFromList (name, data);
- else sg = JS.SpaceGroup.determineSpaceGroupNA (name, data);
-if (sg == null) sg = JS.SpaceGroup.createSpaceGroupN (name);
+if (Clazz_instanceOf (data, JU.List)) sg = J.symmetry.SpaceGroup.createSGFromList (name, data);
+ else sg = J.symmetry.SpaceGroup.determineSpaceGroupNA (name, data);
+if (sg == null) sg = J.symmetry.SpaceGroup.createSpaceGroupN (name);
 }if (sg != null) sg.generateAllOperators (null);
 return sg;
 }, "~N,~S,~O");
 c$.createSGFromList = Clazz_defineMethod (c$, "createSGFromList", 
  function (name, data) {
-var sg =  new JS.SpaceGroup ("0;--;--;--", true);
+var sg =  new J.symmetry.SpaceGroup ("0;--;--;--", true);
 sg.doNormalize = false;
 sg.name = name;
 var n = data.size ();
 for (var i = 0; i < n; i++) {
 var operation = data.get (i);
-if (Clazz_instanceOf (operation, JS.SymmetryOperation)) {
-var op = operation;
-var iop = sg.addOp (op, op.xyz, false);
-sg.operations[iop].setTimeReversal (op.timeReversal);
-} else {
-sg.addSymmetrySM ("xyz matrix:" + operation, operation);
-}}
-var sgn = sg.getDerivedSpaceGroup ();
-if (sgn != null) sg = sgn;
+var xyz = "xyz matrix:" + operation;
+sg.addSymmetrySM (xyz, operation);
+}
 return sg;
-}, "~S,JU.Lst");
+}, "~S,JU.List");
 Clazz_defineMethod (c$, "addSymmetry", 
 function (xyz, opId, allowScaling) {
 xyz = xyz.toLowerCase ();
-return (xyz.indexOf ("[[") < 0 && xyz.indexOf ("x4") < 0 && xyz.indexOf (";") < 0 && (xyz.indexOf ("x") < 0 || xyz.indexOf ("y") < 0 || xyz.indexOf ("z") < 0) ? -1 : this.addOperation (xyz, opId, allowScaling));
+if (xyz.indexOf ("[[") < 0 && xyz.indexOf ("x4") < 0 && (xyz.indexOf ("x") < 0 || xyz.indexOf ("y") < 0 || xyz.indexOf ("z") < 0)) return -1;
+return this.addOperation (xyz, opId, allowScaling);
 }, "~S,~N,~B");
 Clazz_defineMethod (c$, "setFinalOperations", 
 function (atoms, atomIndex, count, doNormalize) {
 if (this.hallInfo == null && this.latticeParameter != 0) {
-var h =  new JS.HallInfo (JS.HallTranslation.getHallLatticeEquivalent (this.latticeParameter));
+var h =  new J.symmetry.HallInfo (J.symmetry.HallTranslation.getHallLatticeEquivalent (this.latticeParameter));
 this.generateAllOperators (h);
 }this.finalOperations = null;
 this.isBio = (this.name.indexOf ("bio") >= 0);
-if (this.index >= JS.SpaceGroup.getSpaceGroups ().length && !this.isBio && this.name.indexOf ("SSG:") < 0 && this.name.indexOf ("[subsystem") < 0) {
+if (this.index >= J.symmetry.SpaceGroup.getSpaceGroups ().length && !this.isBio && this.name.indexOf ("SSG:") < 0 && this.name.indexOf ("[subsystem") < 0) {
 var sg = this.getDerivedSpaceGroup ();
 if (sg != null) this.name = sg.getName ();
 }this.finalOperations =  new Array (this.operationCount);
 if (doNormalize && count > 0 && atoms != null) {
-this.finalOperations[0] =  new JS.SymmetryOperation (this.operations[0], atoms, atomIndex, count, true);
+this.finalOperations[0] =  new J.symmetry.SymmetryOperation (this.operations[0], atoms, atomIndex, count, true);
 var atom = atoms[atomIndex];
 var c = JU.P3.newP (atom);
 this.finalOperations[0].rotTrans (c);
@@ -2127,10 +1983,8 @@ c.setT (atom);
 this.finalOperations[0].rotTrans (c);
 atom.setT (c);
 }
-}var centering = null;
-for (var i = 0; i < this.operationCount; i++) {
-this.finalOperations[i] =  new JS.SymmetryOperation (this.operations[i], atoms, atomIndex, count, doNormalize);
-centering = this.finalOperations[i].setCentering (centering, true);
+}for (var i = 0; i < this.operationCount; i++) {
+this.finalOperations[i] =  new J.symmetry.SymmetryOperation (this.operations[i], atoms, atomIndex, count, doNormalize);
 }
 }, "~A,~N,~N,~B");
 Clazz_defineMethod (c$, "getOperationCount", 
@@ -2155,20 +2009,20 @@ var sg;
 if (cellInfo != null) {
 if (spaceGroup.indexOf ("[") >= 0) spaceGroup = spaceGroup.substring (0, spaceGroup.indexOf ("[")).trim ();
 if (spaceGroup.equals ("unspecified!")) return "no space group identified in file";
-sg = JS.SpaceGroup.determineSpaceGroupNA (spaceGroup, cellInfo.getUnitCellParams ());
+sg = J.symmetry.SpaceGroup.determineSpaceGroupNA (spaceGroup, cellInfo.getNotionalUnitCell ());
 } else if (spaceGroup.equalsIgnoreCase ("ALL")) {
-return JS.SpaceGroup.dumpAll ();
+return J.symmetry.SpaceGroup.dumpAll ();
 } else if (spaceGroup.equalsIgnoreCase ("ALLSEITZ")) {
-return JS.SpaceGroup.dumpAllSeitz ();
+return J.symmetry.SpaceGroup.dumpAllSeitz ();
 } else {
-sg = JS.SpaceGroup.determineSpaceGroupN (spaceGroup);
+sg = J.symmetry.SpaceGroup.determineSpaceGroupN (spaceGroup);
 if (sg == null) {
-sg = JS.SpaceGroup.createSpaceGroupN (spaceGroup);
+sg = J.symmetry.SpaceGroup.createSpaceGroupN (spaceGroup);
 } else {
 var sb =  new JU.SB ();
 while (sg != null) {
 sb.append (sg.dumpInfo (null));
-sg = JS.SpaceGroup.determineSpaceGroupNS (spaceGroup, sg);
+sg = J.symmetry.SpaceGroup.determineSpaceGroupNS (spaceGroup, sg);
 }
 return sb.toString ();
 }}return sg == null ? "?" : sg.dumpInfo (cellInfo);
@@ -2176,7 +2030,7 @@ return sb.toString ();
 Clazz_defineMethod (c$, "dumpInfo", 
 function (cellInfo) {
 var info = this.dumpCanonicalSeitzList ();
-if (Clazz_instanceOf (info, JS.SpaceGroup)) return (info).dumpInfo (null);
+if (Clazz_instanceOf (info, J.symmetry.SpaceGroup)) return (info).dumpInfo (null);
 var sb =  new JU.SB ().append ("\nHermann-Mauguin symbol: ");
 sb.append (this.hmSymbol).append (this.hmSymbolExt.length > 0 ? ":" + this.hmSymbolExt : "").append ("\ninternational table number: ").append (this.intlTableNumber).append (this.intlTableNumberExt.length > 0 ? ":" + this.intlTableNumberExt : "").append ("\n\n").appendI (this.operationCount).append (" operators").append (!this.hallInfo.hallSymbol.equals ("--") ? " from Hall symbol " + this.hallInfo.hallSymbol : "").append (": ");
 for (var i = 0; i < this.operationCount; i++) {
@@ -2192,34 +2046,36 @@ return this.name;
 });
 Clazz_defineMethod (c$, "getLatticeDesignation", 
 function () {
-return JS.HallTranslation.getLatticeDesignation (this.latticeParameter);
+return this.latticeCode + ": " + J.symmetry.HallTranslation.getLatticeDesignation (this.latticeParameter);
 });
 Clazz_defineMethod (c$, "setLatticeParam", 
 function (latticeParameter) {
 this.latticeParameter = latticeParameter;
-if (latticeParameter > 10) this.latticeParameter = -JS.HallTranslation.getLatticeIndex (JS.HallTranslation.getLatticeCode (latticeParameter));
-}, "~N");
+this.latticeCode = J.symmetry.HallTranslation.getLatticeCode (latticeParameter);
+if (latticeParameter > 10) {
+this.latticeParameter = -J.symmetry.HallTranslation.getLatticeIndex (this.latticeCode);
+}}, "~N");
 Clazz_defineMethod (c$, "dumpCanonicalSeitzList", 
  function () {
-if (this.hallInfo == null) this.hallInfo =  new JS.HallInfo (this.hallSymbol);
+if (this.hallInfo == null) this.hallInfo =  new J.symmetry.HallInfo (this.hallSymbol);
 this.generateAllOperators (null);
 var s = this.getCanonicalSeitzList ();
-if (this.index >= JS.SpaceGroup.SG.length) {
-var sgDerived = JS.SpaceGroup.findSpaceGroup (s);
+if (this.index >= J.symmetry.SpaceGroup.spaceGroupDefinitions.length) {
+var sgDerived = J.symmetry.SpaceGroup.findSpaceGroup (s);
 if (sgDerived != null) return sgDerived;
-}return (this.index >= 0 && this.index < JS.SpaceGroup.SG.length ? this.hallSymbol + " = " : "") + s;
+}return (this.index >= 0 && this.index < J.symmetry.SpaceGroup.spaceGroupDefinitions.length ? this.hallSymbol + " = " : "") + s;
 });
 Clazz_defineMethod (c$, "getDerivedSpaceGroup", 
 function () {
-if (this.index >= 0 && this.index < JS.SpaceGroup.SG.length || this.modDim > 0 || this.operations == null || this.operations.length == 0 || this.operations[0].timeReversal != 0) return this;
+if (this.index >= 0 && this.index < J.symmetry.SpaceGroup.spaceGroupDefinitions.length || this.modDim > 0) return this;
 if (this.finalOperations != null) this.setFinalOperations (null, 0, 0, false);
 var s = this.getCanonicalSeitzList ();
-return (s == null ? null : JS.SpaceGroup.findSpaceGroup (s));
+return J.symmetry.SpaceGroup.findSpaceGroup (s);
 });
 Clazz_defineMethod (c$, "getCanonicalSeitzList", 
  function () {
 var list =  new Array (this.operationCount);
-for (var i = 0; i < this.operationCount; i++) list[i] = JS.SymmetryOperation.dumpSeitz (this.operations[i], true);
+for (var i = 0; i < this.operationCount; i++) list[i] = J.symmetry.SymmetryOperation.dumpCanonicalSeitz (this.operations[i]);
 
 java.util.Arrays.sort (list, 0, this.operationCount);
 var sb =  new JU.SB ().append ("\n[");
@@ -2230,48 +2086,49 @@ return sb.toString ();
 });
 c$.findSpaceGroup = Clazz_defineMethod (c$, "findSpaceGroup", 
  function (s) {
-JS.SpaceGroup.getSpaceGroups ();
-if (JS.SpaceGroup.canonicalSeitzList == null) JS.SpaceGroup.canonicalSeitzList =  new Array (JS.SpaceGroup.SG.length);
-for (var i = 0; i < JS.SpaceGroup.SG.length; i++) {
-if (JS.SpaceGroup.canonicalSeitzList[i] == null) JS.SpaceGroup.canonicalSeitzList[i] = JS.SpaceGroup.SG[i].dumpCanonicalSeitzList ();
-if (JS.SpaceGroup.canonicalSeitzList[i].indexOf (s) >= 0) return JS.SpaceGroup.SG[i];
+J.symmetry.SpaceGroup.getSpaceGroups ();
+if (J.symmetry.SpaceGroup.canonicalSeitzList == null) J.symmetry.SpaceGroup.canonicalSeitzList =  new Array (J.symmetry.SpaceGroup.spaceGroupDefinitions.length);
+for (var i = 0; i < J.symmetry.SpaceGroup.spaceGroupDefinitions.length; i++) {
+if (J.symmetry.SpaceGroup.canonicalSeitzList[i] == null) J.symmetry.SpaceGroup.canonicalSeitzList[i] = J.symmetry.SpaceGroup.spaceGroupDefinitions[i].dumpCanonicalSeitzList ();
+if (J.symmetry.SpaceGroup.canonicalSeitzList[i].indexOf (s) >= 0) return J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
 }
 return null;
 }, "~S");
 c$.dumpAll = Clazz_defineMethod (c$, "dumpAll", 
  function () {
 var sb =  new JU.SB ();
-JS.SpaceGroup.getSpaceGroups ();
-for (var i = 0; i < JS.SpaceGroup.SG.length; i++) sb.append ("\n----------------------\n" + JS.SpaceGroup.SG[i].dumpInfo (null));
+J.symmetry.SpaceGroup.getSpaceGroups ();
+for (var i = 0; i < J.symmetry.SpaceGroup.spaceGroupDefinitions.length; i++) sb.append ("\n----------------------\n" + J.symmetry.SpaceGroup.spaceGroupDefinitions[i].dumpInfo (null));
 
 return sb.toString ();
 });
 c$.dumpAllSeitz = Clazz_defineMethod (c$, "dumpAllSeitz", 
  function () {
-JS.SpaceGroup.getSpaceGroups ();
+J.symmetry.SpaceGroup.getSpaceGroups ();
 var sb =  new JU.SB ();
-for (var i = 0; i < JS.SpaceGroup.SG.length; i++) sb.append ("\n").appendO (JS.SpaceGroup.SG[i].dumpCanonicalSeitzList ());
+for (var i = 0; i < J.symmetry.SpaceGroup.spaceGroupDefinitions.length; i++) sb.append ("\n").appendO (J.symmetry.SpaceGroup.spaceGroupDefinitions[i].dumpCanonicalSeitzList ());
 
 return sb.toString ();
 });
 Clazz_defineMethod (c$, "setLattice", 
  function (latticeCode, isCentrosymmetric) {
-this.latticeParameter = JS.HallTranslation.getLatticeIndex (latticeCode);
+this.latticeCode = latticeCode;
+this.latticeParameter = J.symmetry.HallTranslation.getLatticeIndex (latticeCode);
 if (!isCentrosymmetric) this.latticeParameter = -this.latticeParameter;
 }, "~S,~B");
 c$.createSpaceGroupN = Clazz_defineMethod (c$, "createSpaceGroupN", 
  function (name) {
-JS.SpaceGroup.getSpaceGroups ();
+J.symmetry.SpaceGroup.getSpaceGroups ();
 name = name.trim ();
-var sg = JS.SpaceGroup.determineSpaceGroupN (name);
+var sg = J.symmetry.SpaceGroup.determineSpaceGroupN (name);
 var hallInfo;
 if (sg == null) {
-hallInfo =  new JS.HallInfo (name);
+hallInfo =  new J.symmetry.HallInfo (name);
 if (hallInfo.nRotations > 0) {
-sg =  new JS.SpaceGroup ("0;--;--;" + name, true);
+sg =  new J.symmetry.SpaceGroup ("0;--;--;" + name, true);
 sg.hallInfo = hallInfo;
 } else if (name.indexOf (",") >= 0) {
-sg =  new JS.SpaceGroup ("0;--;--;--", true);
+sg =  new J.symmetry.SpaceGroup ("0;--;--;--", true);
 sg.doNormalize = false;
 sg.generateOperatorsFromXyzInfo (name);
 }}if (sg != null) sg.generateAllOperators (null);
@@ -2280,52 +2137,40 @@ return sg;
 Clazz_defineMethod (c$, "addOperation", 
  function (xyz0, opId, allowScaling) {
 if (xyz0 == null || xyz0.length < 3) {
-this.init (false);
+this.xyzList =  new java.util.Hashtable ();
 return -1;
 }var isSpecial = (xyz0.charAt (0) == '=');
 if (isSpecial) xyz0 = xyz0.substring (1);
-var id = this.checkXYZlist (xyz0);
-if (id >= 0) return id;
+if (this.xyzList.containsKey (xyz0)) return this.xyzList.get (xyz0).intValue ();
 if (xyz0.startsWith ("x1,x2,x3,x4") && this.modDim == 0) {
 this.xyzList.clear ();
 this.operationCount = 0;
 this.modDim = JU.PT.parseInt (xyz0.substring (xyz0.lastIndexOf ("x") + 1)) - 3;
-} else if (xyz0.equals ("x,y,z,m")) {
-this.xyzList.clear ();
-this.operationCount = 0;
-}var op =  new JS.SymmetryOperation (null, null, 0, opId, this.doNormalize);
+}var op =  new J.symmetry.SymmetryOperation (null, null, 0, opId, this.doNormalize);
 if (!op.setMatrixFromXYZ (xyz0, this.modDim, allowScaling)) {
-JU.Logger.error ("couldn't interpret symmetry operation: " + xyz0);
+JW.Logger.error ("couldn't interpret symmetry operation: " + xyz0);
 return -1;
 }return this.addOp (op, xyz0, isSpecial);
 }, "~S,~N,~B");
-Clazz_defineMethod (c$, "checkXYZlist", 
- function (xyz) {
-return (this.xyzList.containsKey (xyz) && !(this.latticeOp > 0 && xyz.indexOf ("/") < 0) ? this.xyzList.get (xyz).intValue () : -1);
-}, "~S");
 Clazz_defineMethod (c$, "addOp", 
  function (op, xyz0, isSpecial) {
 var xyz = op.xyz;
 if (!isSpecial) {
-var id = this.checkXYZlist (xyz);
-if (id >= 0) return id;
-if (this.latticeOp < 0) {
-var xxx0 = (this.modDim > 0 ? JS.SymmetryOperation.replaceXn (xyz, this.modDim + 3) : xyz);
-var xxx = JU.PT.replaceAllCharacters (xxx0, "+123/", "");
-if (this.xyzList.containsKey (xxx)) this.latticeOp = this.operationCount;
- else this.xyzList.put (xxx, Integer.$valueOf (this.operationCount));
-}this.xyzList.put (xyz, Integer.$valueOf (this.operationCount));
-}if (!xyz.equals (xyz0)) this.xyzList.put (xyz0, Integer.$valueOf (this.operationCount));
+if (this.xyzList.containsKey (xyz)) return this.xyzList.get (xyz).intValue ();
+if (this.latticeOp < 0 && this.xyzList.containsKey (JU.PT.rep (xyz, "+1/2", ""))) this.latticeOp = this.operationCount;
+this.xyzList.put (xyz, Integer.$valueOf (this.operationCount));
+}if (xyz != null && !xyz.equals (xyz0)) this.xyzList.put (xyz0, Integer.$valueOf (this.operationCount));
 if (this.operations == null) this.operations =  new Array (4);
 if (this.operationCount == this.operations.length) this.operations = JU.AU.arrayCopyObject (this.operations, this.operationCount * 2);
 this.operations[this.operationCount++] = op;
 op.index = this.operationCount;
-if (JU.Logger.debugging) JU.Logger.debug ("\naddOperation " + this.operationCount + op.dumpInfo ());
+if (JW.Logger.debugging) JW.Logger.debug ("\naddOperation " + this.operationCount + op.dumpInfo ());
 return this.operationCount - 1;
-}, "JS.SymmetryOperation,~S,~B");
+}, "J.symmetry.SymmetryOperation,~S,~B");
 Clazz_defineMethod (c$, "generateOperatorsFromXyzInfo", 
  function (xyzInfo) {
-this.init (true);
+this.addOperation (null, 0, false);
+this.addSymmetry ("x,y,z", 0, false);
 var terms = JU.PT.split (xyzInfo.toLowerCase (), ";");
 for (var i = 0; i < terms.length; i++) this.addSymmetry (terms[i], 0, false);
 
@@ -2336,9 +2181,10 @@ if (h == null) {
 h = this.hallInfo;
 if (this.operationCount > 0) return;
 this.operations =  new Array (4);
-if (this.hallInfo == null || this.hallInfo.nRotations == 0) h = this.hallInfo =  new JS.HallInfo (this.hallSymbol);
+if (this.hallInfo == null || this.hallInfo.nRotations == 0) h = this.hallInfo =  new J.symmetry.HallInfo (this.hallSymbol);
 this.setLattice (this.hallInfo.latticeCode, this.hallInfo.isCentrosymmetric);
-this.init (true);
+this.addOperation (null, 0, false);
+this.addSymmetry ("x,y,z", 0, false);
 }var mat1 =  new JU.M4 ();
 var operation =  new JU.M4 ();
 var newOps =  new Array (7);
@@ -2354,13 +2200,13 @@ newOps[j].mul2 (mat1, newOps[0]);
 newOps[0].setM4 (newOps[j]);
 for (var k = 0; k < nOps; k++) {
 operation.mul2 (newOps[j], this.operations[k]);
-JS.SymmetryOperation.normalizeTranslation (operation);
-var xyz = JS.SymmetryOperation.getXYZFromMatrix (operation, true, true, true);
+J.symmetry.SymmetryOperation.normalizeTranslation (operation);
+var xyz = J.symmetry.SymmetryOperation.getXYZFromMatrix (operation, true, true, true);
 this.addSymmetrySM (xyz, operation);
 }
 }
 }
-}, "JS.HallInfo");
+}, "J.symmetry.HallInfo");
 Clazz_defineMethod (c$, "addSymmetrySM", 
 function (xyz, operation) {
 var iop = this.addOperation (xyz, 0, false);
@@ -2371,31 +2217,28 @@ symmetryOperation.setM4 (operation);
 }, "~S,JU.M4");
 c$.determineSpaceGroupN = Clazz_defineMethod (c$, "determineSpaceGroupN", 
  function (name) {
-return JS.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, -1);
+return J.symmetry.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, -1);
 }, "~S");
 c$.determineSpaceGroupNS = Clazz_defineMethod (c$, "determineSpaceGroupNS", 
  function (name, sg) {
-return JS.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, sg.index);
-}, "~S,JS.SpaceGroup");
+return J.symmetry.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, sg.index);
+}, "~S,J.symmetry.SpaceGroup");
 c$.determineSpaceGroupNA = Clazz_defineMethod (c$, "determineSpaceGroupNA", 
- function (name, unitCellParams) {
-return (unitCellParams == null ? JS.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, -1) : JS.SpaceGroup.determineSpaceGroup (name, unitCellParams[0], unitCellParams[1], unitCellParams[2], unitCellParams[3], unitCellParams[4], unitCellParams[5], -1));
+ function (name, notionalUnitcell) {
+if (notionalUnitcell == null) return J.symmetry.SpaceGroup.determineSpaceGroup (name, 0, 0, 0, 0, 0, 0, -1);
+return J.symmetry.SpaceGroup.determineSpaceGroup (name, notionalUnitcell[0], notionalUnitcell[1], notionalUnitcell[2], notionalUnitcell[3], notionalUnitcell[4], notionalUnitcell[5], -1);
 }, "~S,~A");
 c$.determineSpaceGroup = Clazz_defineMethod (c$, "determineSpaceGroup", 
  function (name, a, b, c, alpha, beta, gamma, lastIndex) {
-var i = JS.SpaceGroup.determineSpaceGroupIndex (name, a, b, c, alpha, beta, gamma, lastIndex);
-return (i >= 0 ? JS.SpaceGroup.SG[i] : null);
+var i = J.symmetry.SpaceGroup.determineSpaceGroupIndex (name, a, b, c, alpha, beta, gamma, lastIndex);
+return (i >= 0 ? J.symmetry.SpaceGroup.spaceGroupDefinitions[i] : null);
 }, "~S,~N,~N,~N,~N,~N,~N,~N");
 c$.determineSpaceGroupIndex = Clazz_defineMethod (c$, "determineSpaceGroupIndex", 
  function (name, a, b, c, alpha, beta, gamma, lastIndex) {
-JS.SpaceGroup.getSpaceGroups ();
-if (lastIndex < 0) lastIndex = JS.SpaceGroup.SG.length;
+J.symmetry.SpaceGroup.getSpaceGroups ();
+if (lastIndex < 0) lastIndex = J.symmetry.SpaceGroup.spaceGroupDefinitions.length;
 name = name.trim ().toLowerCase ();
-var checkBilbao = false;
-if (name.startsWith ("bilbao:")) {
-checkBilbao = true;
-name = name.substring (7);
-}var nameType = (name.startsWith ("hall:") ? 5 : name.startsWith ("hm:") ? 3 : 0);
+var nameType = (name.startsWith ("hall:") ? 5 : name.startsWith ("hm:") ? 3 : 0);
 if (nameType > 0) name = name.substring (nameType);
  else if (name.contains ("[")) {
 nameType = 5;
@@ -2413,27 +2256,41 @@ if ((i = name.indexOf (":")) > 0) {
 ext = name.substring (i + 1);
 name = name.substring (0, i).trim ();
 haveExtension = true;
-}if (nameType != 5 && !haveExtension && JU.PT.isOneOf (name, JS.SpaceGroup.ambiguousNames)) {
+}if (nameType != 5 && !haveExtension && JU.PT.isOneOf (name, J.symmetry.SpaceGroup.ambiguousNames)) {
 ext = "?";
 haveExtension = true;
 }var abbr = JU.PT.replaceAllCharacters (name, " ()", "");
 var s;
-if (nameType != 3 && !haveExtension) for (i = lastIndex; --i >= 0; ) if (JS.SpaceGroup.SG[i].hallSymbol.equals (name)) return i;
-
+if (nameType != 3 && !haveExtension) for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hallSymbol.equals (name)) return i;
+}
 if (nameType != 5) {
-if (nameType != 3) for (i = lastIndex; --i >= 0; ) if (JS.SpaceGroup.SG[i].intlTableNumberFull.equals (nameExt)) return i;
-
-for (i = lastIndex; --i >= 0; ) if (JS.SpaceGroup.SG[i].hmSymbolFull.equals (nameExt)) return i;
-
-for (i = lastIndex; --i >= 0; ) if ((s = JS.SpaceGroup.SG[i]).hmSymbolAlternative != null && s.hmSymbolAlternative.equals (nameExt)) return i;
-
-if (haveExtension) {
-for (i = lastIndex; --i >= 0; ) if ((s = JS.SpaceGroup.SG[i]).hmSymbolAbbr.equals (abbr) && s.intlTableNumberExt.equals (ext)) return i;
-
-for (i = lastIndex; --i >= 0; ) if ((s = JS.SpaceGroup.SG[i]).hmSymbolAbbrShort.equals (abbr) && s.intlTableNumberExt.equals (ext)) return i;
-
-}var uniqueAxis = JS.SpaceGroup.determineUniqueAxis (a, b, c, alpha, beta, gamma);
-if (!haveExtension || ext.charAt (0) == '?') for (i = 0; i < lastIndex; i++) if (((s = JS.SpaceGroup.SG[i]).hmSymbolAbbr.equals (abbr) || s.hmSymbolAbbrShort.equals (abbr)) && (!checkBilbao || s.isBilbao)) switch (s.ambiguityType) {
+if (nameType != 3) for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.intlTableNumberFull.equals (nameExt)) return i;
+}
+for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hmSymbolFull.equals (nameExt)) return i;
+}
+for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hmSymbolAlternative != null && s.hmSymbolAlternative.equals (nameExt)) return i;
+}
+if (haveExtension) for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hmSymbolAbbr.equals (abbr) && s.intlTableNumberExt.equals (ext)) return i;
+}
+if (haveExtension) for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hmSymbolAbbrShort.equals (abbr) && s.intlTableNumberExt.equals (ext)) return i;
+}
+var uniqueAxis = J.symmetry.SpaceGroup.determineUniqueAxis (a, b, c, alpha, beta, gamma);
+if (!haveExtension || ext.charAt (0) == '?') for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.hmSymbolAbbr.equals (abbr) || s.hmSymbolAbbrShort.equals (abbr)) {
+switch (s.ambiguityType) {
 case '\0':
 return i;
 case 'a':
@@ -2450,9 +2307,11 @@ if (s.axisChoice == 'h') return i;
 } else if ((s.axisChoice + "").equals (ext)) return i;
 break;
 }
-
-}if (ext.length == 0) for (i = 0; i < lastIndex; i++) if ((s = JS.SpaceGroup.SG[i]).intlTableNumber.equals (nameExt) && (!checkBilbao || s.isBilbao)) return i;
-
+}}
+}if (ext.length == 0) for (i = lastIndex; --i >= 0; ) {
+s = J.symmetry.SpaceGroup.spaceGroupDefinitions[i];
+if (s.intlTableNumber.equals (nameExt)) return i;
+}
 return -1;
 }, "~S,~N,~N,~N,~N,~N,~N,~N");
 c$.determineUniqueAxis = Clazz_defineMethod (c$, "determineUniqueAxis", 
@@ -2468,14 +2327,16 @@ return '\0';
 Clazz_defineMethod (c$, "buildSpaceGroup", 
  function (cifLine) {
 var terms = JU.PT.split (cifLine.toLowerCase (), ";");
+var parts;
 this.intlTableNumberFull = terms[0].trim ();
-this.isBilbao = (terms.length < 5 && !this.intlTableNumberFull.equals ("0"));
-var parts = JU.PT.split (this.intlTableNumberFull, ":");
+parts = JU.PT.split (this.intlTableNumberFull, ":");
 this.intlTableNumber = parts[0];
 this.intlTableNumberExt = (parts.length == 1 ? "" : parts[1]);
 this.ambiguityType = '\0';
 if (this.intlTableNumberExt.length > 0) {
-if (this.intlTableNumberExt.equals ("h") || this.intlTableNumberExt.equals ("r")) {
+var term = this.intlTableNumberExt;
+if (term.startsWith ("-")) term = term.substring (1);
+if (term.equals ("h") || term.equals ("r")) {
 this.ambiguityType = 't';
 this.axisChoice = this.intlTableNumberExt.charAt (0);
 } else if (this.intlTableNumberExt.startsWith ("1") || this.intlTableNumberExt.startsWith ("2")) {
@@ -2483,8 +2344,6 @@ this.ambiguityType = 'o';
 } else if (this.intlTableNumberExt.length <= 2) {
 this.ambiguityType = 'a';
 this.uniqueAxis = this.intlTableNumberExt.charAt (0);
-} else if (this.intlTableNumberExt.contains ("-")) {
-this.ambiguityType = '-';
 }}this.hmSymbolFull = Character.toUpperCase (terms[2].charAt (0)) + terms[2].substring (1);
 parts = JU.PT.split (this.hmSymbolFull, ":");
 this.hmSymbol = parts[0];
@@ -2498,52 +2357,37 @@ this.hmSymbolAbbrShort = JU.PT.rep (this.hmSymbolAbbrShort, " ", "");
 this.hallSymbol = terms[3];
 if (this.hallSymbol.length > 1) this.hallSymbol = this.hallSymbol.substring (0, 2).toUpperCase () + this.hallSymbol.substring (2);
 var info = this.intlTableNumber + this.hallSymbol;
-if (this.intlTableNumber.charAt (0) != '0' && JS.SpaceGroup.lastInfo.equals (info)) JS.SpaceGroup.ambiguousNames += this.hmSymbol + ";";
-JS.SpaceGroup.lastInfo = info;
+if (this.intlTableNumber.charAt (0) != '0' && J.symmetry.SpaceGroup.lastInfo.equals (info)) J.symmetry.SpaceGroup.ambiguousNames += this.hmSymbol + ";";
+J.symmetry.SpaceGroup.lastInfo = info;
 this.name = this.hallSymbol + " [" + this.hmSymbolFull + "] #" + this.intlTableNumber;
 }, "~S");
 c$.getSpaceGroups = Clazz_defineMethod (c$, "getSpaceGroups", 
  function () {
-return (JS.SpaceGroup.SG == null ? (JS.SpaceGroup.SG = JS.SpaceGroup.createSpaceGroups ()) : JS.SpaceGroup.SG);
-});
-c$.createSpaceGroups = Clazz_defineMethod (c$, "createSpaceGroups", 
- function () {
-var n = JS.SpaceGroup.STR_SG.length;
-var defs =  new Array (n);
-for (var i = 0; i < n; i++) defs[i] =  new JS.SpaceGroup (JS.SpaceGroup.STR_SG[i], true);
-
-JS.SpaceGroup.STR_SG = null;
-return defs;
+return (J.symmetry.SpaceGroup.spaceGroupDefinitions == null ? J.symmetry.SpaceGroup.spaceGroupDefinitions = [ new J.symmetry.SpaceGroup ("1;c1^1;p 1;p 1", true),  new J.symmetry.SpaceGroup ("2;ci^1;p -1;-p 1", true),  new J.symmetry.SpaceGroup ("3:b;c2^1;p 1 2 1;p 2y", true),  new J.symmetry.SpaceGroup ("3:b;c2^1;p 2;p 2y", true),  new J.symmetry.SpaceGroup ("3:c;c2^1;p 1 1 2;p 2", true),  new J.symmetry.SpaceGroup ("3:a;c2^1;p 2 1 1;p 2x", true),  new J.symmetry.SpaceGroup ("4:b;c2^2;p 1 21 1;p 2yb", true),  new J.symmetry.SpaceGroup ("4:b;c2^2;p 21;p 2yb", true),  new J.symmetry.SpaceGroup ("4:b*;c2^2;p 1 21 1*;p 2y1", true),  new J.symmetry.SpaceGroup ("4:c;c2^2;p 1 1 21;p 2c", true),  new J.symmetry.SpaceGroup ("4:c*;c2^2;p 1 1 21*;p 21", true),  new J.symmetry.SpaceGroup ("4:a;c2^2;p 21 1 1;p 2xa", true),  new J.symmetry.SpaceGroup ("4:a*;c2^2;p 21 1 1*;p 2x1", true),  new J.symmetry.SpaceGroup ("5:b1;c2^3;c 1 2 1;c 2y", true),  new J.symmetry.SpaceGroup ("5:b1;c2^3;c 2;c 2y", true),  new J.symmetry.SpaceGroup ("5:b2;c2^3;a 1 2 1;a 2y", true),  new J.symmetry.SpaceGroup ("5:b3;c2^3;i 1 2 1;i 2y", true),  new J.symmetry.SpaceGroup ("5:c1;c2^3;a 1 1 2;a 2", true),  new J.symmetry.SpaceGroup ("5:c2;c2^3;b 1 1 2;b 2", true),  new J.symmetry.SpaceGroup ("5:c3;c2^3;i 1 1 2;i 2", true),  new J.symmetry.SpaceGroup ("5:a1;c2^3;b 2 1 1;b 2x", true),  new J.symmetry.SpaceGroup ("5:a2;c2^3;c 2 1 1;c 2x", true),  new J.symmetry.SpaceGroup ("5:a3;c2^3;i 2 1 1;i 2x", true),  new J.symmetry.SpaceGroup ("6:b;cs^1;p 1 m 1;p -2y", true),  new J.symmetry.SpaceGroup ("6:b;cs^1;p m;p -2y", true),  new J.symmetry.SpaceGroup ("6:c;cs^1;p 1 1 m;p -2", true),  new J.symmetry.SpaceGroup ("6:a;cs^1;p m 1 1;p -2x", true),  new J.symmetry.SpaceGroup ("7:b1;cs^2;p 1 c 1;p -2yc", true),  new J.symmetry.SpaceGroup ("7:b1;cs^2;p c;p -2yc", true),  new J.symmetry.SpaceGroup ("7:b2;cs^2;p 1 n 1;p -2yac", true),  new J.symmetry.SpaceGroup ("7:b2;cs^2;p n;p -2yac", true),  new J.symmetry.SpaceGroup ("7:b3;cs^2;p 1 a 1;p -2ya", true),  new J.symmetry.SpaceGroup ("7:b3;cs^2;p a;p -2ya", true),  new J.symmetry.SpaceGroup ("7:c1;cs^2;p 1 1 a;p -2a", true),  new J.symmetry.SpaceGroup ("7:c2;cs^2;p 1 1 n;p -2ab", true),  new J.symmetry.SpaceGroup ("7:c3;cs^2;p 1 1 b;p -2b", true),  new J.symmetry.SpaceGroup ("7:a1;cs^2;p b 1 1;p -2xb", true),  new J.symmetry.SpaceGroup ("7:a2;cs^2;p n 1 1;p -2xbc", true),  new J.symmetry.SpaceGroup ("7:a3;cs^2;p c 1 1;p -2xc", true),  new J.symmetry.SpaceGroup ("8:b1;cs^3;c 1 m 1;c -2y", true),  new J.symmetry.SpaceGroup ("8:b1;cs^3;c m;c -2y", true),  new J.symmetry.SpaceGroup ("8:b2;cs^3;a 1 m 1;a -2y", true),  new J.symmetry.SpaceGroup ("8:b3;cs^3;i 1 m 1;i -2y", true),  new J.symmetry.SpaceGroup ("8:b3;cs^3;i m;i -2y", true),  new J.symmetry.SpaceGroup ("8:c1;cs^3;a 1 1 m;a -2", true),  new J.symmetry.SpaceGroup ("8:c2;cs^3;b 1 1 m;b -2", true),  new J.symmetry.SpaceGroup ("8:c3;cs^3;i 1 1 m;i -2", true),  new J.symmetry.SpaceGroup ("8:a1;cs^3;b m 1 1;b -2x", true),  new J.symmetry.SpaceGroup ("8:a2;cs^3;c m 1 1;c -2x", true),  new J.symmetry.SpaceGroup ("8:a3;cs^3;i m 1 1;i -2x", true),  new J.symmetry.SpaceGroup ("9:b1;cs^4;c 1 c 1;c -2yc", true),  new J.symmetry.SpaceGroup ("9:b1;cs^4;c c;c -2yc", true),  new J.symmetry.SpaceGroup ("9:b2;cs^4;a 1 n 1;a -2yab", true),  new J.symmetry.SpaceGroup ("9:b3;cs^4;i 1 a 1;i -2ya", true),  new J.symmetry.SpaceGroup ("9:-b1;cs^4;a 1 a 1;a -2ya", true),  new J.symmetry.SpaceGroup ("9:-b2;cs^4;c 1 n 1;c -2yac", true),  new J.symmetry.SpaceGroup ("9:-b3;cs^4;i 1 c 1;i -2yc", true),  new J.symmetry.SpaceGroup ("9:c1;cs^4;a 1 1 a;a -2a", true),  new J.symmetry.SpaceGroup ("9:c2;cs^4;b 1 1 n;b -2ab", true),  new J.symmetry.SpaceGroup ("9:c3;cs^4;i 1 1 b;i -2b", true),  new J.symmetry.SpaceGroup ("9:-c1;cs^4;b 1 1 b;b -2b", true),  new J.symmetry.SpaceGroup ("9:-c2;cs^4;a 1 1 n;a -2ab", true),  new J.symmetry.SpaceGroup ("9:-c3;cs^4;i 1 1 a;i -2a", true),  new J.symmetry.SpaceGroup ("9:a1;cs^4;b b 1 1;b -2xb", true),  new J.symmetry.SpaceGroup ("9:a2;cs^4;c n 1 1;c -2xac", true),  new J.symmetry.SpaceGroup ("9:a3;cs^4;i c 1 1;i -2xc", true),  new J.symmetry.SpaceGroup ("9:-a1;cs^4;c c 1 1;c -2xc", true),  new J.symmetry.SpaceGroup ("9:-a2;cs^4;b n 1 1;b -2xab", true),  new J.symmetry.SpaceGroup ("9:-a3;cs^4;i b 1 1;i -2xb", true),  new J.symmetry.SpaceGroup ("10:b;c2h^1;p 1 2/m 1;-p 2y", true),  new J.symmetry.SpaceGroup ("10:b;c2h^1;p 2/m;-p 2y", true),  new J.symmetry.SpaceGroup ("10:c;c2h^1;p 1 1 2/m;-p 2", true),  new J.symmetry.SpaceGroup ("10:a;c2h^1;p 2/m 1 1;-p 2x", true),  new J.symmetry.SpaceGroup ("11:b;c2h^2;p 1 21/m 1;-p 2yb", true),  new J.symmetry.SpaceGroup ("11:b;c2h^2;p 21/m;-p 2yb", true),  new J.symmetry.SpaceGroup ("11:b*;c2h^2;p 1 21/m 1*;-p 2y1", true),  new J.symmetry.SpaceGroup ("11:c;c2h^2;p 1 1 21/m;-p 2c", true),  new J.symmetry.SpaceGroup ("11:c*;c2h^2;p 1 1 21/m*;-p 21", true),  new J.symmetry.SpaceGroup ("11:a;c2h^2;p 21/m 1 1;-p 2xa", true),  new J.symmetry.SpaceGroup ("11:a*;c2h^2;p 21/m 1 1*;-p 2x1", true),  new J.symmetry.SpaceGroup ("12:b1;c2h^3;c 1 2/m 1;-c 2y", true),  new J.symmetry.SpaceGroup ("12:b1;c2h^3;c 2/m;-c 2y", true),  new J.symmetry.SpaceGroup ("12:b2;c2h^3;a 1 2/m 1;-a 2y", true),  new J.symmetry.SpaceGroup ("12:b3;c2h^3;i 1 2/m 1;-i 2y", true),  new J.symmetry.SpaceGroup ("12:b3;c2h^3;i 2/m;-i 2y", true),  new J.symmetry.SpaceGroup ("12:c1;c2h^3;a 1 1 2/m;-a 2", true),  new J.symmetry.SpaceGroup ("12:c2;c2h^3;b 1 1 2/m;-b 2", true),  new J.symmetry.SpaceGroup ("12:c3;c2h^3;i 1 1 2/m;-i 2", true),  new J.symmetry.SpaceGroup ("12:a1;c2h^3;b 2/m 1 1;-b 2x", true),  new J.symmetry.SpaceGroup ("12:a2;c2h^3;c 2/m 1 1;-c 2x", true),  new J.symmetry.SpaceGroup ("12:a3;c2h^3;i 2/m 1 1;-i 2x", true),  new J.symmetry.SpaceGroup ("13:b1;c2h^4;p 1 2/c 1;-p 2yc", true),  new J.symmetry.SpaceGroup ("13:b1;c2h^4;p 2/c;-p 2yc", true),  new J.symmetry.SpaceGroup ("13:b2;c2h^4;p 1 2/n 1;-p 2yac", true),  new J.symmetry.SpaceGroup ("13:b2;c2h^4;p 2/n;-p 2yac", true),  new J.symmetry.SpaceGroup ("13:b3;c2h^4;p 1 2/a 1;-p 2ya", true),  new J.symmetry.SpaceGroup ("13:b3;c2h^4;p 2/a;-p 2ya", true),  new J.symmetry.SpaceGroup ("13:c1;c2h^4;p 1 1 2/a;-p 2a", true),  new J.symmetry.SpaceGroup ("13:c2;c2h^4;p 1 1 2/n;-p 2ab", true),  new J.symmetry.SpaceGroup ("13:c3;c2h^4;p 1 1 2/b;-p 2b", true),  new J.symmetry.SpaceGroup ("13:a1;c2h^4;p 2/b 1 1;-p 2xb", true),  new J.symmetry.SpaceGroup ("13:a2;c2h^4;p 2/n 1 1;-p 2xbc", true),  new J.symmetry.SpaceGroup ("13:a3;c2h^4;p 2/c 1 1;-p 2xc", true),  new J.symmetry.SpaceGroup ("14:b1;c2h^5;p 1 21/c 1;-p 2ybc", true),  new J.symmetry.SpaceGroup ("14:b1;c2h^5;p 21/c;-p 2ybc", true),  new J.symmetry.SpaceGroup ("14:b2;c2h^5;p 1 21/n 1;-p 2yn", true),  new J.symmetry.SpaceGroup ("14:b2;c2h^5;p 21/n;-p 2yn", true),  new J.symmetry.SpaceGroup ("14:b3;c2h^5;p 1 21/a 1;-p 2yab", true),  new J.symmetry.SpaceGroup ("14:b3;c2h^5;p 21/a;-p 2yab", true),  new J.symmetry.SpaceGroup ("14:c1;c2h^5;p 1 1 21/a;-p 2ac", true),  new J.symmetry.SpaceGroup ("14:c2;c2h^5;p 1 1 21/n;-p 2n", true),  new J.symmetry.SpaceGroup ("14:c3;c2h^5;p 1 1 21/b;-p 2bc", true),  new J.symmetry.SpaceGroup ("14:a1;c2h^5;p 21/b 1 1;-p 2xab", true),  new J.symmetry.SpaceGroup ("14:a2;c2h^5;p 21/n 1 1;-p 2xn", true),  new J.symmetry.SpaceGroup ("14:a3;c2h^5;p 21/c 1 1;-p 2xac", true),  new J.symmetry.SpaceGroup ("15:b1;c2h^6;c 1 2/c 1;-c 2yc", true),  new J.symmetry.SpaceGroup ("15:b1;c2h^6;c 2/c;-c 2yc", true),  new J.symmetry.SpaceGroup ("15:b2;c2h^6;a 1 2/n 1;-a 2yab", true),  new J.symmetry.SpaceGroup ("15:b3;c2h^6;i 1 2/a 1;-i 2ya", true),  new J.symmetry.SpaceGroup ("15:b3;c2h^6;i 2/a;-i 2ya", true),  new J.symmetry.SpaceGroup ("15:-b1;c2h^6;a 1 2/a 1;-a 2ya", true),  new J.symmetry.SpaceGroup ("15:-b2;c2h^6;c 1 2/n 1;-c 2yac", true),  new J.symmetry.SpaceGroup ("15:-b2;c2h^6;c 2/n;-c 2yac", true),  new J.symmetry.SpaceGroup ("15:-b3;c2h^6;i 1 2/c 1;-i 2yc", true),  new J.symmetry.SpaceGroup ("15:-b3;c2h^6;i 2/c;-i 2yc", true),  new J.symmetry.SpaceGroup ("15:c1;c2h^6;a 1 1 2/a;-a 2a", true),  new J.symmetry.SpaceGroup ("15:c2;c2h^6;b 1 1 2/n;-b 2ab", true),  new J.symmetry.SpaceGroup ("15:c3;c2h^6;i 1 1 2/b;-i 2b", true),  new J.symmetry.SpaceGroup ("15:-c1;c2h^6;b 1 1 2/b;-b 2b", true),  new J.symmetry.SpaceGroup ("15:-c2;c2h^6;a 1 1 2/n;-a 2ab", true),  new J.symmetry.SpaceGroup ("15:-c3;c2h^6;i 1 1 2/a;-i 2a", true),  new J.symmetry.SpaceGroup ("15:a1;c2h^6;b 2/b 1 1;-b 2xb", true),  new J.symmetry.SpaceGroup ("15:a2;c2h^6;c 2/n 1 1;-c 2xac", true),  new J.symmetry.SpaceGroup ("15:a3;c2h^6;i 2/c 1 1;-i 2xc", true),  new J.symmetry.SpaceGroup ("15:-a1;c2h^6;c 2/c 1 1;-c 2xc", true),  new J.symmetry.SpaceGroup ("15:-a2;c2h^6;b 2/n 1 1;-b 2xab", true),  new J.symmetry.SpaceGroup ("15:-a3;c2h^6;i 2/b 1 1;-i 2xb", true),  new J.symmetry.SpaceGroup ("16;d2^1;p 2 2 2;p 2 2", true),  new J.symmetry.SpaceGroup ("17;d2^2;p 2 2 21;p 2c 2", true),  new J.symmetry.SpaceGroup ("17*;d2^2;p 2 2 21*;p 21 2", true),  new J.symmetry.SpaceGroup ("17:cab;d2^2;p 21 2 2;p 2a 2a", true),  new J.symmetry.SpaceGroup ("17:bca;d2^2;p 2 21 2;p 2 2b", true),  new J.symmetry.SpaceGroup ("18;d2^3;p 21 21 2;p 2 2ab", true),  new J.symmetry.SpaceGroup ("18:cab;d2^3;p 2 21 21;p 2bc 2", true),  new J.symmetry.SpaceGroup ("18:bca;d2^3;p 21 2 21;p 2ac 2ac", true),  new J.symmetry.SpaceGroup ("19;d2^4;p 21 21 21;p 2ac 2ab", true),  new J.symmetry.SpaceGroup ("20;d2^5;c 2 2 21;c 2c 2", true),  new J.symmetry.SpaceGroup ("20*;d2^5;c 2 2 21*;c 21 2", true),  new J.symmetry.SpaceGroup ("20:cab;d2^5;a 21 2 2;a 2a 2a", true),  new J.symmetry.SpaceGroup ("20:cab*;d2^5;a 21 2 2*;a 2a 21", true),  new J.symmetry.SpaceGroup ("20:bca;d2^5;b 2 21 2;b 2 2b", true),  new J.symmetry.SpaceGroup ("21;d2^6;c 2 2 2;c 2 2", true),  new J.symmetry.SpaceGroup ("21:cab;d2^6;a 2 2 2;a 2 2", true),  new J.symmetry.SpaceGroup ("21:bca;d2^6;b 2 2 2;b 2 2", true),  new J.symmetry.SpaceGroup ("22;d2^7;f 2 2 2;f 2 2", true),  new J.symmetry.SpaceGroup ("23;d2^8;i 2 2 2;i 2 2", true),  new J.symmetry.SpaceGroup ("24;d2^9;i 21 21 21;i 2b 2c", true),  new J.symmetry.SpaceGroup ("25;c2v^1;p m m 2;p 2 -2", true),  new J.symmetry.SpaceGroup ("25:cab;c2v^1;p 2 m m;p -2 2", true),  new J.symmetry.SpaceGroup ("25:bca;c2v^1;p m 2 m;p -2 -2", true),  new J.symmetry.SpaceGroup ("26;c2v^2;p m c 21;p 2c -2", true),  new J.symmetry.SpaceGroup ("26*;c2v^2;p m c 21*;p 21 -2", true),  new J.symmetry.SpaceGroup ("26:ba-c;c2v^2;p c m 21;p 2c -2c", true),  new J.symmetry.SpaceGroup ("26:ba-c*;c2v^2;p c m 21*;p 21 -2c", true),  new J.symmetry.SpaceGroup ("26:cab;c2v^2;p 21 m a;p -2a 2a", true),  new J.symmetry.SpaceGroup ("26:-cba;c2v^2;p 21 a m;p -2 2a", true),  new J.symmetry.SpaceGroup ("26:bca;c2v^2;p b 21 m;p -2 -2b", true),  new J.symmetry.SpaceGroup ("26:a-cb;c2v^2;p m 21 b;p -2b -2", true),  new J.symmetry.SpaceGroup ("27;c2v^3;p c c 2;p 2 -2c", true),  new J.symmetry.SpaceGroup ("27:cab;c2v^3;p 2 a a;p -2a 2", true),  new J.symmetry.SpaceGroup ("27:bca;c2v^3;p b 2 b;p -2b -2b", true),  new J.symmetry.SpaceGroup ("28;c2v^4;p m a 2;p 2 -2a", true),  new J.symmetry.SpaceGroup ("28*;c2v^4;p m a 2*;p 2 -21", true),  new J.symmetry.SpaceGroup ("28:ba-c;c2v^4;p b m 2;p 2 -2b", true),  new J.symmetry.SpaceGroup ("28:cab;c2v^4;p 2 m b;p -2b 2", true),  new J.symmetry.SpaceGroup ("28:-cba;c2v^4;p 2 c m;p -2c 2", true),  new J.symmetry.SpaceGroup ("28:-cba*;c2v^4;p 2 c m*;p -21 2", true),  new J.symmetry.SpaceGroup ("28:bca;c2v^4;p c 2 m;p -2c -2c", true),  new J.symmetry.SpaceGroup ("28:a-cb;c2v^4;p m 2 a;p -2a -2a", true),  new J.symmetry.SpaceGroup ("29;c2v^5;p c a 21;p 2c -2ac", true),  new J.symmetry.SpaceGroup ("29:ba-c;c2v^5;p b c 21;p 2c -2b", true),  new J.symmetry.SpaceGroup ("29:cab;c2v^5;p 21 a b;p -2b 2a", true),  new J.symmetry.SpaceGroup ("29:-cba;c2v^5;p 21 c a;p -2ac 2a", true),  new J.symmetry.SpaceGroup ("29:bca;c2v^5;p c 21 b;p -2bc -2c", true),  new J.symmetry.SpaceGroup ("29:a-cb;c2v^5;p b 21 a;p -2a -2ab", true),  new J.symmetry.SpaceGroup ("30;c2v^6;p n c 2;p 2 -2bc", true),  new J.symmetry.SpaceGroup ("30:ba-c;c2v^6;p c n 2;p 2 -2ac", true),  new J.symmetry.SpaceGroup ("30:cab;c2v^6;p 2 n a;p -2ac 2", true),  new J.symmetry.SpaceGroup ("30:-cba;c2v^6;p 2 a n;p -2ab 2", true),  new J.symmetry.SpaceGroup ("30:bca;c2v^6;p b 2 n;p -2ab -2ab", true),  new J.symmetry.SpaceGroup ("30:a-cb;c2v^6;p n 2 b;p -2bc -2bc", true),  new J.symmetry.SpaceGroup ("31;c2v^7;p m n 21;p 2ac -2", true),  new J.symmetry.SpaceGroup ("31:ba-c;c2v^7;p n m 21;p 2bc -2bc", true),  new J.symmetry.SpaceGroup ("31:cab;c2v^7;p 21 m n;p -2ab 2ab", true),  new J.symmetry.SpaceGroup ("31:-cba;c2v^7;p 21 n m;p -2 2ac", true),  new J.symmetry.SpaceGroup ("31:bca;c2v^7;p n 21 m;p -2 -2bc", true),  new J.symmetry.SpaceGroup ("31:a-cb;c2v^7;p m 21 n;p -2ab -2", true),  new J.symmetry.SpaceGroup ("32;c2v^8;p b a 2;p 2 -2ab", true),  new J.symmetry.SpaceGroup ("32:cab;c2v^8;p 2 c b;p -2bc 2", true),  new J.symmetry.SpaceGroup ("32:bca;c2v^8;p c 2 a;p -2ac -2ac", true),  new J.symmetry.SpaceGroup ("33;c2v^9;p n a 21;p 2c -2n", true),  new J.symmetry.SpaceGroup ("33*;c2v^9;p n a 21*;p 21 -2n", true),  new J.symmetry.SpaceGroup ("33:ba-c;c2v^9;p b n 21;p 2c -2ab", true),  new J.symmetry.SpaceGroup ("33:ba-c*;c2v^9;p b n 21*;p 21 -2ab", true),  new J.symmetry.SpaceGroup ("33:cab;c2v^9;p 21 n b;p -2bc 2a", true),  new J.symmetry.SpaceGroup ("33:cab*;c2v^9;p 21 n b*;p -2bc 21", true),  new J.symmetry.SpaceGroup ("33:-cba;c2v^9;p 21 c n;p -2n 2a", true),  new J.symmetry.SpaceGroup ("33:-cba*;c2v^9;p 21 c n*;p -2n 21", true),  new J.symmetry.SpaceGroup ("33:bca;c2v^9;p c 21 n;p -2n -2ac", true),  new J.symmetry.SpaceGroup ("33:a-cb;c2v^9;p n 21 a;p -2ac -2n", true),  new J.symmetry.SpaceGroup ("34;c2v^10;p n n 2;p 2 -2n", true),  new J.symmetry.SpaceGroup ("34:cab;c2v^10;p 2 n n;p -2n 2", true),  new J.symmetry.SpaceGroup ("34:bca;c2v^10;p n 2 n;p -2n -2n", true),  new J.symmetry.SpaceGroup ("35;c2v^11;c m m 2;c 2 -2", true),  new J.symmetry.SpaceGroup ("35:cab;c2v^11;a 2 m m;a -2 2", true),  new J.symmetry.SpaceGroup ("35:bca;c2v^11;b m 2 m;b -2 -2", true),  new J.symmetry.SpaceGroup ("36;c2v^12;c m c 21;c 2c -2", true),  new J.symmetry.SpaceGroup ("36*;c2v^12;c m c 21*;c 21 -2", true),  new J.symmetry.SpaceGroup ("36:ba-c;c2v^12;c c m 21;c 2c -2c", true),  new J.symmetry.SpaceGroup ("36:ba-c*;c2v^12;c c m 21*;c 21 -2c", true),  new J.symmetry.SpaceGroup ("36:cab;c2v^12;a 21 m a;a -2a 2a", true),  new J.symmetry.SpaceGroup ("36:cab*;c2v^12;a 21 m a*;a -2a 21", true),  new J.symmetry.SpaceGroup ("36:-cba;c2v^12;a 21 a m;a -2 2a", true),  new J.symmetry.SpaceGroup ("36:-cba*;c2v^12;a 21 a m*;a -2 21", true),  new J.symmetry.SpaceGroup ("36:bca;c2v^12;b b 21 m;b -2 -2b", true),  new J.symmetry.SpaceGroup ("36:a-cb;c2v^12;b m 21 b;b -2b -2", true),  new J.symmetry.SpaceGroup ("37;c2v^13;c c c 2;c 2 -2c", true),  new J.symmetry.SpaceGroup ("37:cab;c2v^13;a 2 a a;a -2a 2", true),  new J.symmetry.SpaceGroup ("37:bca;c2v^13;b b 2 b;b -2b -2b", true),  new J.symmetry.SpaceGroup ("38;c2v^14;a m m 2;a 2 -2", true),  new J.symmetry.SpaceGroup ("38:ba-c;c2v^14;b m m 2;b 2 -2", true),  new J.symmetry.SpaceGroup ("38:cab;c2v^14;b 2 m m;b -2 2", true),  new J.symmetry.SpaceGroup ("38:-cba;c2v^14;c 2 m m;c -2 2", true),  new J.symmetry.SpaceGroup ("38:bca;c2v^14;c m 2 m;c -2 -2", true),  new J.symmetry.SpaceGroup ("38:a-cb;c2v^14;a m 2 m;a -2 -2", true),  new J.symmetry.SpaceGroup ("39;c2v^15;a b m 2;a 2 -2b", true),  new J.symmetry.SpaceGroup ("39:ba-c;c2v^15;b m a 2;b 2 -2a", true),  new J.symmetry.SpaceGroup ("39:cab;c2v^15;b 2 c m;b -2a 2", true),  new J.symmetry.SpaceGroup ("39:-cba;c2v^15;c 2 m b;c -2a 2", true),  new J.symmetry.SpaceGroup ("39:bca;c2v^15;c m 2 a;c -2a -2a", true),  new J.symmetry.SpaceGroup ("39:a-cb;c2v^15;a c 2 m;a -2b -2b", true),  new J.symmetry.SpaceGroup ("40;c2v^16;a m a 2;a 2 -2a", true),  new J.symmetry.SpaceGroup ("40:ba-c;c2v^16;b b m 2;b 2 -2b", true),  new J.symmetry.SpaceGroup ("40:cab;c2v^16;b 2 m b;b -2b 2", true),  new J.symmetry.SpaceGroup ("40:-cba;c2v^16;c 2 c m;c -2c 2", true),  new J.symmetry.SpaceGroup ("40:bca;c2v^16;c c 2 m;c -2c -2c", true),  new J.symmetry.SpaceGroup ("40:a-cb;c2v^16;a m 2 a;a -2a -2a", true),  new J.symmetry.SpaceGroup ("41;c2v^17;a b a 2;a 2 -2ab", true),  new J.symmetry.SpaceGroup ("41:ba-c;c2v^17;b b a 2;b 2 -2ab", true),  new J.symmetry.SpaceGroup ("41:cab;c2v^17;b 2 c b;b -2ab 2", true),  new J.symmetry.SpaceGroup ("41:-cba;c2v^17;c 2 c b;c -2ac 2", true),  new J.symmetry.SpaceGroup ("41:bca;c2v^17;c c 2 a;c -2ac -2ac", true),  new J.symmetry.SpaceGroup ("41:a-cb;c2v^17;a c 2 a;a -2ab -2ab", true),  new J.symmetry.SpaceGroup ("42;c2v^18;f m m 2;f 2 -2", true),  new J.symmetry.SpaceGroup ("42:cab;c2v^18;f 2 m m;f -2 2", true),  new J.symmetry.SpaceGroup ("42:bca;c2v^18;f m 2 m;f -2 -2", true),  new J.symmetry.SpaceGroup ("43;c2v^19;f d d 2;f 2 -2d", true),  new J.symmetry.SpaceGroup ("43:cab;c2v^19;f 2 d d;f -2d 2", true),  new J.symmetry.SpaceGroup ("43:bca;c2v^19;f d 2 d;f -2d -2d", true),  new J.symmetry.SpaceGroup ("44;c2v^20;i m m 2;i 2 -2", true),  new J.symmetry.SpaceGroup ("44:cab;c2v^20;i 2 m m;i -2 2", true),  new J.symmetry.SpaceGroup ("44:bca;c2v^20;i m 2 m;i -2 -2", true),  new J.symmetry.SpaceGroup ("45;c2v^21;i b a 2;i 2 -2c", true),  new J.symmetry.SpaceGroup ("45:cab;c2v^21;i 2 c b;i -2a 2", true),  new J.symmetry.SpaceGroup ("45:bca;c2v^21;i c 2 a;i -2b -2b", true),  new J.symmetry.SpaceGroup ("46;c2v^22;i m a 2;i 2 -2a", true),  new J.symmetry.SpaceGroup ("46:ba-c;c2v^22;i b m 2;i 2 -2b", true),  new J.symmetry.SpaceGroup ("46:cab;c2v^22;i 2 m b;i -2b 2", true),  new J.symmetry.SpaceGroup ("46:-cba;c2v^22;i 2 c m;i -2c 2", true),  new J.symmetry.SpaceGroup ("46:bca;c2v^22;i c 2 m;i -2c -2c", true),  new J.symmetry.SpaceGroup ("46:a-cb;c2v^22;i m 2 a;i -2a -2a", true),  new J.symmetry.SpaceGroup ("47;d2h^1;p m m m;-p 2 2", true),  new J.symmetry.SpaceGroup ("48:1;d2h^2;p n n n:1;p 2 2 -1n", true),  new J.symmetry.SpaceGroup ("48:2;d2h^2;p n n n:2;-p 2ab 2bc", true),  new J.symmetry.SpaceGroup ("49;d2h^3;p c c m;-p 2 2c", true),  new J.symmetry.SpaceGroup ("49:cab;d2h^3;p m a a;-p 2a 2", true),  new J.symmetry.SpaceGroup ("49:bca;d2h^3;p b m b;-p 2b 2b", true),  new J.symmetry.SpaceGroup ("50:1;d2h^4;p b a n:1;p 2 2 -1ab", true),  new J.symmetry.SpaceGroup ("50:2;d2h^4;p b a n:2;-p 2ab 2b", true),  new J.symmetry.SpaceGroup ("50:1cab;d2h^4;p n c b:1;p 2 2 -1bc", true),  new J.symmetry.SpaceGroup ("50:2cab;d2h^4;p n c b:2;-p 2b 2bc", true),  new J.symmetry.SpaceGroup ("50:1bca;d2h^4;p c n a:1;p 2 2 -1ac", true),  new J.symmetry.SpaceGroup ("50:2bca;d2h^4;p c n a:2;-p 2a 2c", true),  new J.symmetry.SpaceGroup ("51;d2h^5;p m m a;-p 2a 2a", true),  new J.symmetry.SpaceGroup ("51:ba-c;d2h^5;p m m b;-p 2b 2", true),  new J.symmetry.SpaceGroup ("51:cab;d2h^5;p b m m;-p 2 2b", true),  new J.symmetry.SpaceGroup ("51:-cba;d2h^5;p c m m;-p 2c 2c", true),  new J.symmetry.SpaceGroup ("51:bca;d2h^5;p m c m;-p 2c 2", true),  new J.symmetry.SpaceGroup ("51:a-cb;d2h^5;p m a m;-p 2 2a", true),  new J.symmetry.SpaceGroup ("52;d2h^6;p n n a;-p 2a 2bc", true),  new J.symmetry.SpaceGroup ("52:ba-c;d2h^6;p n n b;-p 2b 2n", true),  new J.symmetry.SpaceGroup ("52:cab;d2h^6;p b n n;-p 2n 2b", true),  new J.symmetry.SpaceGroup ("52:-cba;d2h^6;p c n n;-p 2ab 2c", true),  new J.symmetry.SpaceGroup ("52:bca;d2h^6;p n c n;-p 2ab 2n", true),  new J.symmetry.SpaceGroup ("52:a-cb;d2h^6;p n a n;-p 2n 2bc", true),  new J.symmetry.SpaceGroup ("53;d2h^7;p m n a;-p 2ac 2", true),  new J.symmetry.SpaceGroup ("53:ba-c;d2h^7;p n m b;-p 2bc 2bc", true),  new J.symmetry.SpaceGroup ("53:cab;d2h^7;p b m n;-p 2ab 2ab", true),  new J.symmetry.SpaceGroup ("53:-cba;d2h^7;p c n m;-p 2 2ac", true),  new J.symmetry.SpaceGroup ("53:bca;d2h^7;p n c m;-p 2 2bc", true),  new J.symmetry.SpaceGroup ("53:a-cb;d2h^7;p m a n;-p 2ab 2", true),  new J.symmetry.SpaceGroup ("54;d2h^8;p c c a;-p 2a 2ac", true),  new J.symmetry.SpaceGroup ("54:ba-c;d2h^8;p c c b;-p 2b 2c", true),  new J.symmetry.SpaceGroup ("54:cab;d2h^8;p b a a;-p 2a 2b", true),  new J.symmetry.SpaceGroup ("54:-cba;d2h^8;p c a a;-p 2ac 2c", true),  new J.symmetry.SpaceGroup ("54:bca;d2h^8;p b c b;-p 2bc 2b", true),  new J.symmetry.SpaceGroup ("54:a-cb;d2h^8;p b a b;-p 2b 2ab", true),  new J.symmetry.SpaceGroup ("55;d2h^9;p b a m;-p 2 2ab", true),  new J.symmetry.SpaceGroup ("55:cab;d2h^9;p m c b;-p 2bc 2", true),  new J.symmetry.SpaceGroup ("55:bca;d2h^9;p c m a;-p 2ac 2ac", true),  new J.symmetry.SpaceGroup ("56;d2h^10;p c c n;-p 2ab 2ac", true),  new J.symmetry.SpaceGroup ("56:cab;d2h^10;p n a a;-p 2ac 2bc", true),  new J.symmetry.SpaceGroup ("56:bca;d2h^10;p b n b;-p 2bc 2ab", true),  new J.symmetry.SpaceGroup ("57;d2h^11;p b c m;-p 2c 2b", true),  new J.symmetry.SpaceGroup ("57:ba-c;d2h^11;p c a m;-p 2c 2ac", true),  new J.symmetry.SpaceGroup ("57:cab;d2h^11;p m c a;-p 2ac 2a", true),  new J.symmetry.SpaceGroup ("57:-cba;d2h^11;p m a b;-p 2b 2a", true),  new J.symmetry.SpaceGroup ("57:bca;d2h^11;p b m a;-p 2a 2ab", true),  new J.symmetry.SpaceGroup ("57:a-cb;d2h^11;p c m b;-p 2bc 2c", true),  new J.symmetry.SpaceGroup ("58;d2h^12;p n n m;-p 2 2n", true),  new J.symmetry.SpaceGroup ("58:cab;d2h^12;p m n n;-p 2n 2", true),  new J.symmetry.SpaceGroup ("58:bca;d2h^12;p n m n;-p 2n 2n", true),  new J.symmetry.SpaceGroup ("59:1;d2h^13;p m m n:1;p 2 2ab -1ab", true),  new J.symmetry.SpaceGroup ("59:2;d2h^13;p m m n:2;-p 2ab 2a", true),  new J.symmetry.SpaceGroup ("59:1cab;d2h^13;p n m m:1;p 2bc 2 -1bc", true),  new J.symmetry.SpaceGroup ("59:2cab;d2h^13;p n m m:2;-p 2c 2bc", true),  new J.symmetry.SpaceGroup ("59:1bca;d2h^13;p m n m:1;p 2ac 2ac -1ac", true),  new J.symmetry.SpaceGroup ("59:2bca;d2h^13;p m n m:2;-p 2c 2a", true),  new J.symmetry.SpaceGroup ("60;d2h^14;p b c n;-p 2n 2ab", true),  new J.symmetry.SpaceGroup ("60:ba-c;d2h^14;p c a n;-p 2n 2c", true),  new J.symmetry.SpaceGroup ("60:cab;d2h^14;p n c a;-p 2a 2n", true),  new J.symmetry.SpaceGroup ("60:-cba;d2h^14;p n a b;-p 2bc 2n", true),  new J.symmetry.SpaceGroup ("60:bca;d2h^14;p b n a;-p 2ac 2b", true),  new J.symmetry.SpaceGroup ("60:a-cb;d2h^14;p c n b;-p 2b 2ac", true),  new J.symmetry.SpaceGroup ("61;d2h^15;p b c a;-p 2ac 2ab", true),  new J.symmetry.SpaceGroup ("61:ba-c;d2h^15;p c a b;-p 2bc 2ac", true),  new J.symmetry.SpaceGroup ("62;d2h^16;p n m a;-p 2ac 2n", true),  new J.symmetry.SpaceGroup ("62:ba-c;d2h^16;p m n b;-p 2bc 2a", true),  new J.symmetry.SpaceGroup ("62:cab;d2h^16;p b n m;-p 2c 2ab", true),  new J.symmetry.SpaceGroup ("62:-cba;d2h^16;p c m n;-p 2n 2ac", true),  new J.symmetry.SpaceGroup ("62:bca;d2h^16;p m c n;-p 2n 2a", true),  new J.symmetry.SpaceGroup ("62:a-cb;d2h^16;p n a m;-p 2c 2n", true),  new J.symmetry.SpaceGroup ("63;d2h^17;c m c m;-c 2c 2", true),  new J.symmetry.SpaceGroup ("63:ba-c;d2h^17;c c m m;-c 2c 2c", true),  new J.symmetry.SpaceGroup ("63:cab;d2h^17;a m m a;-a 2a 2a", true),  new J.symmetry.SpaceGroup ("63:-cba;d2h^17;a m a m;-a 2 2a", true),  new J.symmetry.SpaceGroup ("63:bca;d2h^17;b b m m;-b 2 2b", true),  new J.symmetry.SpaceGroup ("63:a-cb;d2h^17;b m m b;-b 2b 2", true),  new J.symmetry.SpaceGroup ("64;d2h^18;c m c a;-c 2ac 2", true),  new J.symmetry.SpaceGroup ("64:ba-c;d2h^18;c c m b;-c 2ac 2ac", true),  new J.symmetry.SpaceGroup ("64:cab;d2h^18;a b m a;-a 2ab 2ab", true),  new J.symmetry.SpaceGroup ("64:-cba;d2h^18;a c a m;-a 2 2ab", true),  new J.symmetry.SpaceGroup ("64:bca;d2h^18;b b c m;-b 2 2ab", true),  new J.symmetry.SpaceGroup ("64:a-cb;d2h^18;b m a b;-b 2ab 2", true),  new J.symmetry.SpaceGroup ("65;d2h^19;c m m m;-c 2 2", true),  new J.symmetry.SpaceGroup ("65:cab;d2h^19;a m m m;-a 2 2", true),  new J.symmetry.SpaceGroup ("65:bca;d2h^19;b m m m;-b 2 2", true),  new J.symmetry.SpaceGroup ("66;d2h^20;c c c m;-c 2 2c", true),  new J.symmetry.SpaceGroup ("66:cab;d2h^20;a m a a;-a 2a 2", true),  new J.symmetry.SpaceGroup ("66:bca;d2h^20;b b m b;-b 2b 2b", true),  new J.symmetry.SpaceGroup ("67;d2h^21;c m m a;-c 2a 2", true),  new J.symmetry.SpaceGroup ("67:ba-c;d2h^21;c m m b;-c 2a 2a", true),  new J.symmetry.SpaceGroup ("67:cab;d2h^21;a b m m;-a 2b 2b", true),  new J.symmetry.SpaceGroup ("67:-cba;d2h^21;a c m m;-a 2 2b", true),  new J.symmetry.SpaceGroup ("67:bca;d2h^21;b m c m;-b 2 2a", true),  new J.symmetry.SpaceGroup ("67:a-cb;d2h^21;b m a m;-b 2a 2", true),  new J.symmetry.SpaceGroup ("68:1;d2h^22;c c c a:1;c 2 2 -1ac", true),  new J.symmetry.SpaceGroup ("68:2;d2h^22;c c c a:2;-c 2a 2ac", true),  new J.symmetry.SpaceGroup ("68:1ba-c;d2h^22;c c c b:1;c 2 2 -1ac", true),  new J.symmetry.SpaceGroup ("68:2ba-c;d2h^22;c c c b:2;-c 2a 2c", true),  new J.symmetry.SpaceGroup ("68:1cab;d2h^22;a b a a:1;a 2 2 -1ab", true),  new J.symmetry.SpaceGroup ("68:2cab;d2h^22;a b a a:2;-a 2a 2b", true),  new J.symmetry.SpaceGroup ("68:1-cba;d2h^22;a c a a:1;a 2 2 -1ab", true),  new J.symmetry.SpaceGroup ("68:2-cba;d2h^22;a c a a:2;-a 2ab 2b", true),  new J.symmetry.SpaceGroup ("68:1bca;d2h^22;b b c b:1;b 2 2 -1ab", true),  new J.symmetry.SpaceGroup ("68:2bca;d2h^22;b b c b:2;-b 2ab 2b", true),  new J.symmetry.SpaceGroup ("68:1a-cb;d2h^22;b b a b:1;b 2 2 -1ab", true),  new J.symmetry.SpaceGroup ("68:2a-cb;d2h^22;b b a b:2;-b 2b 2ab", true),  new J.symmetry.SpaceGroup ("69;d2h^23;f m m m;-f 2 2", true),  new J.symmetry.SpaceGroup ("70:1;d2h^24;f d d d:1;f 2 2 -1d", true),  new J.symmetry.SpaceGroup ("70:2;d2h^24;f d d d:2;-f 2uv 2vw", true),  new J.symmetry.SpaceGroup ("71;d2h^25;i m m m;-i 2 2", true),  new J.symmetry.SpaceGroup ("72;d2h^26;i b a m;-i 2 2c", true),  new J.symmetry.SpaceGroup ("72:cab;d2h^26;i m c b;-i 2a 2", true),  new J.symmetry.SpaceGroup ("72:bca;d2h^26;i c m a;-i 2b 2b", true),  new J.symmetry.SpaceGroup ("73;d2h^27;i b c a;-i 2b 2c", true),  new J.symmetry.SpaceGroup ("73:ba-c;d2h^27;i c a b;-i 2a 2b", true),  new J.symmetry.SpaceGroup ("74;d2h^28;i m m a;-i 2b 2", true),  new J.symmetry.SpaceGroup ("74:ba-c;d2h^28;i m m b;-i 2a 2a", true),  new J.symmetry.SpaceGroup ("74:cab;d2h^28;i b m m;-i 2c 2c", true),  new J.symmetry.SpaceGroup ("74:-cba;d2h^28;i c m m;-i 2 2b", true),  new J.symmetry.SpaceGroup ("74:bca;d2h^28;i m c m;-i 2 2a", true),  new J.symmetry.SpaceGroup ("74:a-cb;d2h^28;i m a m;-i 2c 2", true),  new J.symmetry.SpaceGroup ("75;c4^1;p 4;p 4", true),  new J.symmetry.SpaceGroup ("76;c4^2;p 41;p 4w", true),  new J.symmetry.SpaceGroup ("76*;c4^2;p 41*;p 41", true),  new J.symmetry.SpaceGroup ("77;c4^3;p 42;p 4c", true),  new J.symmetry.SpaceGroup ("77*;c4^3;p 42*;p 42", true),  new J.symmetry.SpaceGroup ("78;c4^4;p 43;p 4cw", true),  new J.symmetry.SpaceGroup ("78*;c4^4;p 43*;p 43", true),  new J.symmetry.SpaceGroup ("79;c4^5;i 4;i 4", true),  new J.symmetry.SpaceGroup ("80;c4^6;i 41;i 4bw", true),  new J.symmetry.SpaceGroup ("81;s4^1;p -4;p -4", true),  new J.symmetry.SpaceGroup ("82;s4^2;i -4;i -4", true),  new J.symmetry.SpaceGroup ("83;c4h^1;p 4/m;-p 4", true),  new J.symmetry.SpaceGroup ("84;c4h^2;p 42/m;-p 4c", true),  new J.symmetry.SpaceGroup ("84*;c4h^2;p 42/m*;-p 42", true),  new J.symmetry.SpaceGroup ("85:1;c4h^3;p 4/n:1;p 4ab -1ab", true),  new J.symmetry.SpaceGroup ("85:2;c4h^3;p 4/n:2;-p 4a", true),  new J.symmetry.SpaceGroup ("86:1;c4h^4;p 42/n:1;p 4n -1n", true),  new J.symmetry.SpaceGroup ("86:2;c4h^4;p 42/n:2;-p 4bc", true),  new J.symmetry.SpaceGroup ("87;c4h^5;i 4/m;-i 4", true),  new J.symmetry.SpaceGroup ("88:1;c4h^6;i 41/a:1;i 4bw -1bw", true),  new J.symmetry.SpaceGroup ("88:2;c4h^6;i 41/a:2;-i 4ad", true),  new J.symmetry.SpaceGroup ("89;d4^1;p 4 2 2;p 4 2", true),  new J.symmetry.SpaceGroup ("90;d4^2;p 4 21 2;p 4ab 2ab", true),  new J.symmetry.SpaceGroup ("91;d4^3;p 41 2 2;p 4w 2c", true),  new J.symmetry.SpaceGroup ("91*;d4^3;p 41 2 2*;p 41 2c", true),  new J.symmetry.SpaceGroup ("92;d4^4;p 41 21 2;p 4abw 2nw", true),  new J.symmetry.SpaceGroup ("93;d4^5;p 42 2 2;p 4c 2", true),  new J.symmetry.SpaceGroup ("93*;d4^5;p 42 2 2*;p 42 2", true),  new J.symmetry.SpaceGroup ("94;d4^6;p 42 21 2;p 4n 2n", true),  new J.symmetry.SpaceGroup ("95;d4^7;p 43 2 2;p 4cw 2c", true),  new J.symmetry.SpaceGroup ("95*;d4^7;p 43 2 2*;p 43 2c", true),  new J.symmetry.SpaceGroup ("96;d4^8;p 43 21 2;p 4nw 2abw", true),  new J.symmetry.SpaceGroup ("97;d4^9;i 4 2 2;i 4 2", true),  new J.symmetry.SpaceGroup ("98;d4^10;i 41 2 2;i 4bw 2bw", true),  new J.symmetry.SpaceGroup ("99;c4v^1;p 4 m m;p 4 -2", true),  new J.symmetry.SpaceGroup ("100;c4v^2;p 4 b m;p 4 -2ab", true),  new J.symmetry.SpaceGroup ("101;c4v^3;p 42 c m;p 4c -2c", true),  new J.symmetry.SpaceGroup ("101*;c4v^3;p 42 c m*;p 42 -2c", true),  new J.symmetry.SpaceGroup ("102;c4v^4;p 42 n m;p 4n -2n", true),  new J.symmetry.SpaceGroup ("103;c4v^5;p 4 c c;p 4 -2c", true),  new J.symmetry.SpaceGroup ("104;c4v^6;p 4 n c;p 4 -2n", true),  new J.symmetry.SpaceGroup ("105;c4v^7;p 42 m c;p 4c -2", true),  new J.symmetry.SpaceGroup ("105*;c4v^7;p 42 m c*;p 42 -2", true),  new J.symmetry.SpaceGroup ("106;c4v^8;p 42 b c;p 4c -2ab", true),  new J.symmetry.SpaceGroup ("106*;c4v^8;p 42 b c*;p 42 -2ab", true),  new J.symmetry.SpaceGroup ("107;c4v^9;i 4 m m;i 4 -2", true),  new J.symmetry.SpaceGroup ("108;c4v^10;i 4 c m;i 4 -2c", true),  new J.symmetry.SpaceGroup ("109;c4v^11;i 41 m d;i 4bw -2", true),  new J.symmetry.SpaceGroup ("110;c4v^12;i 41 c d;i 4bw -2c", true),  new J.symmetry.SpaceGroup ("111;d2d^1;p -4 2 m;p -4 2", true),  new J.symmetry.SpaceGroup ("112;d2d^2;p -4 2 c;p -4 2c", true),  new J.symmetry.SpaceGroup ("113;d2d^3;p -4 21 m;p -4 2ab", true),  new J.symmetry.SpaceGroup ("114;d2d^4;p -4 21 c;p -4 2n", true),  new J.symmetry.SpaceGroup ("115;d2d^5;p -4 m 2;p -4 -2", true),  new J.symmetry.SpaceGroup ("116;d2d^6;p -4 c 2;p -4 -2c", true),  new J.symmetry.SpaceGroup ("117;d2d^7;p -4 b 2;p -4 -2ab", true),  new J.symmetry.SpaceGroup ("118;d2d^8;p -4 n 2;p -4 -2n", true),  new J.symmetry.SpaceGroup ("119;d2d^9;i -4 m 2;i -4 -2", true),  new J.symmetry.SpaceGroup ("120;d2d^10;i -4 c 2;i -4 -2c", true),  new J.symmetry.SpaceGroup ("121;d2d^11;i -4 2 m;i -4 2", true),  new J.symmetry.SpaceGroup ("122;d2d^12;i -4 2 d;i -4 2bw", true),  new J.symmetry.SpaceGroup ("123;d4h^1;p 4/m m m;-p 4 2", true),  new J.symmetry.SpaceGroup ("124;d4h^2;p 4/m c c;-p 4 2c", true),  new J.symmetry.SpaceGroup ("125:1;d4h^3;p 4/n b m:1;p 4 2 -1ab", true),  new J.symmetry.SpaceGroup ("125:2;d4h^3;p 4/n b m:2;-p 4a 2b", true),  new J.symmetry.SpaceGroup ("126:1;d4h^4;p 4/n n c:1;p 4 2 -1n", true),  new J.symmetry.SpaceGroup ("126:2;d4h^4;p 4/n n c:2;-p 4a 2bc", true),  new J.symmetry.SpaceGroup ("127;d4h^5;p 4/m b m;-p 4 2ab", true),  new J.symmetry.SpaceGroup ("128;d4h^6;p 4/m n c;-p 4 2n", true),  new J.symmetry.SpaceGroup ("129:1;d4h^7;p 4/n m m:1;p 4ab 2ab -1ab", true),  new J.symmetry.SpaceGroup ("129:2;d4h^7;p 4/n m m:2;-p 4a 2a", true),  new J.symmetry.SpaceGroup ("130:1;d4h^8;p 4/n c c:1;p 4ab 2n -1ab", true),  new J.symmetry.SpaceGroup ("130:2;d4h^8;p 4/n c c:2;-p 4a 2ac", true),  new J.symmetry.SpaceGroup ("131;d4h^9;p 42/m m c;-p 4c 2", true),  new J.symmetry.SpaceGroup ("132;d4h^10;p 42/m c m;-p 4c 2c", true),  new J.symmetry.SpaceGroup ("133:1;d4h^11;p 42/n b c:1;p 4n 2c -1n", true),  new J.symmetry.SpaceGroup ("133:2;d4h^11;p 42/n b c:2;-p 4ac 2b", true),  new J.symmetry.SpaceGroup ("134:1;d4h^12;p 42/n n m:1;p 4n 2 -1n", true),  new J.symmetry.SpaceGroup ("134:2;d4h^12;p 42/n n m:2;-p 4ac 2bc", true),  new J.symmetry.SpaceGroup ("135;d4h^13;p 42/m b c;-p 4c 2ab", true),  new J.symmetry.SpaceGroup ("135*;d4h^13;p 42/m b c*;-p 42 2ab", true),  new J.symmetry.SpaceGroup ("136;d4h^14;p 42/m n m;-p 4n 2n", true),  new J.symmetry.SpaceGroup ("137:1;d4h^15;p 42/n m c:1;p 4n 2n -1n", true),  new J.symmetry.SpaceGroup ("137:2;d4h^15;p 42/n m c:2;-p 4ac 2a", true),  new J.symmetry.SpaceGroup ("138:1;d4h^16;p 42/n c m:1;p 4n 2ab -1n", true),  new J.symmetry.SpaceGroup ("138:2;d4h^16;p 42/n c m:2;-p 4ac 2ac", true),  new J.symmetry.SpaceGroup ("139;d4h^17;i 4/m m m;-i 4 2", true),  new J.symmetry.SpaceGroup ("140;d4h^18;i 4/m c m;-i 4 2c", true),  new J.symmetry.SpaceGroup ("141:1;d4h^19;i 41/a m d:1;i 4bw 2bw -1bw", true),  new J.symmetry.SpaceGroup ("141:2;d4h^19;i 41/a m d:2;-i 4bd 2", true),  new J.symmetry.SpaceGroup ("142:1;d4h^20;i 41/a c d:1;i 4bw 2aw -1bw", true),  new J.symmetry.SpaceGroup ("142:2;d4h^20;i 41/a c d:2;-i 4bd 2c", true),  new J.symmetry.SpaceGroup ("143;c3^1;p 3;p 3", true),  new J.symmetry.SpaceGroup ("144;c3^2;p 31;p 31", true),  new J.symmetry.SpaceGroup ("145;c3^3;p 32;p 32", true),  new J.symmetry.SpaceGroup ("146:h;c3^4;r 3:h;r 3", true),  new J.symmetry.SpaceGroup ("146:r;c3^4;r 3:r;p 3*", true),  new J.symmetry.SpaceGroup ("147;c3i^1;p -3;-p 3", true),  new J.symmetry.SpaceGroup ("148:h;c3i^2;r -3:h;-r 3", true),  new J.symmetry.SpaceGroup ("148:r;c3i^2;r -3:r;-p 3*", true),  new J.symmetry.SpaceGroup ("149;d3^1;p 3 1 2;p 3 2", true),  new J.symmetry.SpaceGroup ("150;d3^2;p 3 2 1;p 3 2\"", true),  new J.symmetry.SpaceGroup ("151;d3^3;p 31 1 2;p 31 2 (0 0 4)", true),  new J.symmetry.SpaceGroup ("152;d3^4;p 31 2 1;p 31 2\"", true),  new J.symmetry.SpaceGroup ("153;d3^5;p 32 1 2;p 32 2 (0 0 2)", true),  new J.symmetry.SpaceGroup ("154;d3^6;p 32 2 1;p 32 2\"", true),  new J.symmetry.SpaceGroup ("155:h;d3^7;r 3 2:h;r 3 2\"", true),  new J.symmetry.SpaceGroup ("155:r;d3^7;r 3 2:r;p 3* 2", true),  new J.symmetry.SpaceGroup ("156;c3v^1;p 3 m 1;p 3 -2\"", true),  new J.symmetry.SpaceGroup ("157;c3v^2;p 3 1 m;p 3 -2", true),  new J.symmetry.SpaceGroup ("158;c3v^3;p 3 c 1;p 3 -2\"c", true),  new J.symmetry.SpaceGroup ("159;c3v^4;p 3 1 c;p 3 -2c", true),  new J.symmetry.SpaceGroup ("160:h;c3v^5;r 3 m:h;r 3 -2\"", true),  new J.symmetry.SpaceGroup ("160:r;c3v^5;r 3 m:r;p 3* -2", true),  new J.symmetry.SpaceGroup ("161:h;c3v^6;r 3 c:h;r 3 -2\"c", true),  new J.symmetry.SpaceGroup ("161:r;c3v^6;r 3 c:r;p 3* -2n", true),  new J.symmetry.SpaceGroup ("162;d3d^1;p -3 1 m;-p 3 2", true),  new J.symmetry.SpaceGroup ("163;d3d^2;p -3 1 c;-p 3 2c", true),  new J.symmetry.SpaceGroup ("164;d3d^3;p -3 m 1;-p 3 2\"", true),  new J.symmetry.SpaceGroup ("165;d3d^4;p -3 c 1;-p 3 2\"c", true),  new J.symmetry.SpaceGroup ("166:h;d3d^5;r -3 m:h;-r 3 2\"", true),  new J.symmetry.SpaceGroup ("166:r;d3d^5;r -3 m:r;-p 3* 2", true),  new J.symmetry.SpaceGroup ("167:h;d3d^6;r -3 c:h;-r 3 2\"c", true),  new J.symmetry.SpaceGroup ("167:r;d3d^6;r -3 c:r;-p 3* 2n", true),  new J.symmetry.SpaceGroup ("168;c6^1;p 6;p 6", true),  new J.symmetry.SpaceGroup ("169;c6^2;p 61;p 61", true),  new J.symmetry.SpaceGroup ("170;c6^3;p 65;p 65", true),  new J.symmetry.SpaceGroup ("171;c6^4;p 62;p 62", true),  new J.symmetry.SpaceGroup ("172;c6^5;p 64;p 64", true),  new J.symmetry.SpaceGroup ("173;c6^6;p 63;p 6c", true),  new J.symmetry.SpaceGroup ("173*;c6^6;p 63*;p 63 ", true),  new J.symmetry.SpaceGroup ("174;c3h^1;p -6;p -6", true),  new J.symmetry.SpaceGroup ("175;c6h^1;p 6/m;-p 6", true),  new J.symmetry.SpaceGroup ("176;c6h^2;p 63/m;-p 6c", true),  new J.symmetry.SpaceGroup ("176*;c6h^2;p 63/m*;-p 63", true),  new J.symmetry.SpaceGroup ("177;d6^1;p 6 2 2;p 6 2", true),  new J.symmetry.SpaceGroup ("178;d6^2;p 61 2 2;p 61 2 (0 0 5)", true),  new J.symmetry.SpaceGroup ("179;d6^3;p 65 2 2;p 65 2 (0 0 1)", true),  new J.symmetry.SpaceGroup ("180;d6^4;p 62 2 2;p 62 2 (0 0 4)", true),  new J.symmetry.SpaceGroup ("181;d6^5;p 64 2 2;p 64 2 (0 0 2)", true),  new J.symmetry.SpaceGroup ("182;d6^6;p 63 2 2;p 6c 2c", true),  new J.symmetry.SpaceGroup ("182*;d6^6;p 63 2 2*;p 63 2c", true),  new J.symmetry.SpaceGroup ("183;c6v^1;p 6 m m;p 6 -2", true),  new J.symmetry.SpaceGroup ("184;c6v^2;p 6 c c;p 6 -2c", true),  new J.symmetry.SpaceGroup ("185;c6v^3;p 63 c m;p 6c -2", true),  new J.symmetry.SpaceGroup ("185*;c6v^3;p 63 c m*;p 63 -2", true),  new J.symmetry.SpaceGroup ("186;c6v^4;p 63 m c;p 6c -2c", true),  new J.symmetry.SpaceGroup ("186*;c6v^4;p 63 m c*;p 63 -2c", true),  new J.symmetry.SpaceGroup ("187;d3h^1;p -6 m 2;p -6 2", true),  new J.symmetry.SpaceGroup ("188;d3h^2;p -6 c 2;p -6c 2", true),  new J.symmetry.SpaceGroup ("189;d3h^3;p -6 2 m;p -6 -2", true),  new J.symmetry.SpaceGroup ("190;d3h^4;p -6 2 c;p -6c -2c", true),  new J.symmetry.SpaceGroup ("191;d6h^1;p 6/m m m;-p 6 2", true),  new J.symmetry.SpaceGroup ("192;d6h^2;p 6/m c c;-p 6 2c", true),  new J.symmetry.SpaceGroup ("193;d6h^3;p 63/m c m;-p 6c 2", true),  new J.symmetry.SpaceGroup ("193*;d6h^3;p 63/m c m*;-p 63 2", true),  new J.symmetry.SpaceGroup ("194;d6h^4;p 63/m m c;-p 6c 2c", true),  new J.symmetry.SpaceGroup ("194*;d6h^4;p 63/m m c*;-p 63 2c", true),  new J.symmetry.SpaceGroup ("195;t^1;p 2 3;p 2 2 3", true),  new J.symmetry.SpaceGroup ("196;t^2;f 2 3;f 2 2 3", true),  new J.symmetry.SpaceGroup ("197;t^3;i 2 3;i 2 2 3", true),  new J.symmetry.SpaceGroup ("198;t^4;p 21 3;p 2ac 2ab 3", true),  new J.symmetry.SpaceGroup ("199;t^5;i 21 3;i 2b 2c 3", true),  new J.symmetry.SpaceGroup ("200;th^1;p m -3;-p 2 2 3", true),  new J.symmetry.SpaceGroup ("201:1;th^2;p n -3:1;p 2 2 3 -1n", true),  new J.symmetry.SpaceGroup ("201:2;th^2;p n -3:2;-p 2ab 2bc 3", true),  new J.symmetry.SpaceGroup ("202;th^3;f m -3;-f 2 2 3", true),  new J.symmetry.SpaceGroup ("203:1;th^4;f d -3:1;f 2 2 3 -1d", true),  new J.symmetry.SpaceGroup ("203:2;th^4;f d -3:2;-f 2uv 2vw 3", true),  new J.symmetry.SpaceGroup ("204;th^5;i m -3;-i 2 2 3", true),  new J.symmetry.SpaceGroup ("205;th^6;p a -3;-p 2ac 2ab 3", true),  new J.symmetry.SpaceGroup ("206;th^7;i a -3;-i 2b 2c 3", true),  new J.symmetry.SpaceGroup ("207;o^1;p 4 3 2;p 4 2 3", true),  new J.symmetry.SpaceGroup ("208;o^2;p 42 3 2;p 4n 2 3", true),  new J.symmetry.SpaceGroup ("209;o^3;f 4 3 2;f 4 2 3", true),  new J.symmetry.SpaceGroup ("210;o^4;f 41 3 2;f 4d 2 3", true),  new J.symmetry.SpaceGroup ("211;o^5;i 4 3 2;i 4 2 3", true),  new J.symmetry.SpaceGroup ("212;o^6;p 43 3 2;p 4acd 2ab 3", true),  new J.symmetry.SpaceGroup ("213;o^7;p 41 3 2;p 4bd 2ab 3", true),  new J.symmetry.SpaceGroup ("214;o^8;i 41 3 2;i 4bd 2c 3", true),  new J.symmetry.SpaceGroup ("215;td^1;p -4 3 m;p -4 2 3", true),  new J.symmetry.SpaceGroup ("216;td^2;f -4 3 m;f -4 2 3", true),  new J.symmetry.SpaceGroup ("217;td^3;i -4 3 m;i -4 2 3", true),  new J.symmetry.SpaceGroup ("218;td^4;p -4 3 n;p -4n 2 3", true),  new J.symmetry.SpaceGroup ("219;td^5;f -4 3 c;f -4a 2 3", true),  new J.symmetry.SpaceGroup ("220;td^6;i -4 3 d;i -4bd 2c 3", true),  new J.symmetry.SpaceGroup ("221;oh^1;p m -3 m;-p 4 2 3", true),  new J.symmetry.SpaceGroup ("222:1;oh^2;p n -3 n:1;p 4 2 3 -1n", true),  new J.symmetry.SpaceGroup ("222:2;oh^2;p n -3 n:2;-p 4a 2bc 3", true),  new J.symmetry.SpaceGroup ("223;oh^3;p m -3 n;-p 4n 2 3", true),  new J.symmetry.SpaceGroup ("224:1;oh^4;p n -3 m:1;p 4n 2 3 -1n", true),  new J.symmetry.SpaceGroup ("224:2;oh^4;p n -3 m:2;-p 4bc 2bc 3", true),  new J.symmetry.SpaceGroup ("225;oh^5;f m -3 m;-f 4 2 3", true),  new J.symmetry.SpaceGroup ("226;oh^6;f m -3 c;-f 4a 2 3", true),  new J.symmetry.SpaceGroup ("227:1;oh^7;f d -3 m:1;f 4d 2 3 -1d", true),  new J.symmetry.SpaceGroup ("227:2;oh^7;f d -3 m:2;-f 4vw 2vw 3", true),  new J.symmetry.SpaceGroup ("228:1;oh^8;f d -3 c:1;f 4d 2 3 -1ad", true),  new J.symmetry.SpaceGroup ("228:2;oh^8;f d -3 c:2;-f 4ud 2vw 3", true),  new J.symmetry.SpaceGroup ("229;oh^9;i m -3 m;-i 4 2 3", true),  new J.symmetry.SpaceGroup ("230;oh^10;i a -3 d;-i 4bd 2c 3", true)] : J.symmetry.SpaceGroup.spaceGroupDefinitions);
 });
 Clazz_defineMethod (c$, "addLatticeVectors", 
 function (lattvecs) {
-if (this.latticeOp >= 0 || lattvecs.size () == 0) return false;
+if (this.latticeOp >= 0) return false;
 var nOps = this.latticeOp = this.operationCount;
-var isMag = (lattvecs.get (0).length == this.modDim + 4);
-var magRev = -2;
 for (var j = 0; j < lattvecs.size (); j++) {
 var data = lattvecs.get (j);
-if (isMag) {
-magRev = Clazz_floatToInt (data[this.modDim + 3]);
-data = JU.AU.arrayCopyF (data, this.modDim + 3);
-}if (data.length > this.modDim + 3) return false;
+if (data.length > this.modDim + 3) return false;
 for (var i = 0; i < nOps; i++) {
-var newOp =  new JS.SymmetryOperation (null, null, 0, 0, this.doNormalize);
+var newOp =  new J.symmetry.SymmetryOperation (null, null, 0, 0, this.doNormalize);
 newOp.modDim = this.modDim;
 var op = this.operations[i];
 newOp.linearRotTrans = JU.AU.arrayCopyF (op.linearRotTrans, -1);
 newOp.setFromMatrix (data, false);
-if (magRev != -2) newOp.setTimeReversal (op.timeReversal * magRev);
 newOp.xyzOriginal = newOp.xyz;
 this.addOp (newOp, newOp.xyz, true);
 }
 }
 return true;
-}, "JU.Lst");
+}, "JU.List");
 Clazz_defineMethod (c$, "getSiteMultiplicity", 
 function (pt, unitCell) {
 var n = this.finalOperations.length;
-var pts =  new JU.Lst ();
+var pts =  new JU.List ();
 for (var i = n; --i >= 0; ) {
 var pt1 = JU.P3.newP (pt);
 this.finalOperations[i].rotTrans (pt1);
@@ -2557,7 +2401,15 @@ break;
 if (pt1 != null) pts.addLast (pt1);
 }
 return Clazz_doubleToInt (n / pts.size ());
-}, "JU.P3,JS.UnitCell");
+}, "JU.P3,J.symmetry.UnitCell");
+Clazz_defineMethod (c$, "getOperationList", 
+function () {
+if (this.operationList == null) {
+this.operationList =  new Array (this.finalOperations.length);
+for (var i = 0; i < this.operationList.length; i++) this.operationList[i] = this.finalOperations[i].toString ();
+
+}return this.operationList;
+});
 Clazz_defineStatics (c$,
 "canonicalSeitzList", null,
 "NAME_HALL", 5,
@@ -2565,11 +2417,10 @@ Clazz_defineStatics (c$,
 "sgIndex", -1,
 "ambiguousNames", "",
 "lastInfo", "",
-"SG", null,
-"STR_SG",  Clazz_newArray (-1, ["1;c1^1;p 1;p 1", "2;ci^1;p -1;-p 1", "3:b;c2^1;p 1 2 1;p 2y", "3:b;c2^1;p 2;p 2y", "3:c;c2^1;p 1 1 2;p 2", "3:a;c2^1;p 2 1 1;p 2x", "4:b;c2^2;p 1 21 1;p 2yb", "4:b;c2^2;p 21;p 2yb", "4:b*;c2^2;p 1 21 1*;p 2y1", "4:c;c2^2;p 1 1 21;p 2c", "4:c*;c2^2;p 1 1 21*;p 21", "4:a;c2^2;p 21 1 1;p 2xa", "4:a*;c2^2;p 21 1 1*;p 2x1", "5:b1;c2^3;c 1 2 1;c 2y", "5:b1;c2^3;c 2;c 2y", "5:b2;c2^3;a 1 2 1;a 2y", "5:b3;c2^3;i 1 2 1;i 2y", "5:c1;c2^3;a 1 1 2;a 2", "5:c2;c2^3;b 1 1 2;b 2", "5:c3;c2^3;i 1 1 2;i 2", "5:a1;c2^3;b 2 1 1;b 2x", "5:a2;c2^3;c 2 1 1;c 2x", "5:a3;c2^3;i 2 1 1;i 2x", "6:b;cs^1;p 1 m 1;p -2y", "6:b;cs^1;p m;p -2y", "6:c;cs^1;p 1 1 m;p -2", "6:a;cs^1;p m 1 1;p -2x", "7:b1;cs^2;p 1 c 1;p -2yc", "7:b1;cs^2;p c;p -2yc", "7:b2;cs^2;p 1 n 1;p -2yac", "7:b2;cs^2;p n;p -2yac", "7:b3;cs^2;p 1 a 1;p -2ya", "7:b3;cs^2;p a;p -2ya", "7:c1;cs^2;p 1 1 a;p -2a", "7:c2;cs^2;p 1 1 n;p -2ab", "7:c3;cs^2;p 1 1 b;p -2b", "7:a1;cs^2;p b 1 1;p -2xb", "7:a2;cs^2;p n 1 1;p -2xbc", "7:a3;cs^2;p c 1 1;p -2xc", "8:b1;cs^3;c 1 m 1;c -2y", "8:b1;cs^3;c m;c -2y", "8:b2;cs^3;a 1 m 1;a -2y", "8:b3;cs^3;i 1 m 1;i -2y", "8:b3;cs^3;i m;i -2y", "8:c1;cs^3;a 1 1 m;a -2", "8:c2;cs^3;b 1 1 m;b -2", "8:c3;cs^3;i 1 1 m;i -2", "8:a1;cs^3;b m 1 1;b -2x", "8:a2;cs^3;c m 1 1;c -2x", "8:a3;cs^3;i m 1 1;i -2x", "9:b1;cs^4;c 1 c 1;c -2yc", "9:b1;cs^4;c c;c -2yc", "9:b2;cs^4;a 1 n 1;a -2yab", "9:b3;cs^4;i 1 a 1;i -2ya", "9:-b1;cs^4;a 1 a 1;a -2ya", "9:-b2;cs^4;c 1 n 1;c -2yac", "9:-b3;cs^4;i 1 c 1;i -2yc", "9:c1;cs^4;a 1 1 a;a -2a", "9:c2;cs^4;b 1 1 n;b -2ab", "9:c3;cs^4;i 1 1 b;i -2b", "9:-c1;cs^4;b 1 1 b;b -2b", "9:-c2;cs^4;a 1 1 n;a -2ab", "9:-c3;cs^4;i 1 1 a;i -2a", "9:a1;cs^4;b b 1 1;b -2xb", "9:a2;cs^4;c n 1 1;c -2xac", "9:a3;cs^4;i c 1 1;i -2xc", "9:-a1;cs^4;c c 1 1;c -2xc", "9:-a2;cs^4;b n 1 1;b -2xab", "9:-a3;cs^4;i b 1 1;i -2xb", "10:b;c2h^1;p 1 2/m 1;-p 2y", "10:b;c2h^1;p 2/m;-p 2y", "10:c;c2h^1;p 1 1 2/m;-p 2", "10:a;c2h^1;p 2/m 1 1;-p 2x", "11:b;c2h^2;p 1 21/m 1;-p 2yb", "11:b;c2h^2;p 21/m;-p 2yb", "11:b*;c2h^2;p 1 21/m 1*;-p 2y1", "11:c;c2h^2;p 1 1 21/m;-p 2c", "11:c*;c2h^2;p 1 1 21/m*;-p 21", "11:a;c2h^2;p 21/m 1 1;-p 2xa", "11:a*;c2h^2;p 21/m 1 1*;-p 2x1", "12:b1;c2h^3;c 1 2/m 1;-c 2y", "12:b1;c2h^3;c 2/m;-c 2y", "12:b2;c2h^3;a 1 2/m 1;-a 2y", "12:b3;c2h^3;i 1 2/m 1;-i 2y", "12:b3;c2h^3;i 2/m;-i 2y", "12:c1;c2h^3;a 1 1 2/m;-a 2", "12:c2;c2h^3;b 1 1 2/m;-b 2", "12:c3;c2h^3;i 1 1 2/m;-i 2", "12:a1;c2h^3;b 2/m 1 1;-b 2x", "12:a2;c2h^3;c 2/m 1 1;-c 2x", "12:a3;c2h^3;i 2/m 1 1;-i 2x", "13:b1;c2h^4;p 1 2/c 1;-p 2yc", "13:b1;c2h^4;p 2/c;-p 2yc", "13:b2;c2h^4;p 1 2/n 1;-p 2yac", "13:b2;c2h^4;p 2/n;-p 2yac", "13:b3;c2h^4;p 1 2/a 1;-p 2ya", "13:b3;c2h^4;p 2/a;-p 2ya", "13:c1;c2h^4;p 1 1 2/a;-p 2a", "13:c2;c2h^4;p 1 1 2/n;-p 2ab", "13:c3;c2h^4;p 1 1 2/b;-p 2b", "13:a1;c2h^4;p 2/b 1 1;-p 2xb", "13:a2;c2h^4;p 2/n 1 1;-p 2xbc", "13:a3;c2h^4;p 2/c 1 1;-p 2xc", "14:b1;c2h^5;p 1 21/c 1;-p 2ybc", "14:b1;c2h^5;p 21/c;-p 2ybc", "14:b2;c2h^5;p 1 21/n 1;-p 2yn", "14:b2;c2h^5;p 21/n;-p 2yn", "14:b3;c2h^5;p 1 21/a 1;-p 2yab", "14:b3;c2h^5;p 21/a;-p 2yab", "14:c1;c2h^5;p 1 1 21/a;-p 2ac", "14:c2;c2h^5;p 1 1 21/n;-p 2n", "14:c3;c2h^5;p 1 1 21/b;-p 2bc", "14:a1;c2h^5;p 21/b 1 1;-p 2xab", "14:a2;c2h^5;p 21/n 1 1;-p 2xn", "14:a3;c2h^5;p 21/c 1 1;-p 2xac", "15:b1;c2h^6;c 1 2/c 1;-c 2yc", "15:b1;c2h^6;c 2/c;-c 2yc", "15:b2;c2h^6;a 1 2/n 1;-a 2yab", "15:b3;c2h^6;i 1 2/a 1;-i 2ya", "15:b3;c2h^6;i 2/a;-i 2ya", "15:-b1;c2h^6;a 1 2/a 1;-a 2ya", "15:-b2;c2h^6;c 1 2/n 1;-c 2yac", "15:-b2;c2h^6;c 2/n;-c 2yac", "15:-b3;c2h^6;i 1 2/c 1;-i 2yc", "15:-b3;c2h^6;i 2/c;-i 2yc", "15:c1;c2h^6;a 1 1 2/a;-a 2a", "15:c2;c2h^6;b 1 1 2/n;-b 2ab", "15:c3;c2h^6;i 1 1 2/b;-i 2b", "15:-c1;c2h^6;b 1 1 2/b;-b 2b", "15:-c2;c2h^6;a 1 1 2/n;-a 2ab", "15:-c3;c2h^6;i 1 1 2/a;-i 2a", "15:a1;c2h^6;b 2/b 1 1;-b 2xb", "15:a2;c2h^6;c 2/n 1 1;-c 2xac", "15:a3;c2h^6;i 2/c 1 1;-i 2xc", "15:-a1;c2h^6;c 2/c 1 1;-c 2xc", "15:-a2;c2h^6;b 2/n 1 1;-b 2xab", "15:-a3;c2h^6;i 2/b 1 1;-i 2xb", "16;d2^1;p 2 2 2;p 2 2", "17;d2^2;p 2 2 21;p 2c 2", "17*;d2^2;p 2 2 21*;p 21 2", "17:cab;d2^2;p 21 2 2;p 2a 2a", "17:bca;d2^2;p 2 21 2;p 2 2b", "18;d2^3;p 21 21 2;p 2 2ab", "18:cab;d2^3;p 2 21 21;p 2bc 2", "18:bca;d2^3;p 21 2 21;p 2ac 2ac", "19;d2^4;p 21 21 21;p 2ac 2ab", "20;d2^5;c 2 2 21;c 2c 2", "20*;d2^5;c 2 2 21*;c 21 2", "20:cab;d2^5;a 21 2 2;a 2a 2a", "20:cab*;d2^5;a 21 2 2*;a 2a 21", "20:bca;d2^5;b 2 21 2;b 2 2b", "21;d2^6;c 2 2 2;c 2 2", "21:cab;d2^6;a 2 2 2;a 2 2", "21:bca;d2^6;b 2 2 2;b 2 2", "22;d2^7;f 2 2 2;f 2 2", "23;d2^8;i 2 2 2;i 2 2", "24;d2^9;i 21 21 21;i 2b 2c", "25;c2v^1;p m m 2;p 2 -2", "25:cab;c2v^1;p 2 m m;p -2 2", "25:bca;c2v^1;p m 2 m;p -2 -2", "26;c2v^2;p m c 21;p 2c -2", "26*;c2v^2;p m c 21*;p 21 -2", "26:ba-c;c2v^2;p c m 21;p 2c -2c", "26:ba-c*;c2v^2;p c m 21*;p 21 -2c", "26:cab;c2v^2;p 21 m a;p -2a 2a", "26:-cba;c2v^2;p 21 a m;p -2 2a", "26:bca;c2v^2;p b 21 m;p -2 -2b", "26:a-cb;c2v^2;p m 21 b;p -2b -2", "27;c2v^3;p c c 2;p 2 -2c", "27:cab;c2v^3;p 2 a a;p -2a 2", "27:bca;c2v^3;p b 2 b;p -2b -2b", "28;c2v^4;p m a 2;p 2 -2a", "28*;c2v^4;p m a 2*;p 2 -21", "28:ba-c;c2v^4;p b m 2;p 2 -2b", "28:cab;c2v^4;p 2 m b;p -2b 2", "28:-cba;c2v^4;p 2 c m;p -2c 2", "28:-cba*;c2v^4;p 2 c m*;p -21 2", "28:bca;c2v^4;p c 2 m;p -2c -2c", "28:a-cb;c2v^4;p m 2 a;p -2a -2a", "29;c2v^5;p c a 21;p 2c -2ac", "29:ba-c;c2v^5;p b c 21;p 2c -2b", "29:cab;c2v^5;p 21 a b;p -2b 2a", "29:-cba;c2v^5;p 21 c a;p -2ac 2a", "29:bca;c2v^5;p c 21 b;p -2bc -2c", "29:a-cb;c2v^5;p b 21 a;p -2a -2ab", "30;c2v^6;p n c 2;p 2 -2bc", "30:ba-c;c2v^6;p c n 2;p 2 -2ac", "30:cab;c2v^6;p 2 n a;p -2ac 2", "30:-cba;c2v^6;p 2 a n;p -2ab 2", "30:bca;c2v^6;p b 2 n;p -2ab -2ab", "30:a-cb;c2v^6;p n 2 b;p -2bc -2bc", "31;c2v^7;p m n 21;p 2ac -2", "31:ba-c;c2v^7;p n m 21;p 2bc -2bc", "31:cab;c2v^7;p 21 m n;p -2ab 2ab", "31:-cba;c2v^7;p 21 n m;p -2 2ac", "31:bca;c2v^7;p n 21 m;p -2 -2bc", "31:a-cb;c2v^7;p m 21 n;p -2ab -2", "32;c2v^8;p b a 2;p 2 -2ab", "32:cab;c2v^8;p 2 c b;p -2bc 2", "32:bca;c2v^8;p c 2 a;p -2ac -2ac", "33;c2v^9;p n a 21;p 2c -2n", "33*;c2v^9;p n a 21*;p 21 -2n", "33:ba-c;c2v^9;p b n 21;p 2c -2ab", "33:ba-c*;c2v^9;p b n 21*;p 21 -2ab", "33:cab;c2v^9;p 21 n b;p -2bc 2a", "33:cab*;c2v^9;p 21 n b*;p -2bc 21", "33:-cba;c2v^9;p 21 c n;p -2n 2a", "33:-cba*;c2v^9;p 21 c n*;p -2n 21", "33:bca;c2v^9;p c 21 n;p -2n -2ac", "33:a-cb;c2v^9;p n 21 a;p -2ac -2n", "34;c2v^10;p n n 2;p 2 -2n", "34:cab;c2v^10;p 2 n n;p -2n 2", "34:bca;c2v^10;p n 2 n;p -2n -2n", "35;c2v^11;c m m 2;c 2 -2", "35:cab;c2v^11;a 2 m m;a -2 2", "35:bca;c2v^11;b m 2 m;b -2 -2", "36;c2v^12;c m c 21;c 2c -2", "36*;c2v^12;c m c 21*;c 21 -2", "36:ba-c;c2v^12;c c m 21;c 2c -2c", "36:ba-c*;c2v^12;c c m 21*;c 21 -2c", "36:cab;c2v^12;a 21 m a;a -2a 2a", "36:cab*;c2v^12;a 21 m a*;a -2a 21", "36:-cba;c2v^12;a 21 a m;a -2 2a", "36:-cba*;c2v^12;a 21 a m*;a -2 21", "36:bca;c2v^12;b b 21 m;b -2 -2b", "36:a-cb;c2v^12;b m 21 b;b -2b -2", "37;c2v^13;c c c 2;c 2 -2c", "37:cab;c2v^13;a 2 a a;a -2a 2", "37:bca;c2v^13;b b 2 b;b -2b -2b", "38;c2v^14;a m m 2;a 2 -2", "38:ba-c;c2v^14;b m m 2;b 2 -2", "38:cab;c2v^14;b 2 m m;b -2 2", "38:-cba;c2v^14;c 2 m m;c -2 2", "38:bca;c2v^14;c m 2 m;c -2 -2", "38:a-cb;c2v^14;a m 2 m;a -2 -2", "39;c2v^15;a e m 2;a 2 -2b", "39;c2v^15;a b m 2;a 2 -2b", "39:ba-c;c2v^15;b m a 2;b 2 -2a", "39:cab;c2v^15;b 2 c m;b -2a 2", "39:-cba;c2v^15;c 2 m b;c -2a 2", "39:bca;c2v^15;c m 2 a;c -2a -2a", "39:a-cb;c2v^15;a c 2 m;a -2b -2b", "40;c2v^16;a m a 2;a 2 -2a", "40:ba-c;c2v^16;b b m 2;b 2 -2b", "40:cab;c2v^16;b 2 m b;b -2b 2", "40:-cba;c2v^16;c 2 c m;c -2c 2", "40:bca;c2v^16;c c 2 m;c -2c -2c", "40:a-cb;c2v^16;a m 2 a;a -2a -2a", "41;c2v^17;a e a 2;a 2 -2ab", "41;c2v^17;a b a 2;a 2 -2ab;-b", "41:ba-c;c2v^17;b b a 2;b 2 -2ab", "41:cab;c2v^17;b 2 c b;b -2ab 2", "41:-cba;c2v^17;c 2 c b;c -2ac 2", "41:bca;c2v^17;c c 2 a;c -2ac -2ac", "41:a-cb;c2v^17;a c 2 a;a -2ab -2ab", "42;c2v^18;f m m 2;f 2 -2", "42:cab;c2v^18;f 2 m m;f -2 2", "42:bca;c2v^18;f m 2 m;f -2 -2", "43;c2v^19;f d d 2;f 2 -2d", "43:cab;c2v^19;f 2 d d;f -2d 2", "43:bca;c2v^19;f d 2 d;f -2d -2d", "44;c2v^20;i m m 2;i 2 -2", "44:cab;c2v^20;i 2 m m;i -2 2", "44:bca;c2v^20;i m 2 m;i -2 -2", "45;c2v^21;i b a 2;i 2 -2c", "45:cab;c2v^21;i 2 c b;i -2a 2", "45:bca;c2v^21;i c 2 a;i -2b -2b", "46;c2v^22;i m a 2;i 2 -2a", "46:ba-c;c2v^22;i b m 2;i 2 -2b", "46:cab;c2v^22;i 2 m b;i -2b 2", "46:-cba;c2v^22;i 2 c m;i -2c 2", "46:bca;c2v^22;i c 2 m;i -2c -2c", "46:a-cb;c2v^22;i m 2 a;i -2a -2a", "47;d2h^1;p m m m;-p 2 2", "48:1;d2h^2;p n n n:1;p 2 2 -1n;-b", "48:2;d2h^2;p n n n:2;-p 2ab 2bc", "49;d2h^3;p c c m;-p 2 2c", "49:cab;d2h^3;p m a a;-p 2a 2", "49:bca;d2h^3;p b m b;-p 2b 2b", "50:1;d2h^4;p b a n:1;p 2 2 -1ab;-b", "50:2;d2h^4;p b a n:2;-p 2ab 2b", "50:1cab;d2h^4;p n c b:1;p 2 2 -1bc", "50:2cab;d2h^4;p n c b:2;-p 2b 2bc", "50:1bca;d2h^4;p c n a:1;p 2 2 -1ac", "50:2bca;d2h^4;p c n a:2;-p 2a 2c", "51;d2h^5;p m m a;-p 2a 2a", "51:ba-c;d2h^5;p m m b;-p 2b 2", "51:cab;d2h^5;p b m m;-p 2 2b", "51:-cba;d2h^5;p c m m;-p 2c 2c", "51:bca;d2h^5;p m c m;-p 2c 2", "51:a-cb;d2h^5;p m a m;-p 2 2a", "52;d2h^6;p n n a;-p 2a 2bc", "52:ba-c;d2h^6;p n n b;-p 2b 2n", "52:cab;d2h^6;p b n n;-p 2n 2b", "52:-cba;d2h^6;p c n n;-p 2ab 2c", "52:bca;d2h^6;p n c n;-p 2ab 2n", "52:a-cb;d2h^6;p n a n;-p 2n 2bc", "53;d2h^7;p m n a;-p 2ac 2", "53:ba-c;d2h^7;p n m b;-p 2bc 2bc", "53:cab;d2h^7;p b m n;-p 2ab 2ab", "53:-cba;d2h^7;p c n m;-p 2 2ac", "53:bca;d2h^7;p n c m;-p 2 2bc", "53:a-cb;d2h^7;p m a n;-p 2ab 2", "54;d2h^8;p c c a;-p 2a 2ac", "54:ba-c;d2h^8;p c c b;-p 2b 2c", "54:cab;d2h^8;p b a a;-p 2a 2b", "54:-cba;d2h^8;p c a a;-p 2ac 2c", "54:bca;d2h^8;p b c b;-p 2bc 2b", "54:a-cb;d2h^8;p b a b;-p 2b 2ab", "55;d2h^9;p b a m;-p 2 2ab", "55:cab;d2h^9;p m c b;-p 2bc 2", "55:bca;d2h^9;p c m a;-p 2ac 2ac", "56;d2h^10;p c c n;-p 2ab 2ac", "56:cab;d2h^10;p n a a;-p 2ac 2bc", "56:bca;d2h^10;p b n b;-p 2bc 2ab", "57;d2h^11;p b c m;-p 2c 2b", "57:ba-c;d2h^11;p c a m;-p 2c 2ac", "57:cab;d2h^11;p m c a;-p 2ac 2a", "57:-cba;d2h^11;p m a b;-p 2b 2a", "57:bca;d2h^11;p b m a;-p 2a 2ab", "57:a-cb;d2h^11;p c m b;-p 2bc 2c", "58;d2h^12;p n n m;-p 2 2n", "58:cab;d2h^12;p m n n;-p 2n 2", "58:bca;d2h^12;p n m n;-p 2n 2n", "59:1;d2h^13;p m m n:1;p 2 2ab -1ab;-b", "59:2;d2h^13;p m m n:2;-p 2ab 2a", "59:1cab;d2h^13;p n m m:1;p 2bc 2 -1bc", "59:2cab;d2h^13;p n m m:2;-p 2c 2bc", "59:1bca;d2h^13;p m n m:1;p 2ac 2ac -1ac", "59:2bca;d2h^13;p m n m:2;-p 2c 2a", "60;d2h^14;p b c n;-p 2n 2ab", "60:ba-c;d2h^14;p c a n;-p 2n 2c", "60:cab;d2h^14;p n c a;-p 2a 2n", "60:-cba;d2h^14;p n a b;-p 2bc 2n", "60:bca;d2h^14;p b n a;-p 2ac 2b", "60:a-cb;d2h^14;p c n b;-p 2b 2ac", "61;d2h^15;p b c a;-p 2ac 2ab", "61:ba-c;d2h^15;p c a b;-p 2bc 2ac", "62;d2h^16;p n m a;-p 2ac 2n", "62:ba-c;d2h^16;p m n b;-p 2bc 2a", "62:cab;d2h^16;p b n m;-p 2c 2ab", "62:-cba;d2h^16;p c m n;-p 2n 2ac", "62:bca;d2h^16;p m c n;-p 2n 2a", "62:a-cb;d2h^16;p n a m;-p 2c 2n", "63;d2h^17;c m c m;-c 2c 2", "63:ba-c;d2h^17;c c m m;-c 2c 2c", "63:cab;d2h^17;a m m a;-a 2a 2a", "63:-cba;d2h^17;a m a m;-a 2 2a", "63:bca;d2h^17;b b m m;-b 2 2b", "63:a-cb;d2h^17;b m m b;-b 2b 2", "64;d2h^18;c m c e;-c 2ac 2", "64;d2h^18;c m c a;-c 2ac 2", "64:ba-c;d2h^18;c c m b;-c 2ac 2ac", "64:cab;d2h^18;a b m a;-a 2ab 2ab", "64:-cba;d2h^18;a c a m;-a 2 2ab", "64:bca;d2h^18;b b c m;-b 2 2ab", "64:a-cb;d2h^18;b m a b;-b 2ab 2", "65;d2h^19;c m m m;-c 2 2", "65:cab;d2h^19;a m m m;-a 2 2", "65:bca;d2h^19;b m m m;-b 2 2", "66;d2h^20;c c c m;-c 2 2c", "66:cab;d2h^20;a m a a;-a 2a 2", "66:bca;d2h^20;b b m b;-b 2b 2b", "67;d2h^21;c m m e;-c 2a 2", "67;d2h^21;c m m a;-c 2a 2", "67:ba-c;d2h^21;c m m b;-c 2a 2a", "67:cab;d2h^21;a b m m;-a 2b 2b", "67:-cba;d2h^21;a c m m;-a 2 2b", "67:bca;d2h^21;b m c m;-b 2 2a", "67:a-cb;d2h^21;b m a m;-b 2a 2", "68:1;d2h^22;c c c e:1;c 2 2 -1ac;-b", "68:1;d2h^22;c c c a:1;c 2 2 -1ac;-b", "68:2;d2h^22;c c c e:2;-c 2a 2ac", "68:2;d2h^22;c c c a:2;-c 2a 2ac", "68:1ba-c;d2h^22;c c c b:1;c 2 2 -1ac", "68:2ba-c;d2h^22;c c c b:2;-c 2a 2c", "68:1cab;d2h^22;a b a a:1;a 2 2 -1ab", "68:2cab;d2h^22;a b a a:2;-a 2a 2b", "68:1-cba;d2h^22;a c a a:1;a 2 2 -1ab", "68:2-cba;d2h^22;a c a a:2;-a 2ab 2b", "68:1bca;d2h^22;b b c b:1;b 2 2 -1ab", "68:2bca;d2h^22;b b c b:2;-b 2ab 2b", "68:1a-cb;d2h^22;b b a b:1;b 2 2 -1ab", "68:2a-cb;d2h^22;b b a b:2;-b 2b 2ab", "69;d2h^23;f m m m;-f 2 2", "70:1;d2h^24;f d d d:1;f 2 2 -1d;-b", "70:2;d2h^24;f d d d:2;-f 2uv 2vw", "71;d2h^25;i m m m;-i 2 2", "72;d2h^26;i b a m;-i 2 2c", "72:cab;d2h^26;i m c b;-i 2a 2", "72:bca;d2h^26;i c m a;-i 2b 2b", "73;d2h^27;i b c a;-i 2b 2c", "73:ba-c;d2h^27;i c a b;-i 2a 2b", "74;d2h^28;i m m a;-i 2b 2", "74:ba-c;d2h^28;i m m b;-i 2a 2a", "74:cab;d2h^28;i b m m;-i 2c 2c", "74:-cba;d2h^28;i c m m;-i 2 2b", "74:bca;d2h^28;i m c m;-i 2 2a", "74:a-cb;d2h^28;i m a m;-i 2c 2", "75;c4^1;p 4;p 4", "76;c4^2;p 41;p 4w", "76*;c4^2;p 41*;p 41", "77;c4^3;p 42;p 4c", "77*;c4^3;p 42*;p 42", "78;c4^4;p 43;p 4cw", "78*;c4^4;p 43*;p 43", "79;c4^5;i 4;i 4", "80;c4^6;i 41;i 4bw", "81;s4^1;p -4;p -4", "82;s4^2;i -4;i -4", "83;c4h^1;p 4/m;-p 4", "84;c4h^2;p 42/m;-p 4c", "84*;c4h^2;p 42/m*;-p 42", "85:1;c4h^3;p 4/n:1;p 4ab -1ab;-b", "85:2;c4h^3;p 4/n:2;-p 4a", "86:1;c4h^4;p 42/n:1;p 4n -1n;-b", "86:2;c4h^4;p 42/n:2;-p 4bc", "87;c4h^5;i 4/m;-i 4", "88:1;c4h^6;i 41/a:1;i 4bw -1bw;-b", "88:2;c4h^6;i 41/a:2;-i 4ad", "89;d4^1;p 4 2 2;p 4 2", "90;d4^2;p 4 21 2;p 4ab 2ab", "91;d4^3;p 41 2 2;p 4w 2c", "91*;d4^3;p 41 2 2*;p 41 2c", "92;d4^4;p 41 21 2;p 4abw 2nw", "93;d4^5;p 42 2 2;p 4c 2", "93*;d4^5;p 42 2 2*;p 42 2", "94;d4^6;p 42 21 2;p 4n 2n", "95;d4^7;p 43 2 2;p 4cw 2c", "95*;d4^7;p 43 2 2*;p 43 2c", "96;d4^8;p 43 21 2;p 4nw 2abw", "97;d4^9;i 4 2 2;i 4 2", "98;d4^10;i 41 2 2;i 4bw 2bw", "99;c4v^1;p 4 m m;p 4 -2", "100;c4v^2;p 4 b m;p 4 -2ab", "101;c4v^3;p 42 c m;p 4c -2c", "101*;c4v^3;p 42 c m*;p 42 -2c", "102;c4v^4;p 42 n m;p 4n -2n", "103;c4v^5;p 4 c c;p 4 -2c", "104;c4v^6;p 4 n c;p 4 -2n", "105;c4v^7;p 42 m c;p 4c -2", "105*;c4v^7;p 42 m c*;p 42 -2", "106;c4v^8;p 42 b c;p 4c -2ab", "106*;c4v^8;p 42 b c*;p 42 -2ab", "107;c4v^9;i 4 m m;i 4 -2", "108;c4v^10;i 4 c m;i 4 -2c", "109;c4v^11;i 41 m d;i 4bw -2", "110;c4v^12;i 41 c d;i 4bw -2c", "111;d2d^1;p -4 2 m;p -4 2", "112;d2d^2;p -4 2 c;p -4 2c", "113;d2d^3;p -4 21 m;p -4 2ab", "114;d2d^4;p -4 21 c;p -4 2n", "115;d2d^5;p -4 m 2;p -4 -2", "116;d2d^6;p -4 c 2;p -4 -2c", "117;d2d^7;p -4 b 2;p -4 -2ab", "118;d2d^8;p -4 n 2;p -4 -2n", "119;d2d^9;i -4 m 2;i -4 -2", "120;d2d^10;i -4 c 2;i -4 -2c", "121;d2d^11;i -4 2 m;i -4 2", "122;d2d^12;i -4 2 d;i -4 2bw", "123;d4h^1;p 4/m m m;-p 4 2", "124;d4h^2;p 4/m c c;-p 4 2c", "125:1;d4h^3;p 4/n b m:1;p 4 2 -1ab;-b", "125:2;d4h^3;p 4/n b m:2;-p 4a 2b", "126:1;d4h^4;p 4/n n c:1;p 4 2 -1n;-b", "126:2;d4h^4;p 4/n n c:2;-p 4a 2bc", "127;d4h^5;p 4/m b m;-p 4 2ab", "128;d4h^6;p 4/m n c;-p 4 2n", "129:1;d4h^7;p 4/n m m:1;p 4ab 2ab -1ab;-b", "129:2;d4h^7;p 4/n m m:2;-p 4a 2a", "130:1;d4h^8;p 4/n c c:1;p 4ab 2n -1ab;-b", "130:2;d4h^8;p 4/n c c:2;-p 4a 2ac", "131;d4h^9;p 42/m m c;-p 4c 2", "132;d4h^10;p 42/m c m;-p 4c 2c", "133:1;d4h^11;p 42/n b c:1;p 4n 2c -1n;-b", "133:2;d4h^11;p 42/n b c:2;-p 4ac 2b", "134:1;d4h^12;p 42/n n m:1;p 4n 2 -1n;-b", "134:2;d4h^12;p 42/n n m:2;-p 4ac 2bc", "135;d4h^13;p 42/m b c;-p 4c 2ab", "135*;d4h^13;p 42/m b c*;-p 42 2ab", "136;d4h^14;p 42/m n m;-p 4n 2n", "137:1;d4h^15;p 42/n m c:1;p 4n 2n -1n;-b", "137:2;d4h^15;p 42/n m c:2;-p 4ac 2a", "138:1;d4h^16;p 42/n c m:1;p 4n 2ab -1n;-b", "138:2;d4h^16;p 42/n c m:2;-p 4ac 2ac", "139;d4h^17;i 4/m m m;-i 4 2", "140;d4h^18;i 4/m c m;-i 4 2c", "141:1;d4h^19;i 41/a m d:1;i 4bw 2bw -1bw;-b", "141:2;d4h^19;i 41/a m d:2;-i 4bd 2", "142:1;d4h^20;i 41/a c d:1;i 4bw 2aw -1bw;-b", "142:2;d4h^20;i 41/a c d:2;-i 4bd 2c", "143;c3^1;p 3;p 3", "144;c3^2;p 31;p 31", "145;c3^3;p 32;p 32", "146:h;c3^4;r 3:h;r 3", "146:r;c3^4;r 3:r;p 3*", "147;c3i^1;p -3;-p 3", "148:h;c3i^2;r -3:h;-r 3", "148:r;c3i^2;r -3:r;-p 3*", "149;d3^1;p 3 1 2;p 3 2", "150;d3^2;p 3 2 1;p 3 2\"", "151;d3^3;p 31 1 2;p 31 2 (0 0 4)", "152;d3^4;p 31 2 1;p 31 2\"", "153;d3^5;p 32 1 2;p 32 2 (0 0 2)", "154;d3^6;p 32 2 1;p 32 2\"", "155:h;d3^7;r 3 2:h;r 3 2\"", "155:r;d3^7;r 3 2:r;p 3* 2", "156;c3v^1;p 3 m 1;p 3 -2\"", "157;c3v^2;p 3 1 m;p 3 -2", "158;c3v^3;p 3 c 1;p 3 -2\"c", "159;c3v^4;p 3 1 c;p 3 -2c", "160:h;c3v^5;r 3 m:h;r 3 -2\"", "160:r;c3v^5;r 3 m:r;p 3* -2", "161:h;c3v^6;r 3 c:h;r 3 -2\"c", "161:r;c3v^6;r 3 c:r;p 3* -2n", "162;d3d^1;p -3 1 m;-p 3 2", "163;d3d^2;p -3 1 c;-p 3 2c", "164;d3d^3;p -3 m 1;-p 3 2\"", "165;d3d^4;p -3 c 1;-p 3 2\"c", "166:h;d3d^5;r -3 m:h;-r 3 2\"", "166:r;d3d^5;r -3 m:r;-p 3* 2", "167:h;d3d^6;r -3 c:h;-r 3 2\"c", "167:r;d3d^6;r -3 c:r;-p 3* 2n", "168;c6^1;p 6;p 6", "169;c6^2;p 61;p 61", "170;c6^3;p 65;p 65", "171;c6^4;p 62;p 62", "172;c6^5;p 64;p 64", "173;c6^6;p 63;p 6c", "173*;c6^6;p 63*;p 63 ", "174;c3h^1;p -6;p -6", "175;c6h^1;p 6/m;-p 6", "176;c6h^2;p 63/m;-p 6c", "176*;c6h^2;p 63/m*;-p 63", "177;d6^1;p 6 2 2;p 6 2", "178;d6^2;p 61 2 2;p 61 2 (0 0 5)", "179;d6^3;p 65 2 2;p 65 2 (0 0 1)", "180;d6^4;p 62 2 2;p 62 2 (0 0 4)", "181;d6^5;p 64 2 2;p 64 2 (0 0 2)", "182;d6^6;p 63 2 2;p 6c 2c", "182*;d6^6;p 63 2 2*;p 63 2c", "183;c6v^1;p 6 m m;p 6 -2", "184;c6v^2;p 6 c c;p 6 -2c", "185;c6v^3;p 63 c m;p 6c -2", "185*;c6v^3;p 63 c m*;p 63 -2", "186;c6v^4;p 63 m c;p 6c -2c", "186*;c6v^4;p 63 m c*;p 63 -2c", "187;d3h^1;p -6 m 2;p -6 2", "188;d3h^2;p -6 c 2;p -6c 2", "189;d3h^3;p -6 2 m;p -6 -2", "190;d3h^4;p -6 2 c;p -6c -2c", "191;d6h^1;p 6/m m m;-p 6 2", "192;d6h^2;p 6/m c c;-p 6 2c", "193;d6h^3;p 63/m c m;-p 6c 2", "193*;d6h^3;p 63/m c m*;-p 63 2", "194;d6h^4;p 63/m m c;-p 6c 2c", "194*;d6h^4;p 63/m m c*;-p 63 2c", "195;t^1;p 2 3;p 2 2 3", "196;t^2;f 2 3;f 2 2 3", "197;t^3;i 2 3;i 2 2 3", "198;t^4;p 21 3;p 2ac 2ab 3", "199;t^5;i 21 3;i 2b 2c 3", "200;th^1;p m -3;-p 2 2 3", "201:1;th^2;p n -3:1;p 2 2 3 -1n;-b", "201:2;th^2;p n -3:2;-p 2ab 2bc 3", "202;th^3;f m -3;-f 2 2 3", "203:1;th^4;f d -3:1;f 2 2 3 -1d;-b", "203:2;th^4;f d -3:2;-f 2uv 2vw 3", "204;th^5;i m -3;-i 2 2 3", "205;th^6;p a -3;-p 2ac 2ab 3", "206;th^7;i a -3;-i 2b 2c 3", "207;o^1;p 4 3 2;p 4 2 3", "208;o^2;p 42 3 2;p 4n 2 3", "209;o^3;f 4 3 2;f 4 2 3", "210;o^4;f 41 3 2;f 4d 2 3", "211;o^5;i 4 3 2;i 4 2 3", "212;o^6;p 43 3 2;p 4acd 2ab 3", "213;o^7;p 41 3 2;p 4bd 2ab 3", "214;o^8;i 41 3 2;i 4bd 2c 3", "215;td^1;p -4 3 m;p -4 2 3", "216;td^2;f -4 3 m;f -4 2 3", "217;td^3;i -4 3 m;i -4 2 3", "218;td^4;p -4 3 n;p -4n 2 3", "219;td^5;f -4 3 c;f -4a 2 3", "220;td^6;i -4 3 d;i -4bd 2c 3", "221;oh^1;p m -3 m;-p 4 2 3", "222:1;oh^2;p n -3 n:1;p 4 2 3 -1n;-b", "222:2;oh^2;p n -3 n:2;-p 4a 2bc 3", "223;oh^3;p m -3 n;-p 4n 2 3", "224:1;oh^4;p n -3 m:1;p 4n 2 3 -1n;-b", "224:2;oh^4;p n -3 m:2;-p 4bc 2bc 3", "225;oh^5;f m -3 m;-f 4 2 3", "226;oh^6;f m -3 c;-f 4a 2 3", "227:1;oh^7;f d -3 m:1;f 4d 2 3 -1d;-b", "227:2;oh^7;f d -3 m:2;-f 4vw 2vw 3", "228:1;oh^8;f d -3 c:1;f 4d 2 3 -1ad;-b", "228:2;oh^8;f d -3 c:2;-f 4ud 2vw 3", "229;oh^9;i m -3 m;-i 4 2 3", "230;oh^10;i a -3 d;-i 4bd 2c 3"]));
+"spaceGroupDefinitions", null);
 });
-Clazz_declarePackage ("JS");
-Clazz_load (null, "JS.HallInfo", ["JU.P3i", "$.SB", "JS.HallRotationTerm", "$.HallTranslation", "JU.Logger"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (null, "J.symmetry.HallInfo", ["JU.P3i", "$.SB", "J.symmetry.HallRotationTerm", "$.HallTranslation", "JW.Logger"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.hallSymbol = null;
 this.primitiveHallSymbol = null;
@@ -2581,7 +2432,7 @@ this.rotationTerms = null;
 this.vector12ths = null;
 this.vectorCode = null;
 Clazz_instantialize (this, arguments);
-}, JS, "HallInfo");
+}, J.symmetry, "HallInfo");
 Clazz_prepareFields (c$, function () {
 this.rotationTerms =  new Array (16);
 });
@@ -2590,10 +2441,10 @@ function (hallSymbol) {
 try {
 var str = this.hallSymbol = hallSymbol.trim ();
 str = this.extractLatticeInfo (str);
-if (JS.HallTranslation.getLatticeIndex (this.latticeCode) == 0) return;
-this.latticeExtension = JS.HallTranslation.getLatticeExtension (this.latticeCode, this.isCentrosymmetric);
+if (J.symmetry.HallTranslation.getLatticeIndex (this.latticeCode) == 0) return;
+this.latticeExtension = J.symmetry.HallTranslation.getLatticeExtension (this.latticeCode, this.isCentrosymmetric);
 str = this.extractVectorInfo (str) + this.latticeExtension;
-if (JU.Logger.debugging) JU.Logger.debug ("Hallinfo: " + hallSymbol + " " + str);
+if (JW.Logger.debugging) JW.Logger.debug ("Hallinfo: " + hallSymbol + " " + str);
 var prevOrder = 0;
 var prevAxisType = '\u0000';
 this.primitiveHallSymbol = "P";
@@ -2607,7 +2458,7 @@ this.primitiveHallSymbol += " " + r.primitiveCode;
 this.primitiveHallSymbol += this.vectorCode;
 } catch (e) {
 if (Clazz_exceptionOf (e, Exception)) {
-JU.Logger.error ("Invalid Hall symbol " + e);
+JW.Logger.error ("Invalid Hall symbol " + e);
 this.nRotations = 0;
 } else {
 throw e;
@@ -2625,7 +2476,7 @@ return sb.toString ();
 });
 Clazz_defineMethod (c$, "getLatticeDesignation", 
  function () {
-return JS.HallTranslation.getLatticeDesignation2 (this.latticeCode, this.isCentrosymmetric);
+return J.symmetry.HallTranslation.getLatticeDesignation2 (this.latticeCode, this.isCentrosymmetric);
 });
 Clazz_defineMethod (c$, "extractLatticeInfo", 
  function (name) {
@@ -2669,13 +2520,13 @@ name = name.substring (i + 1).trim ();
 } else {
 code = name;
 name = "";
-}this.rotationTerms[this.nRotations] =  new JS.HallRotationTerm (this, code, prevOrder, prevAxisType);
+}this.rotationTerms[this.nRotations] =  new J.symmetry.HallRotationTerm (this, code, prevOrder, prevAxisType);
 this.nRotations++;
 return name;
 }, "~S,~N,~S");
 });
-Clazz_declarePackage ("JS");
-Clazz_load (["JU.M4"], "JS.HallRotationTerm", ["JU.SB", "JS.HallRotation", "$.HallTranslation", "$.SymmetryOperation", "JU.Logger"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["JU.M4"], "J.symmetry.HallRotationTerm", ["JU.SB", "J.symmetry.HallRotation", "$.HallTranslation", "$.SymmetryOperation", "JW.Logger"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.inputCode = null;
 this.primitiveCode = null;
@@ -2690,7 +2541,7 @@ this.axisType = '\0';
 this.diagonalReferenceAxis = '\0';
 this.allPositive = true;
 Clazz_instantialize (this, arguments);
-}, JS, "HallRotationTerm");
+}, J.symmetry, "HallRotationTerm");
 Clazz_prepareFields (c$, function () {
 this.seitzMatrix12ths =  new JU.M4 ();
 });
@@ -2745,24 +2596,27 @@ code = code.substring (0, 1) + this.diagonalReferenceAxis + this.axisType + code
 this.primitiveCode += this.diagonalReferenceAxis;
 ptr = 3;
 }this.lookupCode = code.substring (0, ptr);
-this.rotation = JS.HallRotation.lookup (this.lookupCode);
+this.rotation = J.symmetry.HallRotation.lookup (this.lookupCode);
 if (this.rotation == null) {
-JU.Logger.error ("Rotation lookup could not find " + this.inputCode + " ? " + this.lookupCode);
+JW.Logger.error ("Rotation lookup could not find " + this.inputCode + " ? " + this.lookupCode);
 return;
-}this.translation =  new JS.HallTranslation ('\0', null);
+}this.translation =  new J.symmetry.HallTranslation ('\0', null);
 this.translationString = "";
 var len = code.length;
 for (var i = ptr; i < len; i++) {
 var translationCode = code.charAt (i);
-var t = JS.HallTranslation.getHallTranslation (translationCode, this.order);
+var t = J.symmetry.HallTranslation.getHallTranslation (translationCode, this.order);
 if (t != null) {
 this.translationString += "" + t.translationCode;
 this.translation.rotationShift12ths += t.rotationShift12ths;
 this.translation.vectorShift12ths.add (t.vectorShift12ths);
 }}
 this.primitiveCode = (this.isImproper ? "-" : "") + this.primitiveCode + this.translationString;
-this.seitzMatrix12ths.setM4 (this.isImproper ? this.rotation.seitzMatrixInv : this.rotation.seitzMatrix);
-this.seitzMatrix12ths.m03 = this.translation.vectorShift12ths.x;
+if (this.isImproper) {
+this.seitzMatrix12ths.setM4 (this.rotation.seitzMatrixInv);
+} else {
+this.seitzMatrix12ths.setM4 (this.rotation.seitzMatrix);
+}this.seitzMatrix12ths.m03 = this.translation.vectorShift12ths.x;
 this.seitzMatrix12ths.m13 = this.translation.vectorShift12ths.y;
 this.seitzMatrix12ths.m23 = this.translation.vectorShift12ths.z;
 switch (this.axisType) {
@@ -2788,9 +2642,9 @@ m2.m13 = -v.y;
 m2.m23 = -v.z;
 this.seitzMatrix12ths.mul2 (m1, this.seitzMatrix12ths);
 this.seitzMatrix12ths.mul (m2);
-}if (JU.Logger.debugging) {
-JU.Logger.debug ("code = " + code + "; primitive code =" + this.primitiveCode + "\n Seitz Matrix(12ths):" + this.seitzMatrix12ths);
-}}, "JS.HallInfo,~S,~N,~S");
+}if (JW.Logger.debugging) {
+JW.Logger.debug ("code = " + code + "; primitive code =" + this.primitiveCode + "\n Seitz Matrix(12ths):" + this.seitzMatrix12ths);
+}}, "J.symmetry.HallInfo,~S,~N,~S");
 Clazz_defineMethod (c$, "dumpInfo", 
 function (vectorCode) {
 var sb =  new JU.SB ();
@@ -2800,22 +2654,22 @@ sb.append ("; axisType: ").appendC (this.axisType);
 if (this.diagonalReferenceAxis != '\0') sb.appendC (this.diagonalReferenceAxis);
 }if (this.translationString.length > 0) sb.append ("; translation: ").append (this.translationString);
 if (vectorCode.length > 0) sb.append ("; vector offset: ").append (vectorCode);
-if (this.rotation != null) sb.append ("\noperator: ").append (this.getXYZ (this.allPositive)).append ("\nSeitz matrix:\n").append (JS.SymmetryOperation.dumpSeitz (this.seitzMatrix12ths, false));
+if (this.rotation != null) sb.append ("\noperator: ").append (this.getXYZ (this.allPositive)).append ("\nSeitz matrix:\n").append (J.symmetry.SymmetryOperation.dumpSeitz (this.seitzMatrix12ths));
 return sb.toString ();
 }, "~S");
 Clazz_defineMethod (c$, "getXYZ", 
 function (allPositive) {
-return JS.SymmetryOperation.getXYZFromMatrix (this.seitzMatrix12ths, true, allPositive, true);
+return J.symmetry.SymmetryOperation.getXYZFromMatrix (this.seitzMatrix12ths, true, allPositive, true);
 }, "~B");
 });
-Clazz_declarePackage ("JS");
-Clazz_load (["JU.M4"], "JS.HallRotation", null, function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["JU.M4"], "J.symmetry.HallRotation", null, function () {
 c$ = Clazz_decorateAsClass (function () {
 this.rotCode = null;
 this.seitzMatrix = null;
 this.seitzMatrixInv = null;
 Clazz_instantialize (this, arguments);
-}, JS, "HallRotation");
+}, J.symmetry, "HallRotation");
 Clazz_prepareFields (c$, function () {
 this.seitzMatrix =  new JU.M4 ();
 this.seitzMatrixInv =  new JU.M4 ();
@@ -2849,26 +2703,26 @@ this.seitzMatrixInv.setA (dataInv);
 }, "~S,~S");
 c$.lookup = Clazz_defineMethod (c$, "lookup", 
 function (code) {
-for (var i = JS.HallRotation.getHallTerms ().length; --i >= 0; ) if (JS.HallRotation.hallRotationTerms[i].rotCode.equals (code)) return JS.HallRotation.hallRotationTerms[i];
+for (var i = J.symmetry.HallRotation.getHallTerms ().length; --i >= 0; ) if (J.symmetry.HallRotation.hallRotationTerms[i].rotCode.equals (code)) return J.symmetry.HallRotation.hallRotationTerms[i];
 
 return null;
 }, "~S");
 c$.getHallTerms = Clazz_defineMethod (c$, "getHallTerms", 
  function () {
-return (JS.HallRotation.hallRotationTerms == null ? JS.HallRotation.hallRotationTerms =  Clazz_newArray (-1, [ new JS.HallRotation ("1_", "+00 0+0 00+"),  new JS.HallRotation ("2x", "+00 0-0 00-"),  new JS.HallRotation ("2y", "-00 0+0 00-"),  new JS.HallRotation ("2z", "-00 0-0 00+"),  new JS.HallRotation ("2'", "0-0 -00 00-"),  new JS.HallRotation ("2\"", "0+0 +00 00-"),  new JS.HallRotation ("2x'", "-00 00- 0-0"),  new JS.HallRotation ("2x\"", "-00 00+ 0+0"),  new JS.HallRotation ("2y'", "00- 0-0 -00"),  new JS.HallRotation ("2y\"", "00+ 0-0 +00"),  new JS.HallRotation ("2z'", "0-0 -00 00-"),  new JS.HallRotation ("2z\"", "0+0 +00 00-"),  new JS.HallRotation ("3x", "+00 00- 0+-"),  new JS.HallRotation ("3y", "-0+ 0+0 -00"),  new JS.HallRotation ("3z", "0-0 +-0 00+"),  new JS.HallRotation ("3*", "00+ +00 0+0"),  new JS.HallRotation ("4x", "+00 00- 0+0"),  new JS.HallRotation ("4y", "00+ 0+0 -00"),  new JS.HallRotation ("4z", "0-0 +00 00+"),  new JS.HallRotation ("6x", "+00 0+- 0+0"),  new JS.HallRotation ("6y", "00+ 0+0 -0+"),  new JS.HallRotation ("6z", "+-0 +00 00+")]) : JS.HallRotation.hallRotationTerms);
+return (J.symmetry.HallRotation.hallRotationTerms == null ? J.symmetry.HallRotation.hallRotationTerms = [ new J.symmetry.HallRotation ("1_", "+00 0+0 00+"),  new J.symmetry.HallRotation ("2x", "+00 0-0 00-"),  new J.symmetry.HallRotation ("2y", "-00 0+0 00-"),  new J.symmetry.HallRotation ("2z", "-00 0-0 00+"),  new J.symmetry.HallRotation ("2\'", "0-0 -00 00-"),  new J.symmetry.HallRotation ("2\"", "0+0 +00 00-"),  new J.symmetry.HallRotation ("2x\'", "-00 00- 0-0"),  new J.symmetry.HallRotation ("2x\"", "-00 00+ 0+0"),  new J.symmetry.HallRotation ("2y\'", "00- 0-0 -00"),  new J.symmetry.HallRotation ("2y\"", "00+ 0-0 +00"),  new J.symmetry.HallRotation ("2z\'", "0-0 -00 00-"),  new J.symmetry.HallRotation ("2z\"", "0+0 +00 00-"),  new J.symmetry.HallRotation ("3x", "+00 00- 0+-"),  new J.symmetry.HallRotation ("3y", "-0+ 0+0 -00"),  new J.symmetry.HallRotation ("3z", "0-0 +-0 00+"),  new J.symmetry.HallRotation ("3*", "00+ +00 0+0"),  new J.symmetry.HallRotation ("4x", "+00 00- 0+0"),  new J.symmetry.HallRotation ("4y", "00+ 0+0 -00"),  new J.symmetry.HallRotation ("4z", "0-0 +00 00+"),  new J.symmetry.HallRotation ("6x", "+00 0+- 0+0"),  new J.symmetry.HallRotation ("6y", "00+ 0+0 -0+"),  new J.symmetry.HallRotation ("6z", "+-0 +00 00+")] : J.symmetry.HallRotation.hallRotationTerms);
 });
 Clazz_defineStatics (c$,
 "hallRotationTerms", null);
 });
-Clazz_declarePackage ("JS");
-Clazz_load (null, "JS.HallTranslation", ["JU.P3i"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (null, "J.symmetry.HallTranslation", ["JU.P3i"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.translationCode = '\0';
 this.rotationOrder = 0;
 this.rotationShift12ths = 0;
 this.vectorShift12ths = null;
 Clazz_instantialize (this, arguments);
-}, JS, "HallTranslation");
+}, J.symmetry, "HallTranslation");
 Clazz_makeConstructor (c$, 
 function (translationCode, params) {
 this.translationCode = translationCode;
@@ -2882,53 +2736,53 @@ this.rotationShift12ths = params.y;
 }, "~S,JU.P3i");
 c$.getHallLatticeEquivalent = Clazz_defineMethod (c$, "getHallLatticeEquivalent", 
 function (latticeParameter) {
-var latticeCode = JS.HallTranslation.getLatticeCode (latticeParameter);
+var latticeCode = J.symmetry.HallTranslation.getLatticeCode (latticeParameter);
 var isCentrosymmetric = (latticeParameter > 0);
 return (isCentrosymmetric ? "-" : "") + latticeCode + " 1";
 }, "~N");
 c$.getLatticeIndex = Clazz_defineMethod (c$, "getLatticeIndex", 
 function (latt) {
-for (var i = 1, ipt = 3; i <= JS.HallTranslation.nLatticeTypes; i++, ipt += 3) if (JS.HallTranslation.latticeTranslationData[ipt].charAt (0) == latt) return i;
+for (var i = 1, ipt = 3; i <= J.symmetry.HallTranslation.nLatticeTypes; i++, ipt += 3) if (J.symmetry.HallTranslation.latticeTranslationData[ipt].charAt (0) == latt) return i;
 
 return 0;
 }, "~S");
 c$.getLatticeCode = Clazz_defineMethod (c$, "getLatticeCode", 
 function (latt) {
 if (latt < 0) latt = -latt;
-return (latt == 0 ? '\0' : latt > JS.HallTranslation.nLatticeTypes ? JS.HallTranslation.getLatticeCode (JS.HallTranslation.getLatticeIndex (String.fromCharCode (latt))) : JS.HallTranslation.latticeTranslationData[latt * 3].charAt (0));
+return (latt == 0 ? '\0' : latt > J.symmetry.HallTranslation.nLatticeTypes ? J.symmetry.HallTranslation.getLatticeCode (J.symmetry.HallTranslation.getLatticeIndex (String.fromCharCode (latt))) : J.symmetry.HallTranslation.latticeTranslationData[latt * 3].charAt (0));
 }, "~N");
 c$.getLatticeDesignation = Clazz_defineMethod (c$, "getLatticeDesignation", 
 function (latt) {
 var isCentrosymmetric = (latt > 0);
 var str = (isCentrosymmetric ? "-" : "");
 if (latt < 0) latt = -latt;
-if (latt == 0 || latt > JS.HallTranslation.nLatticeTypes) return "";
-return str + JS.HallTranslation.getLatticeCode (latt) + ": " + (isCentrosymmetric ? "centrosymmetric " : "") + JS.HallTranslation.latticeTranslationData[latt * 3 + 1];
+if (latt == 0 || latt > J.symmetry.HallTranslation.nLatticeTypes) return "";
+return str + J.symmetry.HallTranslation.getLatticeCode (latt) + ": " + (isCentrosymmetric ? "centrosymmetric " : "") + J.symmetry.HallTranslation.latticeTranslationData[latt * 3 + 1];
 }, "~N");
 c$.getLatticeDesignation2 = Clazz_defineMethod (c$, "getLatticeDesignation2", 
 function (latticeCode, isCentrosymmetric) {
-var latt = JS.HallTranslation.getLatticeIndex (latticeCode);
+var latt = J.symmetry.HallTranslation.getLatticeIndex (latticeCode);
 if (!isCentrosymmetric) latt = -latt;
-return JS.HallTranslation.getLatticeDesignation (latt);
+return J.symmetry.HallTranslation.getLatticeDesignation (latt);
 }, "~S,~B");
 c$.getLatticeExtension = Clazz_defineMethod (c$, "getLatticeExtension", 
 function (latt, isCentrosymmetric) {
-for (var i = 1, ipt = 3; i <= JS.HallTranslation.nLatticeTypes; i++, ipt += 3) if (JS.HallTranslation.latticeTranslationData[ipt].charAt (0) == latt) return JS.HallTranslation.latticeTranslationData[ipt + 2] + (isCentrosymmetric ? " -1" : "");
+for (var i = 1, ipt = 3; i <= J.symmetry.HallTranslation.nLatticeTypes; i++, ipt += 3) if (J.symmetry.HallTranslation.latticeTranslationData[ipt].charAt (0) == latt) return J.symmetry.HallTranslation.latticeTranslationData[ipt + 2] + (isCentrosymmetric ? " -1" : "");
 
 return "";
 }, "~S,~B");
 c$.getHallTerms = Clazz_defineMethod (c$, "getHallTerms", 
  function () {
-return (JS.HallTranslation.hallTranslationTerms == null ? JS.HallTranslation.hallTranslationTerms =  Clazz_newArray (-1, [ new JS.HallTranslation ('a', JU.P3i.new3 (6, 0, 0)),  new JS.HallTranslation ('b', JU.P3i.new3 (0, 6, 0)),  new JS.HallTranslation ('c', JU.P3i.new3 (0, 0, 6)),  new JS.HallTranslation ('n', JU.P3i.new3 (6, 6, 6)),  new JS.HallTranslation ('u', JU.P3i.new3 (3, 0, 0)),  new JS.HallTranslation ('v', JU.P3i.new3 (0, 3, 0)),  new JS.HallTranslation ('w', JU.P3i.new3 (0, 0, 3)),  new JS.HallTranslation ('d', JU.P3i.new3 (3, 3, 3)),  new JS.HallTranslation ('1', JU.P3i.new3 (2, 6, -1)),  new JS.HallTranslation ('1', JU.P3i.new3 (3, 4, -1)),  new JS.HallTranslation ('2', JU.P3i.new3 (3, 8, -1)),  new JS.HallTranslation ('1', JU.P3i.new3 (4, 3, -1)),  new JS.HallTranslation ('3', JU.P3i.new3 (4, 9, -1)),  new JS.HallTranslation ('1', JU.P3i.new3 (6, 2, -1)),  new JS.HallTranslation ('2', JU.P3i.new3 (6, 4, -1)),  new JS.HallTranslation ('4', JU.P3i.new3 (6, 8, -1)),  new JS.HallTranslation ('5', JU.P3i.new3 (6, 10, -1)),  new JS.HallTranslation ('r', JU.P3i.new3 (4, 8, 8)),  new JS.HallTranslation ('s', JU.P3i.new3 (8, 8, 4)),  new JS.HallTranslation ('t', JU.P3i.new3 (8, 4, 8))]) : JS.HallTranslation.hallTranslationTerms);
+return (J.symmetry.HallTranslation.hallTranslationTerms == null ? J.symmetry.HallTranslation.hallTranslationTerms = [ new J.symmetry.HallTranslation ('a', JU.P3i.new3 (6, 0, 0)),  new J.symmetry.HallTranslation ('b', JU.P3i.new3 (0, 6, 0)),  new J.symmetry.HallTranslation ('c', JU.P3i.new3 (0, 0, 6)),  new J.symmetry.HallTranslation ('n', JU.P3i.new3 (6, 6, 6)),  new J.symmetry.HallTranslation ('u', JU.P3i.new3 (3, 0, 0)),  new J.symmetry.HallTranslation ('v', JU.P3i.new3 (0, 3, 0)),  new J.symmetry.HallTranslation ('w', JU.P3i.new3 (0, 0, 3)),  new J.symmetry.HallTranslation ('d', JU.P3i.new3 (3, 3, 3)),  new J.symmetry.HallTranslation ('1', JU.P3i.new3 (2, 6, -1)),  new J.symmetry.HallTranslation ('1', JU.P3i.new3 (3, 4, -1)),  new J.symmetry.HallTranslation ('2', JU.P3i.new3 (3, 8, -1)),  new J.symmetry.HallTranslation ('1', JU.P3i.new3 (4, 3, -1)),  new J.symmetry.HallTranslation ('3', JU.P3i.new3 (4, 9, -1)),  new J.symmetry.HallTranslation ('1', JU.P3i.new3 (6, 2, -1)),  new J.symmetry.HallTranslation ('2', JU.P3i.new3 (6, 4, -1)),  new J.symmetry.HallTranslation ('4', JU.P3i.new3 (6, 8, -1)),  new J.symmetry.HallTranslation ('5', JU.P3i.new3 (6, 10, -1)),  new J.symmetry.HallTranslation ('r', JU.P3i.new3 (4, 8, 8)),  new J.symmetry.HallTranslation ('s', JU.P3i.new3 (8, 8, 4)),  new J.symmetry.HallTranslation ('t', JU.P3i.new3 (8, 4, 8))] : J.symmetry.HallTranslation.hallTranslationTerms);
 });
 c$.getHallTranslation = Clazz_defineMethod (c$, "getHallTranslation", 
 function (translationCode, order) {
 var ht = null;
-for (var i = JS.HallTranslation.getHallTerms ().length; --i >= 0; ) {
-var h = JS.HallTranslation.hallTranslationTerms[i];
+for (var i = J.symmetry.HallTranslation.getHallTerms ().length; --i >= 0; ) {
+var h = J.symmetry.HallTranslation.hallTranslationTerms[i];
 if (h.translationCode == translationCode) {
 if (h.rotationOrder == 0 || h.rotationOrder == order) {
-ht =  new JS.HallTranslation (translationCode, null);
+ht =  new J.symmetry.HallTranslation (translationCode, null);
 ht.translationCode = translationCode;
 ht.rotationShift12ths = h.rotationShift12ths;
 ht.vectorShift12ths = h.vectorShift12ths;
@@ -2937,20 +2791,19 @@ return ht;
 return ht;
 }, "~S,~N");
 Clazz_defineStatics (c$,
-"latticeTranslationData",  Clazz_newArray (-1, ["\0", "unknown", "", "P", "primitive", "", "I", "body-centered", " 1n", "R", "rhombohedral", " 1r 1r", "F", "face-centered", " 1ab 1bc 1ac", "A", "A-centered", " 1bc", "B", "B-centered", " 1ac", "C", "C-centered", " 1ab", "S", "rhombohedral(S)", " 1s 1s", "T", "rhombohedral(T)", " 1t 1t"]));
-c$.nLatticeTypes = c$.prototype.nLatticeTypes = Clazz_doubleToInt (JS.HallTranslation.latticeTranslationData.length / 3) - 1;
+"latticeTranslationData", ["\0", "unknown", "", "P", "primitive", "", "I", "body-centered", " 1n", "R", "rhombohedral", " 1r 1r", "F", "face-centered", " 1ab 1bc 1ac", "A", "A-centered", " 1bc", "B", "B-centered", " 1ac", "C", "C-centered", " 1ab", "S", "rhombohedral(S)", " 1s 1s", "T", "rhombohedral(T)", " 1t 1t"]);
+c$.nLatticeTypes = c$.prototype.nLatticeTypes = Clazz_doubleToInt (J.symmetry.HallTranslation.latticeTranslationData.length / 3) - 1;
 Clazz_defineStatics (c$,
 "hallTranslationTerms", null);
 });
-Clazz_declarePackage ("JS");
-Clazz_load (["JU.M4"], "JS.SymmetryOperation", ["java.lang.Float", "JU.Matrix", "$.P3", "$.PT", "$.SB", "$.V3", "JU.Logger", "$.Parser"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["JU.M4"], "J.symmetry.SymmetryOperation", ["java.lang.Float", "JU.List", "$.Matrix", "$.P3", "$.P4", "$.PT", "$.Quat", "$.SB", "$.V3", "JW.Escape", "$.Logger", "$.Measure", "$.Parser"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.xyzOriginal = null;
 this.xyz = null;
 this.doNormalize = true;
 this.isFinalized = false;
 this.opId = 0;
-this.centering = null;
 this.atomTest = null;
 this.myLabels = null;
 this.modDim = 0;
@@ -2960,12 +2813,8 @@ this.isBio = false;
 this.sigma = null;
 this.index = 0;
 this.subsystemCode = null;
-this.timeReversal = 0;
-this.unCentered = false;
-this.isCenteringOp = false;
-this.magOp = 3.4028235E38;
 Clazz_instantialize (this, arguments);
-}, JS, "SymmetryOperation", JU.M4);
+}, J.symmetry, "SymmetryOperation", JU.M4);
 Clazz_defineMethod (c$, "setSigma", 
 function (subsystemCode, sigma) {
 this.subsystemCode = subsystemCode;
@@ -2986,11 +2835,10 @@ this.index = op.index;
 this.linearRotTrans = op.linearRotTrans;
 this.sigma = op.sigma;
 this.subsystemCode = op.subsystemCode;
-this.timeReversal = op.timeReversal;
 this.setMatrix (false);
 if (!op.isFinalized) this.doFinalize ();
 if (doNormalize && this.sigma == null) this.setOffset (atoms, atomIndex, countOrId);
-}, "JS.SymmetryOperation,~A,~N,~N,~B");
+}, "J.symmetry.SymmetryOperation,~A,~N,~N,~B");
 Clazz_defineMethod (c$, "setGamma", 
  function (isReverse) {
 var n = 3 + this.modDim;
@@ -3037,82 +2885,60 @@ function () {
 return "\n" + this.xyz + "\ninternal matrix representation:\n" + this.toString ();
 });
 c$.dumpSeitz = Clazz_defineMethod (c$, "dumpSeitz", 
-function (s, isCanonical) {
-var sb =  new JU.SB ();
-var r =  Clazz_newFloatArray (4, 0);
-for (var i = 0; i < 3; i++) {
-s.getRow (i, r);
-sb.append ("[\t");
-for (var j = 0; j < 3; j++) sb.appendI (Clazz_floatToInt (r[j])).append ("\t");
-
-sb.append (JS.SymmetryOperation.twelfthsOf (isCanonical ? (Clazz_floatToInt (r[3]) + 12) % 12 : Clazz_floatToInt (r[3]))).append ("\t]\n");
-}
-return sb.toString ();
-}, "JU.M4,~B");
+function (s) {
+return  new JU.SB ().append ("{\t").appendI (Clazz_floatToInt (s.m00)).append ("\t").appendI (Clazz_floatToInt (s.m01)).append ("\t").appendI (Clazz_floatToInt (s.m02)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf (s.m03)).append ("\t}\n").append ("{\t").appendI (Clazz_floatToInt (s.m10)).append ("\t").appendI (Clazz_floatToInt (s.m11)).append ("\t").appendI (Clazz_floatToInt (s.m12)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf (s.m13)).append ("\t}\n").append ("{\t").appendI (Clazz_floatToInt (s.m20)).append ("\t").appendI (Clazz_floatToInt (s.m21)).append ("\t").appendI (Clazz_floatToInt (s.m22)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf (s.m23)).append ("\t}\n").append ("{\t0\t0\t0\t1\t}\n").toString ();
+}, "JU.M4");
+c$.dumpCanonicalSeitz = Clazz_defineMethod (c$, "dumpCanonicalSeitz", 
+function (s) {
+return  new JU.SB ().append ("{\t").appendI (Clazz_floatToInt (s.m00)).append ("\t").appendI (Clazz_floatToInt (s.m01)).append ("\t").appendI (Clazz_floatToInt (s.m02)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf ((s.m03 + 12) % 12)).append ("\t}\n").append ("{\t").appendI (Clazz_floatToInt (s.m10)).append ("\t").appendI (Clazz_floatToInt (s.m11)).append ("\t").appendI (Clazz_floatToInt (s.m12)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf ((s.m13 + 12) % 12)).append ("\t}\n").append ("{\t").appendI (Clazz_floatToInt (s.m20)).append ("\t").appendI (Clazz_floatToInt (s.m21)).append ("\t").appendI (Clazz_floatToInt (s.m22)).append ("\t").append (J.symmetry.SymmetryOperation.twelfthsOf ((s.m23 + 12) % 12)).append ("\t}\n").append ("{\t0\t0\t0\t1\t}\n").toString ();
+}, "JU.M4");
 Clazz_defineMethod (c$, "setMatrixFromXYZ", 
 function (xyz, modDim, allowScaling) {
 if (xyz == null) return false;
 this.xyzOriginal = xyz;
 xyz = xyz.toLowerCase ();
-this.setModDim (modDim);
+var n = (modDim + 4) * (modDim + 4);
+this.modDim = modDim;
+if (modDim > 0) this.myLabels = J.symmetry.SymmetryOperation.labelsXn;
+this.linearRotTrans =  Clazz_newFloatArray (n, 0);
 var isReverse = (xyz.startsWith ("!"));
 if (isReverse) xyz = xyz.substring (1);
 if (xyz.indexOf ("xyz matrix:") == 0) {
 this.xyz = xyz;
-JU.Parser.parseStringInfestedFloatArray (xyz, null, this.linearRotTrans);
+JW.Parser.parseStringInfestedFloatArray (xyz, null, this.linearRotTrans);
 return this.setFromMatrix (null, isReverse);
 }if (xyz.indexOf ("[[") == 0) {
 xyz = xyz.$replace ('[', ' ').$replace (']', ' ').$replace (',', ' ');
-JU.Parser.parseStringInfestedFloatArray (xyz, null, this.linearRotTrans);
-for (var i = this.linearRotTrans.length; --i >= 0; ) if (Float.isNaN (this.linearRotTrans[i])) return false;
-
+JW.Parser.parseStringInfestedFloatArray (xyz, null, this.linearRotTrans);
+for (var i = 0; i < n; i++) {
+var v = this.linearRotTrans[i];
+if (Float.isNaN (v)) return false;
+}
 this.setMatrix (isReverse);
 this.isFinalized = true;
 this.isBio = (xyz.indexOf ("bio") >= 0);
-this.xyz = (this.isBio ? this.toString () : JS.SymmetryOperation.getXYZFromMatrix (this, false, false, false));
+this.xyz = (this.isBio ? this.toString () : J.symmetry.SymmetryOperation.getXYZFromMatrix (this, false, false, false));
 return true;
-}if (modDim == 0 && xyz.indexOf ("x4") >= 0) {
-for (var i = 14; --i >= 4; ) {
-if (xyz.indexOf ("x" + i) >= 0) {
-this.setModDim (i - 3);
-break;
-}}
-}if (xyz.endsWith ("m")) {
-this.timeReversal = (xyz.indexOf ("-m") >= 0 ? -1 : 1);
-allowScaling = true;
-}var strOut = JS.SymmetryOperation.getMatrixFromString (this, xyz, this.linearRotTrans, allowScaling);
+}var strOut = J.symmetry.SymmetryOperation.getMatrixFromString (this, xyz, this.linearRotTrans, allowScaling);
 if (strOut == null) return false;
 this.setMatrix (isReverse);
-this.xyz = (isReverse ? JS.SymmetryOperation.getXYZFromMatrix (this, true, false, false) : strOut);
-if (this.timeReversal != 0) this.xyz += (this.timeReversal == 1 ? ",m" : ",-m");
-if (JU.Logger.debugging) JU.Logger.debug ("" + this);
+this.xyz = (isReverse ? J.symmetry.SymmetryOperation.getXYZFromMatrix (this, true, false, false) : strOut);
+if (JW.Logger.debugging) JW.Logger.debug ("" + this);
 return true;
 }, "~S,~N,~B");
-Clazz_defineMethod (c$, "setModDim", 
- function (dim) {
-var n = (dim + 4) * (dim + 4);
-this.modDim = dim;
-if (dim > 0) this.myLabels = JS.SymmetryOperation.labelsXn;
-this.linearRotTrans =  Clazz_newFloatArray (n, 0);
-}, "~N");
 Clazz_defineMethod (c$, "setMatrix", 
  function (isReverse) {
 if (this.linearRotTrans.length > 16) {
 this.setGamma (isReverse);
 } else {
 this.setA (this.linearRotTrans);
-if (isReverse) {
-var p3 = JU.P3.new3 (this.m03, this.m13, this.m23);
-this.invert ();
-this.rotate (p3);
-p3.scale (-1);
-this.setTranslation (p3);
-}}}, "~B");
+if (isReverse) this.invertM (this);
+}}, "~B");
 Clazz_defineMethod (c$, "setFromMatrix", 
 function (offset, isReverse) {
 var v = 0;
 var pt = 0;
-this.myLabels = (this.modDim == 0 ? JS.SymmetryOperation.labelsXYZ : JS.SymmetryOperation.labelsXn);
+this.myLabels = (this.modDim == 0 ? J.symmetry.SymmetryOperation.labelsXYZ : J.symmetry.SymmetryOperation.labelsXn);
 var rowPt = 0;
 var n = 3 + this.modDim;
 for (var i = 0; rowPt < n; i++) {
@@ -3124,14 +2950,14 @@ if (isTrans) {
 if (offset != null) {
 v /= 12;
 if (pt < offset.length) v += offset[pt++];
-}v = JS.SymmetryOperation.normalizeTwelfths ((v < 0 ? -1 : 1) * Math.abs (v * 12) / 12, this.doNormalize);
+}v = J.symmetry.SymmetryOperation.normalizeTwelfths ((v < 0 ? -1 : 1) * Math.round (Math.abs (v * 12)) / 12, this.doNormalize);
 rowPt++;
 }this.linearRotTrans[i] = v;
 }
 this.linearRotTrans[this.linearRotTrans.length - 1] = 1;
 this.setMatrix (isReverse);
 this.isFinalized = (offset == null);
-this.xyz = JS.SymmetryOperation.getXYZFromMatrix (this, true, false, false);
+this.xyz = J.symmetry.SymmetryOperation.getXYZFromMatrix (this, true, false, false);
 return true;
 }, "~A,~B");
 c$.getMatrixFromString = Clazz_defineMethod (c$, "getMatrixFromString", 
@@ -3142,18 +2968,13 @@ var isNegative = false;
 var modDim = (op == null ? 0 : op.modDim);
 var nRows = 4 + modDim;
 var doNormalize = (op != null && op.doNormalize);
-var dimOffset = (modDim > 0 ? 3 : 0);
 linearRotTrans[linearRotTrans.length - 1] = 1;
-var transPt = xyz.indexOf (';') + 1;
-if (transPt != 0) {
-allowScaling = true;
-if (transPt == xyz.length) xyz += "0,0,0";
-}var rotPt = -1;
 var myLabels = (op == null || modDim == 0 ? null : op.myLabels);
-if (myLabels == null) myLabels = JS.SymmetryOperation.labelsXYZ;
-xyz = xyz.toLowerCase () + ",";
-if (modDim > 0) xyz = JS.SymmetryOperation.replaceXn (xyz, modDim + 3);
-var xpt = 0;
+if (myLabels == null) myLabels = J.symmetry.SymmetryOperation.labelsXYZ;
+xyz = xyz.toLowerCase ();
+xyz += ",";
+if (modDim > 0) for (var i = modDim + 3; --i >= 0; ) xyz = JU.PT.rep (xyz, J.symmetry.SymmetryOperation.labelsXn[i], J.symmetry.SymmetryOperation.labelsXnSub[i]);
+
 var tpt0 = 0;
 var rowPt = 0;
 var ch;
@@ -3163,8 +2984,6 @@ var strT = "";
 var strOut = "";
 for (var i = 0; i < xyz.length; i++) {
 switch (ch = xyz.charAt (i)) {
-case ';':
-break;
 case '\'':
 case ' ':
 case '{':
@@ -3191,37 +3010,25 @@ case 'e':
 case 'f':
 case 'g':
 case 'h':
-tpt0 = rowPt * nRows;
-var ipt = (ch >= 'x' ? ch.charCodeAt (0) - 120 : ch.charCodeAt (0) - 97 + dimOffset);
-xpt = tpt0 + ipt;
 var val = (isNegative ? -1 : 1);
 if (allowScaling && iValue != 0) {
-linearRotTrans[xpt] = iValue;
 val = Clazz_floatToInt (iValue);
 iValue = 0;
-} else {
-linearRotTrans[xpt] = val;
-}strT += JS.SymmetryOperation.plusMinus (strT, val, myLabels[ipt]);
+}tpt0 = rowPt * nRows;
+var ipt = (ch >= 'x' ? ch.charCodeAt (0) - 120 : ch.charCodeAt (0) - 97 + 3);
+linearRotTrans[tpt0 + ipt] = val;
+strT += J.symmetry.SymmetryOperation.plusMinus (strT, val, myLabels[ipt]);
 break;
 case ',':
-if (transPt != 0) {
-if (transPt > 0) {
-rotPt = i;
-i = transPt - 1;
-transPt = -i;
-iValue = 0;
-continue;
-}transPt = i + 1;
-i = rotPt;
-}iValue = JS.SymmetryOperation.normalizeTwelfths (iValue, doNormalize);
+iValue = J.symmetry.SymmetryOperation.normalizeTwelfths (iValue, doNormalize);
 linearRotTrans[tpt0 + nRows - 1] = iValue;
-strT += JS.SymmetryOperation.xyzFraction (iValue, false, true);
+strT += J.symmetry.SymmetryOperation.xyzFraction (iValue, false, true);
 strOut += (strOut === "" ? "" : ",") + strT;
 if (rowPt == nRows - 2) return strOut;
 iValue = 0;
 strT = "";
 if (rowPt++ > 2 && modDim == 0) {
-JU.Logger.warn ("Symmetry Operation? " + xyz);
+JW.Logger.warn ("Symmetry Operation? " + xyz);
 return null;
 }break;
 case '.':
@@ -3239,63 +3046,52 @@ iValue += decimalMultiplier * ich * (isNegative ? -1 : 1);
 continue;
 }if (ich >= 0 && ich <= 9) {
 if (isDenominator) {
-if (iValue == 0) {
-linearRotTrans[xpt] /= ich;
-} else {
 iValue /= ich;
-}} else {
+} else {
 iValue = iValue * 10 + (isNegative ? -1 : 1) * ich;
 isNegative = false;
 }} else {
-JU.Logger.warn ("symmetry character?" + ch);
+JW.Logger.warn ("symmetry character?" + ch);
 }}
 isDecimal = isDenominator = isNegative = false;
 }
 return null;
-}, "JS.SymmetryOperation,~S,~A,~B");
-c$.replaceXn = Clazz_defineMethod (c$, "replaceXn", 
-function (xyz, n) {
-for (var i = n; --i >= 0; ) xyz = JU.PT.rep (xyz, JS.SymmetryOperation.labelsXn[i], JS.SymmetryOperation.labelsXnSub[i]);
-
-return xyz;
-}, "~S,~N");
+}, "J.symmetry.SymmetryOperation,~S,~A,~B");
 c$.xyzFraction = Clazz_defineMethod (c$, "xyzFraction", 
  function (n12ths, allPositive, halfOrLess) {
-var n = n12ths;
+n12ths = Math.round (n12ths);
 if (allPositive) {
-while (n < 0) n += 12;
+while (n12ths < 0) n12ths += 12;
 
 } else if (halfOrLess) {
-while (n > 6) n -= 12;
+while (n12ths > 6) n12ths -= 12;
 
-while (n < -6.0) n += 12;
+while (n12ths < -6.0) n12ths += 12;
 
-}var s = JS.SymmetryOperation.twelfthsOf (n);
-return (s.charAt (0) == '0' ? "" : n > 0 ? "+" + s : s);
+}var s = J.symmetry.SymmetryOperation.twelfthsOf (n12ths);
+return (s.charAt (0) == '0' ? "" : n12ths > 0 ? "+" + s : s);
 }, "~N,~B,~B");
 c$.twelfthsOf = Clazz_defineMethod (c$, "twelfthsOf", 
  function (n12ths) {
 var str = "";
-if (n12ths < 0) {
-n12ths = -n12ths;
-str = "-";
-}var m = 12;
-var n = Math.round (n12ths);
-if (Math.abs (n - n12ths) > 0.01) {
-var f = n12ths / 12;
-var max = 20;
-for (m = 5; m < max; m++) {
-var fm = f * m;
-n = Math.round (fm);
-if (Math.abs (n - fm) < 0.01) break;
-}
-if (m == max) return str + f;
-} else {
-if (n == 12) return str + "1";
-if (n < 12) return str + JS.SymmetryOperation.twelfths[n % 12];
-switch (n % 12) {
+var i12ths = Math.round (n12ths);
+if (i12ths == 12) return "1";
+if (i12ths == -12) return "-1";
+if (i12ths < 0) {
+i12ths = -i12ths;
+if (i12ths % 12 != 0) str = "-";
+}var n = Clazz_doubleToInt (i12ths / 12);
+if (n < 1) return str + J.symmetry.SymmetryOperation.twelfths[i12ths % 12];
+var m = 0;
+switch (i12ths % 12) {
 case 0:
-return "" + Clazz_doubleToInt (n / 12);
+return str + n;
+case 1:
+case 5:
+case 7:
+case 11:
+m = 12;
+break;
 case 2:
 case 10:
 m = 6;
@@ -3311,11 +3107,8 @@ break;
 case 6:
 m = 2;
 break;
-default:
-break;
 }
-n = (Clazz_doubleToInt (n * m / 12));
-}return str + n + "/" + m;
+return str + (Clazz_doubleToInt (i12ths * m / 12)) + "/" + m;
 }, "~N");
 c$.plusMinus = Clazz_defineMethod (c$, "plusMinus", 
  function (strT, x, sx) {
@@ -3334,16 +3127,16 @@ while (iValue <= -6) iValue += 12;
 c$.getXYZFromMatrix = Clazz_defineMethod (c$, "getXYZFromMatrix", 
 function (mat, is12ths, allPositive, halfOrLess) {
 var str = "";
-var op = (Clazz_instanceOf (mat, JS.SymmetryOperation) ? mat : null);
-if (op != null && op.modDim > 0) return JS.SymmetryOperation.getXYZFromRsVs (op.rsvs.getRotation (), op.rsvs.getTranslation (), is12ths);
+var op = (Clazz_instanceOf (mat, J.symmetry.SymmetryOperation) ? mat : null);
+if (op != null && op.modDim > 0) return J.symmetry.SymmetryOperation.getXYZFromRsVs (op.rsvs.getRotation (), op.rsvs.getTranslation (), is12ths);
 var row =  Clazz_newFloatArray (4, 0);
 for (var i = 0; i < 3; i++) {
 var lpt = (i < 3 ? 0 : 3);
 mat.getRow (i, row);
 var term = "";
-for (var j = 0; j < 3; j++) if (row[j] != 0) term += JS.SymmetryOperation.plusMinus (term, row[j], JS.SymmetryOperation.labelsXYZ[j + lpt]);
+for (var j = 0; j < 3; j++) if (row[j] != 0) term += J.symmetry.SymmetryOperation.plusMinus (term, row[j], J.symmetry.SymmetryOperation.labelsXYZ[j + lpt]);
 
-term += JS.SymmetryOperation.xyzFraction ((is12ths ? row[3] : row[3] * 12), allPositive, halfOrLess);
+term += J.symmetry.SymmetryOperation.xyzFraction ((is12ths ? row[3] : row[3] * 12), allPositive, halfOrLess);
 str += "," + term;
 }
 return str.substring (1);
@@ -3387,21 +3180,402 @@ unitcell.toCartesian (ptTemp, true);
 vRot[i] = JU.V3.newV (ptTemp);
 }
 return vRot;
-}, "~A,JS.UnitCell,JU.P3,JU.M3");
+}, "~A,J.symmetry.UnitCell,JU.P3,JU.M3");
+Clazz_defineMethod (c$, "getDescription", 
+function (modelSet, uc, pt00, ptTarget, id) {
+if (!this.isFinalized) this.doFinalize ();
+var vtemp =  new JU.V3 ();
+var ptemp =  new JU.P3 ();
+var pt01 =  new JU.P3 ();
+var pt02 =  new JU.P3 ();
+var pt03 =  new JU.P3 ();
+var ftrans =  new JU.V3 ();
+var vtrans =  new JU.V3 ();
+var xyz = (this.isBio ? this.xyzOriginal : J.symmetry.SymmetryOperation.getXYZFromMatrix (this, false, false, false));
+var typeOnly = (id == null);
+if (pt00 == null || Float.isNaN (pt00.x)) pt00 =  new JU.P3 ();
+if (ptTarget != null) {
+pt01.setT (pt00);
+pt02.setT (ptTarget);
+uc.toUnitCell (pt01, ptemp);
+uc.toUnitCell (pt02, ptemp);
+uc.toFractional (pt01, false);
+this.rotTrans (pt01);
+uc.toCartesian (pt01, false);
+uc.toUnitCell (pt01, ptemp);
+if (pt01.distance (pt02) > 0.1) return null;
+pt01.setT (pt00);
+pt02.setT (ptTarget);
+uc.toFractional (pt01, false);
+uc.toFractional (pt02, false);
+this.rotTrans (pt01);
+vtrans.sub2 (pt02, pt01);
+pt01.set (0, 0, 0);
+pt02.set (0, 0, 0);
+}pt01.x = pt02.y = pt03.z = 1;
+pt01.add (pt00);
+pt02.add (pt00);
+pt03.add (pt00);
+var p0 = JU.P3.newP (pt00);
+var p1 = JU.P3.newP (pt01);
+var p2 = JU.P3.newP (pt02);
+var p3 = JU.P3.newP (pt03);
+uc.toFractional (p0, false);
+uc.toFractional (p1, false);
+uc.toFractional (p2, false);
+uc.toFractional (p3, false);
+this.rotTrans2 (p0, p0);
+this.rotTrans2 (p1, p1);
+this.rotTrans2 (p2, p2);
+this.rotTrans2 (p3, p3);
+p0.add (vtrans);
+p1.add (vtrans);
+p2.add (vtrans);
+p3.add (vtrans);
+J.symmetry.SymmetryOperation.approx (vtrans);
+uc.toCartesian (p0, false);
+uc.toCartesian (p1, false);
+uc.toCartesian (p2, false);
+uc.toCartesian (p3, false);
+var v01 =  new JU.V3 ();
+v01.sub2 (p1, p0);
+var v02 =  new JU.V3 ();
+v02.sub2 (p2, p0);
+var v03 =  new JU.V3 ();
+v03.sub2 (p3, p0);
+vtemp.cross (v01, v02);
+var haveinversion = (vtemp.dot (v03) < 0);
+if (haveinversion) {
+p1.scaleAdd2 (-2, v01, p1);
+p2.scaleAdd2 (-2, v02, p2);
+p3.scaleAdd2 (-2, v03, p3);
+}var info;
+info = JW.Measure.computeHelicalAxis (null, 135266306, pt00, p0, JU.Quat.getQuaternionFrame (p0, p1, p2).div (JU.Quat.getQuaternionFrame (pt00, pt01, pt02)));
+var pa1 = info[0];
+var ax1 = info[1];
+var ang1 = Clazz_floatToInt (Math.abs (JU.PT.approx ((info[3]).x, 1)));
+var pitch1 = J.symmetry.SymmetryOperation.approxF ((info[3]).y);
+if (haveinversion) {
+p1.scaleAdd2 (2, v01, p1);
+p2.scaleAdd2 (2, v02, p2);
+p3.scaleAdd2 (2, v03, p3);
+}var trans = JU.V3.newVsub (p0, pt00);
+if (trans.length () < 0.1) trans = null;
+var ptinv = null;
+var ipt = null;
+var pt0 = null;
+var istranslation = (ang1 == 0);
+var isrotation = !istranslation;
+var isinversion = false;
+var ismirrorplane = false;
+if (isrotation || haveinversion) trans = null;
+if (haveinversion && istranslation) {
+ipt = JU.P3.newP (pt00);
+ipt.add (p0);
+ipt.scale (0.5);
+ptinv = p0;
+isinversion = true;
+} else if (haveinversion) {
+var d = (pitch1 == 0 ?  new JU.V3 () : ax1);
+var f = 0;
+switch (ang1) {
+case 60:
+f = 0.6666667;
+break;
+case 120:
+f = 2;
+break;
+case 90:
+f = 1;
+break;
+case 180:
+pt0 = JU.P3.newP (pt00);
+pt0.add (d);
+pa1.scaleAdd2 (0.5, d, pt00);
+if (pt0.distance (p0) > 0.1) {
+trans = JU.V3.newVsub (p0, pt0);
+ptemp.setT (trans);
+uc.toFractional (ptemp, false);
+ftrans.setT (ptemp);
+} else {
+trans = null;
+}isrotation = false;
+haveinversion = false;
+ismirrorplane = true;
+}
+if (f != 0) {
+vtemp.sub2 (pt00, pa1);
+vtemp.add (p0);
+vtemp.sub (pa1);
+vtemp.sub (d);
+vtemp.scale (f);
+pa1.add (vtemp);
+ipt =  new JU.P3 ();
+ipt.scaleAdd2 (0.5, d, pa1);
+ptinv =  new JU.P3 ();
+ptinv.scaleAdd2 (-2, ipt, pt00);
+ptinv.scale (-1);
+}} else if (trans != null) {
+ptemp.setT (trans);
+uc.toFractional (ptemp, false);
+if (J.symmetry.SymmetryOperation.approxF (ptemp.x) == 1) {
+ptemp.x = 0;
+}if (J.symmetry.SymmetryOperation.approxF (ptemp.y) == 1) {
+ptemp.y = 0;
+}if (J.symmetry.SymmetryOperation.approxF (ptemp.z) == 1) {
+ptemp.z = 0;
+}ftrans.setT (ptemp);
+uc.toCartesian (ptemp, false);
+trans.setT (ptemp);
+}var ang = ang1;
+J.symmetry.SymmetryOperation.approx0 (ax1);
+if (isrotation) {
+var pt1 =  new JU.P3 ();
+vtemp.setT (ax1);
+var ang2 = ang1;
+if (haveinversion) {
+pt1.add2 (pa1, vtemp);
+ang2 = Math.round (JW.Measure.computeTorsion (ptinv, pa1, pt1, p0, true));
+} else if (pitch1 == 0) {
+pt1.setT (pa1);
+ptemp.scaleAdd2 (1, pt1, vtemp);
+ang2 = Math.round (JW.Measure.computeTorsion (pt00, pa1, ptemp, p0, true));
+} else {
+ptemp.add2 (pa1, vtemp);
+pt1.scaleAdd2 (0.5, vtemp, pa1);
+ang2 = Math.round (JW.Measure.computeTorsion (pt00, pa1, ptemp, p0, true));
+}if (ang2 != 0) ang1 = ang2;
+}if (isrotation && !haveinversion && pitch1 == 0) {
+if (ax1.z < 0 || ax1.z == 0 && (ax1.y < 0 || ax1.y == 0 && ax1.x < 0)) {
+ax1.scale (-1);
+ang1 = -ang1;
+}}var info1 = "identity";
+var draw1 =  new JU.SB ();
+var drawid;
+if (isinversion) {
+ptemp.setT (ipt);
+uc.toFractional (ptemp, false);
+info1 = "inversion center|" + this.coord (ptemp);
+} else if (isrotation) {
+if (haveinversion) {
+info1 = "" + (Clazz_doubleToInt (360 / ang)) + "-bar axis";
+} else if (pitch1 != 0) {
+info1 = "" + (Clazz_doubleToInt (360 / ang)) + "-fold screw axis";
+ptemp.setT (ax1);
+uc.toFractional (ptemp, false);
+info1 += "|translation: " + this.coord (ptemp);
+} else {
+info1 = "C" + (Clazz_doubleToInt (360 / ang)) + " axis";
+}} else if (trans != null) {
+var s = " " + this.coord (ftrans);
+if (istranslation) {
+info1 = "translation:" + s;
+} else if (ismirrorplane) {
+var fx = J.symmetry.SymmetryOperation.approxF (ftrans.x);
+var fy = J.symmetry.SymmetryOperation.approxF (ftrans.y);
+var fz = J.symmetry.SymmetryOperation.approxF (ftrans.z);
+s = " " + this.coord (ftrans);
+if (fx != 0 && fy != 0 && fz != 0) info1 = "d-";
+ else if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0 && fx != 0) info1 = "n-";
+ else if (fx != 0) info1 = "a-";
+ else if (fy != 0) info1 = "b-";
+ else info1 = "c-";
+info1 += "glide plane |translation:" + s;
+}} else if (ismirrorplane) {
+info1 = "mirror plane";
+}if (haveinversion && !isinversion) {
+ptemp.setT (ipt);
+uc.toFractional (ptemp, false);
+info1 += "|inversion center at " + this.coord (ptemp);
+}var cmds = null;
+if (!typeOnly) {
+drawid = "\ndraw ID " + id + "_";
+draw1 =  new JU.SB ();
+draw1.append (("// " + this.xyzOriginal + "|" + xyz + "|" + info1).$replace ('\n', ' ')).append ("\n");
+draw1.append (drawid).append ("* delete");
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame1X", 0.15, pt00, pt01, "red");
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame1Y", 0.15, pt00, pt02, "green");
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame1Z", 0.15, pt00, pt03, "blue");
+ptemp.sub2 (p1, p0);
+ptemp.scaleAdd2 (0.9, ptemp, p0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame2X", 0.2, p0, ptemp, "red");
+ptemp.sub2 (p2, p0);
+ptemp.scaleAdd2 (0.9, ptemp, p0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame2Y", 0.2, p0, ptemp, "green");
+ptemp.sub2 (p3, p0);
+ptemp.scaleAdd2 (0.9, ptemp, p0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "frame2Z", 0.2, p0, ptemp, "purple");
+var color;
+if (isrotation) {
+var pt1 =  new JU.P3 ();
+color = "red";
+ang = ang1;
+var scale = 1.0;
+vtemp.setT (ax1);
+if (haveinversion) {
+pt1.add2 (pa1, vtemp);
+if (pitch1 == 0) {
+pt1.setT (ipt);
+vtemp.scale (3);
+ptemp.scaleAdd2 (-1, vtemp, pa1);
+draw1.append (drawid).append ("rotVector2 diameter 0.1 ").append (JW.Escape.eP (pa1)).append (JW.Escape.eP (ptemp)).append (" color red");
+}scale = p0.distance (pt1);
+draw1.append (drawid).append ("rotLine1 ").append (JW.Escape.eP (pt1)).append (JW.Escape.eP (ptinv)).append (" color red");
+draw1.append (drawid).append ("rotLine2 ").append (JW.Escape.eP (pt1)).append (JW.Escape.eP (p0)).append (" color red");
+} else if (pitch1 == 0) {
+var isSpecial = (pt00.distance (p0) < 0.2);
+if (!isSpecial) {
+draw1.append (drawid).append ("rotLine1 ").append (JW.Escape.eP (pt00)).append (JW.Escape.eP (pa1)).append (" color red");
+draw1.append (drawid).append ("rotLine2 ").append (JW.Escape.eP (p0)).append (JW.Escape.eP (pa1)).append (" color red");
+}vtemp.scale (3);
+ptemp.scaleAdd2 (-1, vtemp, pa1);
+draw1.append (drawid).append ("rotVector2 diameter 0.1 ").append (JW.Escape.eP (pa1)).append (JW.Escape.eP (ptemp)).append (" color red");
+pt1.setT (pa1);
+if (pitch1 == 0 && pt00.distance (p0) < 0.2) pt1.scaleAdd2 (0.5, pt1, vtemp);
+} else {
+color = "orange";
+draw1.append (drawid).append ("rotLine1 ").append (JW.Escape.eP (pt00)).append (JW.Escape.eP (pa1)).append (" color red");
+ptemp.add2 (pa1, vtemp);
+draw1.append (drawid).append ("rotLine2 ").append (JW.Escape.eP (p0)).append (JW.Escape.eP (ptemp)).append (" color red");
+pt1.scaleAdd2 (0.5, vtemp, pa1);
+}ptemp.add2 (pt1, vtemp);
+if (haveinversion && pitch1 != 0) {
+draw1.append (drawid).append ("rotRotLine1").append (JW.Escape.eP (pt1)).append (JW.Escape.eP (ptinv)).append (" color red");
+draw1.append (drawid).append ("rotRotLine2").append (JW.Escape.eP (pt1)).append (JW.Escape.eP (p0)).append (" color red");
+}draw1.append (drawid).append ("rotRotArrow arrow width 0.10 scale " + scale + " arc ").append (JW.Escape.eP (pt1)).append (JW.Escape.eP (ptemp));
+ptemp.setT (haveinversion ? ptinv : pt00);
+if (ptemp.distance (p0) < 0.1) ptemp.set (Math.random (), Math.random (), Math.random ());
+draw1.append (JW.Escape.eP (ptemp));
+ptemp.set (0, ang, 0);
+draw1.append (JW.Escape.eP (ptemp)).append (" color red");
+draw1.append (drawid).append ("rotVector1 vector diameter 0.1 ").append (JW.Escape.eP (pa1)).append (JW.Escape.eP (vtemp)).append ("color ").append (color);
+}if (ismirrorplane) {
+if (pt00.distance (pt0) > 0.2) draw1.append (drawid).append ("planeVector arrow ").append (JW.Escape.eP (pt00)).append (JW.Escape.eP (pt0)).append (" color indigo");
+if (trans != null) {
+ptemp.scaleAdd2 (-1, p0, p1);
+ptemp.add (pt0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "planeFrameX", 0.15, pt0, ptemp, "translucent red");
+ptemp.scaleAdd2 (-1, p0, p2);
+ptemp.add (pt0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "planeFrameY", 0.15, pt0, ptemp, "translucent green");
+ptemp.scaleAdd2 (-1, p0, p3);
+ptemp.add (pt0);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "planeFrameZ", 0.15, pt0, ptemp, "translucent blue");
+}color = (trans == null ? "green" : "blue");
+vtemp.setT (ax1);
+vtemp.normalize ();
+var w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
+var plane = JU.P4.new4 (vtemp.x, vtemp.y, vtemp.z, w);
+var v =  new JU.List ();
+v.addLast (uc.getCanonicalCopy (1.05, false));
+modelSet.intersectPlane (plane, v, 3);
+for (var i = v.size (); --i >= 0; ) {
+var pts = v.get (i);
+draw1.append (drawid).append ("planep").appendI (i).append (" ").append (JW.Escape.eP (pts[0])).append (JW.Escape.eP (pts[1]));
+if (pts.length == 3) draw1.append (JW.Escape.eP (pts[2]));
+draw1.append (" color translucent ").append (color);
+}
+if (v.size () == 0) {
+ptemp.add2 (pa1, ax1);
+draw1.append (drawid).append ("planeCircle scale 2.0 circle ").append (JW.Escape.eP (pa1)).append (JW.Escape.eP (ptemp)).append (" color translucent ").append (color).append (" mesh fill");
+}}if (haveinversion) {
+draw1.append (drawid).append ("invPoint diameter 0.4 ").append (JW.Escape.eP (ipt));
+draw1.append (drawid).append ("invArrow arrow ").append (JW.Escape.eP (pt00)).append (JW.Escape.eP (ptinv)).append (" color indigo");
+if (!isinversion) {
+ptemp.add2 (ptinv, pt00);
+ptemp.sub (pt01);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "invFrameX", 0.15, ptinv, ptemp, "translucent red");
+ptemp.add2 (ptinv, pt00);
+ptemp.sub (pt02);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "invFrameY", 0.15, ptinv, ptemp, "translucent green");
+ptemp.add2 (ptinv, pt00);
+ptemp.sub (pt03);
+J.symmetry.SymmetryOperation.drawLine (draw1, drawid + "invFrameZ", 0.15, ptinv, ptemp, "translucent blue");
+}}if (trans != null) {
+if (pt0 == null) pt0 = JU.P3.newP (pt00);
+draw1.append (drawid).append ("transVector vector ").append (JW.Escape.eP (pt0)).append (JW.Escape.eP (trans));
+}draw1.append ("\nvar pt00 = " + JW.Escape.eP (pt00));
+draw1.append ("\nvar p0 = " + JW.Escape.eP (p0));
+draw1.append ("\nif (within(0.2,p0).length == 0) {");
+draw1.append ("\nvar set2 = within(0.2,p0.uxyz.xyz)");
+draw1.append ("\nif (set2) {");
+draw1.append (drawid).append ("cellOffsetVector arrow @p0 @set2 color grey");
+draw1.append (drawid).append ("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ").append (JW.Escape.eP (v01)).append ("*0.9} color red");
+draw1.append (drawid).append ("offsetFrameY diameter 0.20 @{set2.xyz} @{set2.xyz + ").append (JW.Escape.eP (v02)).append ("*0.9} color green");
+draw1.append (drawid).append ("offsetFrameZ diameter 0.20 @{set2.xyz} @{set2.xyz + ").append (JW.Escape.eP (v03)).append ("*0.9} color purple");
+draw1.append ("\n}}\n");
+cmds = draw1.toString ();
+draw1 = null;
+drawid = null;
+}if (trans == null) ftrans = null;
+if (isrotation) {
+if (haveinversion) {
+} else if (pitch1 == 0) {
+} else {
+trans = JU.V3.newV (ax1);
+ptemp.setT (trans);
+uc.toFractional (ptemp, false);
+ftrans = JU.V3.newV (ptemp);
+}}if (ismirrorplane) {
+ang1 = 0;
+}if (haveinversion) {
+if (isinversion) {
+pa1 = null;
+ax1 = null;
+trans = null;
+ftrans = null;
+}} else if (istranslation) {
+pa1 = null;
+ax1 = null;
+}if (ax1 != null) ax1.normalize ();
+var m2 = null;
+m2 = JU.M4.newM4 (this);
+if (vtrans.length () != 0) {
+m2.m03 += vtrans.x;
+m2.m13 += vtrans.y;
+m2.m23 += vtrans.z;
+}xyz = (this.isBio ? m2.toString () : J.symmetry.SymmetryOperation.getXYZFromMatrix (m2, false, false, false));
+return [xyz, this.xyzOriginal, info1, cmds, J.symmetry.SymmetryOperation.approx0 (ftrans), J.symmetry.SymmetryOperation.approx0 (trans), J.symmetry.SymmetryOperation.approx0 (ipt), J.symmetry.SymmetryOperation.approx0 (pa1), J.symmetry.SymmetryOperation.approx0 (ax1), Integer.$valueOf (ang1), m2, vtrans];
+}, "JM.ModelSet,J.api.SymmetryInterface,JU.P3,JU.P3,~S");
+Clazz_defineMethod (c$, "coord", 
+ function (p) {
+J.symmetry.SymmetryOperation.approx0 (p);
+return (this.isBio ? p.x + " " + p.y + " " + p.z : J.symmetry.SymmetryOperation.fcoord (p));
+}, "JU.T3");
+c$.drawLine = Clazz_defineMethod (c$, "drawLine", 
+ function (s, id, diameter, pt0, pt1, color) {
+s.append (id).append (" diameter ").appendF (diameter).append (JW.Escape.eP (pt0)).append (JW.Escape.eP (pt1)).append (" color ").append (color);
+}, "JU.SB,~S,~N,JU.P3,JU.P3,~S");
 c$.fcoord = Clazz_defineMethod (c$, "fcoord", 
 function (p) {
-return JS.SymmetryOperation.fc (p.x) + " " + JS.SymmetryOperation.fc (p.y) + " " + JS.SymmetryOperation.fc (p.z);
+return J.symmetry.SymmetryOperation.fc (p.x) + " " + J.symmetry.SymmetryOperation.fc (p.y) + " " + J.symmetry.SymmetryOperation.fc (p.z);
 }, "JU.T3");
 c$.fc = Clazz_defineMethod (c$, "fc", 
  function (x) {
 var xabs = Math.abs (x);
-var x24 = Clazz_floatToInt (JS.SymmetryOperation.approxF (xabs * 24));
+var x24 = Clazz_floatToInt (J.symmetry.SymmetryOperation.approxF (xabs * 24));
 var m = (x < 0 ? "-" : "");
-if (x24 % 8 != 0) return m + JS.SymmetryOperation.twelfthsOf (x24 >> 1);
+if (x24 % 8 != 0) return m + J.symmetry.SymmetryOperation.twelfthsOf (x24 >> 1);
 return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (Clazz_doubleToInt (x24 / 8)) + "/3");
 }, "~N");
+c$.approx0 = Clazz_defineMethod (c$, "approx0", 
+ function (pt) {
+if (pt != null) {
+if (Math.abs (pt.x) < 0.0001) pt.x = 0;
+if (Math.abs (pt.y) < 0.0001) pt.y = 0;
+if (Math.abs (pt.z) < 0.0001) pt.z = 0;
+}return pt;
+}, "JU.T3");
+c$.approx = Clazz_defineMethod (c$, "approx", 
+ function (pt) {
+if (pt != null) {
+pt.x = J.symmetry.SymmetryOperation.approxF (pt.x);
+pt.y = J.symmetry.SymmetryOperation.approxF (pt.y);
+pt.z = J.symmetry.SymmetryOperation.approxF (pt.z);
+}return pt;
+}, "JU.T3");
 c$.approxF = Clazz_defineMethod (c$, "approxF", 
-function (f) {
+ function (f) {
 return JU.PT.approx (f, 100);
 }, "~N");
 c$.normalizeTranslation = Clazz_defineMethod (c$, "normalizeTranslation", 
@@ -3423,69 +3597,32 @@ var r = ra[i][j];
 if (r != 0) {
 s += (r < 0 ? "-" : s.endsWith (",") ? "" : "+") + (Math.abs (r) == 1 ? "" : "" + Clazz_doubleToInt (Math.abs (r))) + "x" + (j + 1);
 }}
-s += JS.SymmetryOperation.xyzFraction (Clazz_doubleToInt (va[i][0] * (is12ths ? 1 : 12)), false, true);
+s += J.symmetry.SymmetryOperation.xyzFraction (Clazz_doubleToInt (va[i][0] * (is12ths ? 1 : 12)), false, true);
 }
 return JU.PT.rep (s.substring (1), ",+", ",");
 }, "JU.Matrix,JU.Matrix,~B");
 Clazz_defineMethod (c$, "toString", 
 function () {
-return (this.rsvs == null ? Clazz_superCall (this, JS.SymmetryOperation, "toString", []) : Clazz_superCall (this, JS.SymmetryOperation, "toString", []) + " " + this.rsvs.toString ());
+return (this.rsvs == null ? Clazz_superCall (this, J.symmetry.SymmetryOperation, "toString", []) : Clazz_superCall (this, J.symmetry.SymmetryOperation, "toString", []) + " " + this.rsvs.toString ());
 });
-Clazz_defineMethod (c$, "getSpinOp", 
-function () {
-if (this.magOp == 3.4028235E38) this.magOp = this.determinant3 () * this.timeReversal;
-return this.magOp;
-});
-Clazz_defineMethod (c$, "setTimeReversal", 
-function (magRev) {
-this.timeReversal = magRev;
-if (this.xyz.indexOf ("m") >= 0) this.xyz = this.xyz.substring (0, this.xyz.indexOf ("m"));
-this.xyz += (magRev == 1 ? ",m" : magRev == -1 ? ",-m" : "");
-}, "~N");
-c$.getPrettyMatrix = Clazz_defineMethod (c$, "getPrettyMatrix", 
-function (sb, m4) {
-sb.append ("[ ");
-var row =  Clazz_newFloatArray (4, 0);
-for (var i = 0; i < 3; i++) {
-m4.getRow (i, row);
-sb.append ("[ ").appendI (Clazz_floatToInt (row[0])).appendC (' ').appendI (Clazz_floatToInt (row[1])).appendC (' ').appendI (Clazz_floatToInt (row[2])).appendC (' ');
-sb.append (JS.SymmetryOperation.twelfthsOf (row[3] * 12)).append (" ]");
-}
-return sb.append (" ]").toString ();
-}, "JU.SB,JU.M4");
-Clazz_defineMethod (c$, "setCentering", 
-function (c, isFinal) {
-if (this.centering == null && !this.unCentered) {
-if (this.modDim == 0 && this.index > 1 && this.m00 == 1 && this.m11 == 1 && this.m22 == 1 && this.m01 == 0 && this.m02 == 0 && this.m10 == 0 && this.m12 == 0 && this.m20 == 0 && this.m21 == 0) {
-this.centering = JU.V3.new3 (this.m03, this.m13, this.m23);
-if (this.centering.lengthSquared () == 0) {
-this.unCentered = true;
-this.centering = null;
-} else if (!isFinal) this.centering.scale (0.083333336);
-this.isCenteringOp = true;
-} else {
-this.centering = c;
-}}return this.centering;
-}, "JU.V3,~B");
 Clazz_defineStatics (c$,
-"twelfths",  Clazz_newArray (-1, ["0", "1/12", "1/6", "1/4", "1/3", "5/12", "1/2", "7/12", "2/3", "3/4", "5/6", "11/12"]));
-c$.labelsXYZ = c$.prototype.labelsXYZ =  Clazz_newArray (-1, ["x", "y", "z"]);
-c$.labelsXn = c$.prototype.labelsXn =  Clazz_newArray (-1, ["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13"]);
-c$.labelsXnSub = c$.prototype.labelsXnSub =  Clazz_newArray (-1, ["x", "y", "z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]);
+"twelfths", ["0", "1/12", "1/6", "1/4", "1/3", "5/12", "1/2", "7/12", "2/3", "3/4", "5/6", "11/12"]);
+c$.labelsXYZ = c$.prototype.labelsXYZ = ["x", "y", "z"];
+c$.labelsXn = c$.prototype.labelsXn = ["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13"];
+c$.labelsXnSub = c$.prototype.labelsXnSub = ["x", "y", "z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
 });
-Clazz_declarePackage ("JS");
-Clazz_load (null, "JS.SymmetryInfo", ["JU.Lst", "$.PT", "JU.SimpleUnitCell"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (null, "J.symmetry.SymmetryInfo", ["JW.SimpleUnitCell"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.coordinatesAreFractional = false;
 this.isMultiCell = false;
-this.sgName = null;
+this.spaceGroup = null;
 this.symmetryOperations = null;
-this.infoStr = null;
+this.symmetryInfoString = null;
 this.cellRange = null;
 this.periodicOriginXyz = null;
-this.centerings = null;
 Clazz_instantialize (this, arguments);
-}, JS, "SymmetryInfo");
+}, J.symmetry, "SymmetryInfo");
 Clazz_defineMethod (c$, "isPeriodic", 
 function () {
 return this.periodicOriginXyz != null;
@@ -3494,83 +3631,70 @@ Clazz_makeConstructor (c$,
 function () {
 });
 Clazz_defineMethod (c$, "setSymmetryInfo", 
-function (info, unitCellParams) {
+function (info) {
 this.cellRange = info.get ("unitCellRange");
 this.periodicOriginXyz = info.get ("periodicOriginXyz");
-this.sgName = info.get ("spaceGroup");
-if (this.sgName == null || this.sgName === "") this.sgName = "spacegroup unspecified";
+this.spaceGroup = info.get ("spaceGroup");
+if (this.spaceGroup == null || this.spaceGroup === "") this.spaceGroup = "spacegroup unspecified";
 var symmetryCount = info.containsKey ("symmetryCount") ? (info.get ("symmetryCount")).intValue () : 0;
-this.symmetryOperations = info.remove ("symmetryOps");
-this.infoStr = "Spacegroup: " + this.sgName;
+this.symmetryOperations = info.get ("symmetryOperations");
+this.symmetryInfoString = "Spacegroup: " + this.spaceGroup;
 if (this.symmetryOperations == null) {
-this.infoStr += "\nNumber of symmetry operations: ?\nSymmetry Operations: unspecified\n";
+this.symmetryInfoString += "\nNumber of symmetry operations: ?\nSymmetry Operations: unspecified\n";
 } else {
-this.centerings =  new JU.Lst ();
-var c = "";
-var s = "\nNumber of symmetry operations: " + (symmetryCount == 0 ? 1 : symmetryCount) + "\nSymmetry Operations:";
-for (var i = 0; i < symmetryCount; i++) {
-var op = this.symmetryOperations[i];
-s += "\n" + op.xyz;
-if (op.isCenteringOp) {
-this.centerings.addLast (op.centering);
-var oc = JU.PT.replaceAllCharacters (op.xyz, "xyz", "0");
-c += " (" + JU.PT.rep (oc, "0+", "") + ")";
-}}
-if (c.length > 0) this.infoStr += "\nCentering: " + c;
-this.infoStr += s;
-}this.infoStr += "\n";
-if (unitCellParams == null) unitCellParams = info.get ("unitCellParams");
-if (!JU.SimpleUnitCell.isValid (unitCellParams)) return null;
+this.symmetryInfoString += "\nNumber of symmetry operations: " + (symmetryCount == 0 ? 1 : symmetryCount) + "\nSymmetry Operations:";
+for (var i = 0; i < symmetryCount; i++) this.symmetryInfoString += "\n" + this.symmetryOperations[i];
+
+}this.symmetryInfoString += "\n";
+var notionalUnitcell = info.get ("notionalUnitcell");
+if (!JW.SimpleUnitCell.isValid (notionalUnitcell)) return null;
 this.coordinatesAreFractional = info.containsKey ("coordinatesAreFractional") ? (info.get ("coordinatesAreFractional")).booleanValue () : false;
 this.isMultiCell = (this.coordinatesAreFractional && this.symmetryOperations != null);
-return unitCellParams;
-}, "java.util.Map,~A");
+return notionalUnitcell;
+}, "java.util.Map");
 });
-Clazz_declarePackage ("JS");
-Clazz_load (["JU.SimpleUnitCell", "JU.P3", "JV.JC"], "JS.UnitCell", ["java.lang.Float", "JU.M4", "$.Quat", "$.T4", "$.V3", "J.api.Interface", "JU.BoxInfo", "$.Escape"], function () {
+Clazz_declarePackage ("J.symmetry");
+Clazz_load (["JW.SimpleUnitCell", "JU.P3", "JV.JC"], "J.symmetry.UnitCell", ["java.lang.Float", "JU.M4", "$.V3", "J.api.Interface", "JW.BoxInfo", "$.Escape"], function () {
 c$ = Clazz_decorateAsClass (function () {
 this.vertices = null;
 this.cartesianOffset = null;
 this.fractionalOffset = null;
 this.allFractionalRelative = false;
 this.unitCellMultiplier = null;
-this.moreInfo = null;
-this.name = "";
 Clazz_instantialize (this, arguments);
-}, JS, "UnitCell", JU.SimpleUnitCell);
+}, J.symmetry, "UnitCell", JW.SimpleUnitCell);
 Clazz_prepareFields (c$, function () {
 this.cartesianOffset =  new JU.P3 ();
 });
 Clazz_makeConstructor (c$, 
 function () {
-Clazz_superConstructor (this, JS.UnitCell, []);
+Clazz_superConstructor (this, J.symmetry.UnitCell, []);
 });
 c$.newP = Clazz_defineMethod (c$, "newP", 
 function (points, setRelative) {
-var c =  new JS.UnitCell ();
-var parameters =  Clazz_newFloatArray (-1, [-1, 0, 0, 0, 0, 0, points[1].x, points[1].y, points[1].z, points[2].x, points[2].y, points[2].z, points[3].x, points[3].y, points[3].z]);
-c.init (parameters);
+var c =  new J.symmetry.UnitCell ();
+var parameters = [-1, 0, 0, 0, 0, 0, points[1].x, points[1].y, points[1].z, points[2].x, points[2].y, points[2].z, points[3].x, points[3].y, points[3].z];
+c.set (parameters);
 c.allFractionalRelative = setRelative;
-c.initUnitcellVertices ();
+c.calcUnitcellVertices ();
 c.setCartesianOffset (points[0]);
 return c;
 }, "~A,~B");
-c$.newA = Clazz_defineMethod (c$, "newA", 
-function (params, setRelative) {
-var c =  new JS.UnitCell ();
-c.init (params);
-c.initUnitcellVertices ();
-c.allFractionalRelative = setRelative;
+c$.newA = Clazz_overrideMethod (c$, "newA", 
+function (notionalUnitcell) {
+var c =  new J.symmetry.UnitCell ();
+c.set (notionalUnitcell);
+c.calcUnitcellVertices ();
 return c;
-}, "~A,~B");
-Clazz_defineMethod (c$, "initOrientation", 
+}, "~A");
+Clazz_defineMethod (c$, "setOrientation", 
 function (mat) {
 if (mat == null) return;
 var m =  new JU.M4 ();
 m.setToM3 (mat);
 this.matrixFractionalToCartesian.mul2 (m, this.matrixFractionalToCartesian);
-this.matrixCartesianToFractional.setM4 (this.matrixFractionalToCartesian).invert ();
-this.initUnitcellVertices ();
+this.matrixCartesianToFractional.invertM (this.matrixFractionalToCartesian);
+this.calcUnitcellVertices ();
 }, "JU.M3");
 Clazz_defineMethod (c$, "toUnitCell", 
 function (pt, offset) {
@@ -3580,38 +3704,35 @@ this.matrixCartesianToFractional.rotTrans (pt);
 this.unitize (pt);
 this.matrixFractionalToCartesian.rotTrans (pt);
 } else {
-this.matrixCtoFANoOffset.rotTrans (pt);
+this.matrixCtoFAbsolute.rotTrans (pt);
 this.unitize (pt);
 pt.add (offset);
-this.matrixFtoCNoOffset.rotTrans (pt);
+this.matrixFtoCAbsolute.rotTrans (pt);
 }}, "JU.P3,JU.P3");
 Clazz_defineMethod (c$, "unitize", 
 function (pt) {
 switch (this.dimension) {
 case 3:
-pt.z = JS.UnitCell.toFractionalX (pt.z);
+pt.z = J.symmetry.UnitCell.toFractionalX (pt.z);
 case 2:
-pt.y = JS.UnitCell.toFractionalX (pt.y);
+pt.y = J.symmetry.UnitCell.toFractionalX (pt.y);
 case 1:
-pt.x = JS.UnitCell.toFractionalX (pt.x);
+pt.x = J.symmetry.UnitCell.toFractionalX (pt.x);
 }
 }, "JU.P3");
-Clazz_defineMethod (c$, "reset", 
-function () {
-this.unitCellMultiplier = null;
-this.setOffset (JU.P3.new3 (0, 0, 0));
-});
+Clazz_defineMethod (c$, "setAllFractionalRelative", 
+function (TF) {
+this.allFractionalRelative = TF;
+}, "~B");
 Clazz_defineMethod (c$, "setOffset", 
 function (pt) {
 if (pt == null) return;
-var pt4 = (Clazz_instanceOf (pt, JU.T4) ? pt : null);
-if (pt4 != null ? pt4.w <= 0 : pt.x >= 100 || pt.y >= 100) {
-this.unitCellMultiplier = (pt.z == 0 && pt.x == pt.y ? null : JU.P3.newP (pt));
-if (pt4 == null || pt4.w == 0) return;
-}if (this.hasOffset () || pt.lengthSquared () > 0) {
-this.fractionalOffset =  new JU.P3 ();
+if (pt.x >= 100 || pt.y >= 100) {
+this.unitCellMultiplier = (pt.z == 0 ? null : JU.P3.newP (pt));
+return;
+}this.fractionalOffset =  new JU.P3 ();
 this.fractionalOffset.setT (pt);
-}this.matrixCartesianToFractional.m03 = -pt.x;
+this.matrixCartesianToFractional.m03 = -pt.x;
 this.matrixCartesianToFractional.m13 = -pt.y;
 this.matrixCartesianToFractional.m23 = -pt.z;
 this.cartesianOffset.setT (pt);
@@ -3623,16 +3744,15 @@ this.matrixFractionalToCartesian.m03 = this.cartesianOffset.x;
 this.matrixFractionalToCartesian.m13 = this.cartesianOffset.y;
 this.matrixFractionalToCartesian.m23 = this.cartesianOffset.z;
 if (this.allFractionalRelative) {
-this.matrixCtoFANoOffset.setM4 (this.matrixCartesianToFractional);
-this.matrixFtoCNoOffset.setM4 (this.matrixFractionalToCartesian);
-}}, "JU.T3");
+this.matrixCtoFAbsolute.setM4 (this.matrixCartesianToFractional);
+this.matrixFtoCAbsolute.setM4 (this.matrixFractionalToCartesian);
+}}, "JU.P3");
 Clazz_defineMethod (c$, "setCartesianOffset", 
- function (origin) {
+function (origin) {
 this.cartesianOffset.setT (origin);
 this.matrixFractionalToCartesian.m03 = this.cartesianOffset.x;
 this.matrixFractionalToCartesian.m13 = this.cartesianOffset.y;
 this.matrixFractionalToCartesian.m23 = this.cartesianOffset.z;
-var wasOffset = this.hasOffset ();
 this.fractionalOffset =  new JU.P3 ();
 this.fractionalOffset.setT (this.cartesianOffset);
 this.matrixCartesianToFractional.m03 = 0;
@@ -3643,19 +3763,18 @@ this.matrixCartesianToFractional.m03 = -this.fractionalOffset.x;
 this.matrixCartesianToFractional.m13 = -this.fractionalOffset.y;
 this.matrixCartesianToFractional.m23 = -this.fractionalOffset.z;
 if (this.allFractionalRelative) {
-this.matrixCtoFANoOffset.setM4 (this.matrixCartesianToFractional);
-this.matrixFtoCNoOffset.setM4 (this.matrixFractionalToCartesian);
-}if (!wasOffset && this.fractionalOffset.lengthSquared () == 0) this.fractionalOffset = null;
-}, "JU.T3");
+this.matrixCtoFAbsolute.setM4 (this.matrixCartesianToFractional);
+this.matrixFtoCAbsolute.setM4 (this.matrixFractionalToCartesian);
+}}, "JU.T3");
 Clazz_defineMethod (c$, "setMinMaxLatticeParameters", 
 function (minXYZ, maxXYZ) {
 if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {
 var pt =  new JU.P3 ();
-JU.SimpleUnitCell.ijkToPoint3f (maxXYZ.x, pt, 0);
+JW.SimpleUnitCell.ijkToPoint3f (maxXYZ.x, pt, 0);
 minXYZ.x = Clazz_floatToInt (pt.x);
 minXYZ.y = Clazz_floatToInt (pt.y);
 minXYZ.z = Clazz_floatToInt (pt.z);
-JU.SimpleUnitCell.ijkToPoint3f (maxXYZ.y, pt, 1);
+JW.SimpleUnitCell.ijkToPoint3f (maxXYZ.y, pt, 1);
 maxXYZ.x = Clazz_floatToInt (pt.x);
 maxXYZ.y = Clazz_floatToInt (pt.y);
 maxXYZ.z = Clazz_floatToInt (pt.z);
@@ -3670,7 +3789,7 @@ maxXYZ.z = 1;
 }, "JU.P3i,JU.P3i");
 Clazz_defineMethod (c$, "dumpInfo", 
 function (isFull) {
-return "a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", alpha=" + this.alpha + ", beta=" + this.beta + ", gamma=" + this.gamma + "\n" + JU.Escape.eAP (this.getUnitCellVectors ()) + "\nvolume=" + this.volume + (isFull ? "\nfractional to cartesian: " + this.matrixFractionalToCartesian + "\ncartesian to fractional: " + this.matrixCartesianToFractional : "");
+return "a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", alpha=" + this.alpha + ", beta=" + this.beta + ", gamma=" + this.gamma + (isFull ? "\nfractional to cartesian: " + this.matrixFractionalToCartesian + "\ncartesian to fractional: " + this.matrixCartesianToFractional : "");
 }, "~B");
 Clazz_defineMethod (c$, "getVertices", 
 function () {
@@ -3685,14 +3804,14 @@ function () {
 return this.fractionalOffset;
 });
 Clazz_defineMethod (c$, "getTensor", 
-function (vwr, parBorU) {
-var t = (J.api.Interface.getUtil ("Tensor", vwr, "file"));
-if (parBorU[0] == 0 && parBorU[1] == 0 && parBorU[2] == 0) {
+function (parBorU) {
+if (parBorU == null) return null;
+var t = (J.api.Interface.getUtil ("Tensor"));
+if (parBorU[0] == 0) {
 var f = parBorU[7];
-var eigenValues =  Clazz_newFloatArray (-1, [f, f, f]);
-return t.setFromEigenVectors (JS.UnitCell.unitVectors, eigenValues, "iso", "Uiso=" + f, null);
-}t.parBorU = parBorU;
-var Bcart =  Clazz_newDoubleArray (6, 0);
+var eigenValues = [f, f, f];
+return t.setFromEigenVectors (J.symmetry.UnitCell.unitVectors, eigenValues, "iso", "Uiso=" + f);
+}var Bcart =  Clazz_newDoubleArray (6, 0);
 var ortepType = Clazz_floatToInt (parBorU[6]);
 if (ortepType == 12) {
 Bcart[0] = parBorU[0] * 19.739208802178716;
@@ -3719,8 +3838,8 @@ Bcart[2] = this.c * this.c * this.cB_ * this.cB_ * B33;
 Bcart[3] = 2 * this.b * this.b * this.cosGamma * this.sinGamma * B22 + 2 * this.c * this.c * this.cA_ * this.cosBeta * B33 + this.a * this.b * this.sinGamma * B12 + this.b * this.c * (this.cA_ * this.cosGamma + this.sinGamma * this.cosBeta) * B23 + this.a * this.c * this.cA_ * B13;
 Bcart[4] = 2 * this.c * this.c * this.cB_ * this.cosBeta * B33 + this.b * this.c * this.cosGamma * B23 + this.a * this.c * this.cB_ * B13;
 Bcart[5] = 2 * this.c * this.c * this.cA_ * this.cB_ * B33 + this.b * this.c * this.cB_ * this.sinGamma * B23;
-}return t.setFromThermalEquation (Bcart, JU.Escape.eAF (parBorU));
-}, "JV.Viewer,~A");
+}return t.setFromThermalEquation (Bcart, JW.Escape.eAF (parBorU));
+}, "~A");
 Clazz_defineMethod (c$, "getCanonicalCopy", 
 function (scale, withOffset) {
 var pts =  new Array (8);
@@ -3729,18 +3848,18 @@ var cell1 = null;
 if (withOffset && this.unitCellMultiplier != null) {
 cell0 =  new JU.P3 ();
 cell1 =  new JU.P3 ();
-JU.SimpleUnitCell.ijkToPoint3f (Clazz_floatToInt (this.unitCellMultiplier.x), cell0, 0);
-JU.SimpleUnitCell.ijkToPoint3f (Clazz_floatToInt (this.unitCellMultiplier.y), cell1, 0);
+JW.SimpleUnitCell.ijkToPoint3f (Clazz_floatToInt (this.unitCellMultiplier.x), cell0, 0);
+JW.SimpleUnitCell.ijkToPoint3f (Clazz_floatToInt (this.unitCellMultiplier.y), cell1, 0);
 cell1.sub (cell0);
 }for (var i = 0; i < 8; i++) {
-var pt = pts[i] = JU.P3.newP (JU.BoxInfo.unitCubePoints[i]);
+var pt = pts[i] = JU.P3.newP (JW.BoxInfo.unitCubePoints[i]);
 if (cell0 != null) {
-scale *= (this.unitCellMultiplier.z == 0 ? 1 : this.unitCellMultiplier.z);
+scale *= this.unitCellMultiplier.z;
 pts[i].add3 (cell0.x + cell1.x * pt.x, cell0.y + cell1.y * pt.y, cell0.z + cell1.z * pt.z);
 }this.matrixFractionalToCartesian.rotTrans (pt);
 if (!withOffset) pt.sub (this.cartesianOffset);
 }
-return JU.BoxInfo.getCanonicalCopy (pts, scale);
+return JW.BoxInfo.getCanonicalCopy (pts, scale);
 }, "~N,~B");
 c$.toFractionalX = Clazz_defineMethod (c$, "toFractionalX", 
  function (x) {
@@ -3748,14 +3867,16 @@ x = (x - Math.floor (x));
 if (x > 0.9999 || x < 0.0001) x = 0;
 return x;
 }, "~N");
-Clazz_defineMethod (c$, "initUnitcellVertices", 
+Clazz_defineMethod (c$, "calcUnitcellVertices", 
  function () {
 if (this.matrixFractionalToCartesian == null) return;
-this.matrixCtoFANoOffset = JU.M4.newM4 (this.matrixCartesianToFractional);
-this.matrixFtoCNoOffset = JU.M4.newM4 (this.matrixFractionalToCartesian);
+this.matrixCtoFAbsolute = JU.M4.newM4 (this.matrixCartesianToFractional);
+this.matrixFtoCAbsolute = JU.M4.newM4 (this.matrixFractionalToCartesian);
 this.vertices =  new Array (8);
-for (var i = 8; --i >= 0; ) this.vertices[i] = this.matrixFractionalToCartesian.rotTrans2 (JU.BoxInfo.unitCubePoints[i],  new JU.P3 ());
-
+for (var i = 8; --i >= 0; ) {
+this.vertices[i] =  new JU.P3 ();
+this.matrixFractionalToCartesian.rotTrans2 (JW.BoxInfo.unitCubePoints[i], this.vertices[i]);
+}
 });
 Clazz_defineMethod (c$, "checkDistance", 
 function (f1, f2, distance, dx, iRange, jRange, kRange, ptOffset) {
@@ -3780,71 +3901,37 @@ return this.unitCellMultiplier;
 Clazz_defineMethod (c$, "getUnitCellVectors", 
 function () {
 var m = this.matrixFractionalToCartesian;
-return  Clazz_newArray (-1, [JU.V3.newV (this.cartesianOffset), JU.V3.new3 (this.fix (m.m00), this.fix (m.m10), this.fix (m.m20)), JU.V3.new3 (this.fix (m.m01), this.fix (m.m11), this.fix (m.m21)), JU.V3.new3 (this.fix (m.m02), this.fix (m.m12), this.fix (m.m22))]);
+return [JU.V3.newV (this.cartesianOffset), JU.V3.new3 (m.m00, m.m10, m.m20), JU.V3.new3 (m.m01, m.m11, m.m21), JU.V3.new3 (m.m02, m.m12, m.m22)];
 });
-Clazz_defineMethod (c$, "fix", 
- function (x) {
-return (Math.abs (x) < 0.001 ? 0 : x);
-}, "~N");
 Clazz_defineMethod (c$, "isSameAs", 
 function (uc) {
-if (uc.unitCellParams.length != this.unitCellParams.length) return false;
-for (var i = this.unitCellParams.length; --i >= 0; ) if (this.unitCellParams[i] != uc.unitCellParams[i] && !(Float.isNaN (this.unitCellParams[i]) && Float.isNaN (uc.unitCellParams[i]))) return false;
+if (uc.notionalUnitcell.length != this.notionalUnitcell.length) return false;
+for (var i = this.notionalUnitcell.length; --i >= 0; ) if (this.notionalUnitcell[i] != uc.notionalUnitcell[i] && !(Float.isNaN (this.notionalUnitcell[i]) && Float.isNaN (uc.notionalUnitcell[i]))) return false;
 
-return (this.fractionalOffset == null ? !uc.hasOffset () : uc.fractionalOffset == null ? !this.hasOffset () : this.fractionalOffset.distanceSquared (uc.fractionalOffset) == 0);
-}, "JS.UnitCell");
-Clazz_defineMethod (c$, "hasOffset", 
-function () {
-return (this.fractionalOffset != null && this.fractionalOffset.lengthSquared () != 0);
-});
+if (this.fractionalOffset == null) return (uc.fractionalOffset == null);
+if (uc.fractionalOffset == null) return false;
+if (this.fractionalOffset.distanceSquared (uc.fractionalOffset) != 0) return false;
+return true;
+}, "J.symmetry.UnitCell");
 Clazz_defineMethod (c$, "getState", 
 function () {
 var s = "";
-if (this.fractionalOffset != null && this.fractionalOffset.lengthSquared () != 0) s += "  unitcell offset " + JU.Escape.eP (this.fractionalOffset) + ";\n";
-if (this.unitCellMultiplier != null) s += "  unitcell range " + JU.Escape.eP (this.unitCellMultiplier) + ";\n";
+if (this.fractionalOffset != null) s += "  unitcell " + JW.Escape.eP (this.fractionalOffset) + ";\n";
+if (this.unitCellMultiplier != null) s += "  unitcell " + JW.Escape.eP (this.unitCellMultiplier) + ";\n";
 return s;
 });
-Clazz_defineMethod (c$, "getQuaternionRotation", 
-function (abc) {
-var a = JU.V3.newVsub (this.vertices[4], this.vertices[0]);
-var b = JU.V3.newVsub (this.vertices[2], this.vertices[0]);
-var c = JU.V3.newVsub (this.vertices[1], this.vertices[0]);
-var x =  new JU.V3 ();
-var v =  new JU.V3 ();
-switch ("abc".indexOf (abc)) {
-case 0:
-x.cross (a, c);
-v.cross (x, a);
-break;
-case 1:
-x.cross (b, a);
-v.cross (x, b);
-break;
-case 2:
-x.cross (c, b);
-v.cross (x, c);
-break;
-default:
-return null;
-}
-return JU.Quat.getQuaternionFrame (null, v, x).inv ();
-}, "~S");
 Clazz_defineStatics (c$,
 "twoP2", 19.739208802178716);
-c$.unitVectors = c$.prototype.unitVectors =  Clazz_newArray (-1, [JV.JC.axisX, JV.JC.axisY, JV.JC.axisZ]);
+c$.unitVectors = c$.prototype.unitVectors = [JV.JC.axisX, JV.JC.axisY, JV.JC.axisZ];
 });
 })(Clazz
-,Clazz.newLongArray
-,Clazz.doubleToByte
 ,Clazz.doubleToInt
-,Clazz.doubleToLong
 ,Clazz.declarePackage
 ,Clazz.instanceOf
 ,Clazz.load
 ,Clazz.instantialize
 ,Clazz.decorateAsClass
 ,Clazz.floatToInt
-,Clazz.floatToLong
 ,Clazz.makeConstructor
 ,Clazz.defineEnumConstant
 ,Clazz.exceptionOf

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM");
-Clazz.load (null, "JM.Measurement", ["java.lang.Float", "JU.Lst", "$.Measure", "$.PT", "$.SB", "J.atomdata.RadiusData", "J.c.VDW", "JM.LabelToken", "JU.Escape"], function () {
+Clazz.load (null, "JM.Measurement", ["java.lang.Float", "JU.List", "$.PT", "$.SB", "J.atomdata.RadiusData", "J.c.VDW", "JM.LabelToken", "JW.Escape", "$.Measure"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.thisID = null;
 this.ms = null;
@@ -146,7 +146,7 @@ return;
 Clazz.defineMethod (c$, "reformatDistanceIfSelected", 
 function () {
 if (this.count != 2) return;
-if (this.vwr.slm.isSelected (this.countPlusIndices[1]) && this.vwr.slm.isSelected (this.countPlusIndices[2])) this.formatMeasurement (null);
+if (this.vwr.isSelected (this.countPlusIndices[1]) && this.vwr.isSelected (this.countPlusIndices[2])) this.formatMeasurement (null);
 });
 Clazz.defineMethod (c$, "formatDistance", 
  function (units) {
@@ -156,7 +156,7 @@ if (units == null) {
 var pt = this.strFormat.indexOf ("//");
 units = (pt >= 0 ? this.strFormat.substring (pt + 2) : null);
 if (units == null) {
-units = this.vwr.g.measureDistanceUnits;
+units = this.vwr.getMeasureDistanceUnits ();
 this.strFormat += "//" + units;
 }}units = JM.Measurement.fixUnits (units);
 var pt = label.indexOf ("//");
@@ -258,7 +258,7 @@ return this.sameAsIJ (this.countPlusIndices, this.pts, i, j);
 }, "~N,~N");
 Clazz.defineMethod (c$, "toVector", 
 function (asBitSet) {
-var V =  new JU.Lst ();
+var V =  new JU.List ();
 for (var i = 1; i <= this.count; i++) V.addLast (this.getLabel (i, asBitSet, false));
 
 V.addLast (this.strMeasurement);
@@ -279,11 +279,11 @@ case 2:
 return ptA.distance (ptB);
 case 3:
 ptC = (pts == null ? this.getAtom (3) : pts[2]);
-return JU.Measure.computeAngleABC (ptA, ptB, ptC, true);
+return JW.Measure.computeAngleABC (ptA, ptB, ptC, true);
 case 4:
 ptC = (pts == null ? this.getAtom (3) : pts[2]);
 var ptD = (pts == null ? this.getAtom (4) : pts[3]);
-return JU.Measure.computeTorsion (ptA, ptB, ptC, ptD, true);
+return JW.Measure.computeTorsion (ptA, ptB, ptC, ptD, true);
 default:
 return NaN;
 }
@@ -291,7 +291,7 @@ return NaN;
 Clazz.defineMethod (c$, "getLabel", 
 function (i, asBitSet, withModelIndex) {
 var atomIndex = this.countPlusIndices[i];
-return (atomIndex < 0 ? (withModelIndex ? "modelIndex " + this.getAtom (i).mi + " " : "") + JU.Escape.eP (this.getAtom (i)) : asBitSet ? "(({" + atomIndex + "}))" : this.vwr.getAtomInfo (atomIndex));
+return (atomIndex < 0 ? (withModelIndex ? "modelIndex " + this.getAtom (i).mi + " " : "") + JW.Escape.eP (this.getAtom (i)) : asBitSet ? "(({" + atomIndex + "}))" : this.vwr.getAtomInfo (atomIndex));
 }, "~N,~B,~B");
 Clazz.defineMethod (c$, "setModelIndex", 
 function (modelIndex) {
@@ -311,7 +311,7 @@ var points = m.pts;
 for (var i = measurements.size (); --i >= 0; ) if (measurements.get (i).sameAsPoints (indices, points)) return i;
 
 return -1;
-}, "JU.Lst,JM.Measurement");
+}, "JU.List,JM.Measurement");
 Clazz.defineMethod (c$, "isConnected", 
 function (atoms, count) {
 var atomIndexLast = -1;

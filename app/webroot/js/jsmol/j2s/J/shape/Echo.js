@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shape");
-Clazz.load (["J.shape.TextShape"], "J.shape.Echo", ["JU.PT", "JM.Object2d", "$.Text", "JU.C"], function () {
+Clazz.load (["J.shape.TextShape"], "J.shape.Echo", ["JM.Object2d", "$.Text", "JW.Txt"], function () {
 c$ = Clazz.declareType (J.shape, "Echo", J.shape.TextShape);
 Clazz.defineMethod (c$, "initShape", 
 function () {
@@ -38,12 +38,12 @@ return;
 }if ("thisID" === propertyName) {
 var target = value;
 this.currentObject = this.objects.get (target);
-if (this.currentObject == null && JU.PT.isWild (target)) this.thisID = target.toUpperCase ();
+if (this.currentObject == null && JW.Txt.isWild (target)) this.thisID = target.toUpperCase ();
 return;
 }if ("hidden" === propertyName) {
 var isHidden = (value).booleanValue ();
 if (this.currentObject == null) {
-if (this.isAll || this.thisID != null) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) if (this.isAll || JU.PT.isMatch (t.target.toUpperCase (), this.thisID, true, true)) t.hidden = isHidden;
+if (this.isAll || this.thisID != null) for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) if (this.isAll || JW.Txt.isMatch (t.target.toUpperCase (), this.thisID, true, true)) t.hidden = isHidden;
 
 return;
 }(this.currentObject).hidden = isHidden;
@@ -67,12 +67,12 @@ valign = 3;
 halign = 2;
 } else if ("bottom" === target) {
 valign = 2;
-}text = JM.Text.newEcho (this.vwr, this.vwr.gdata.getFont3DFS ("Serif", 20), target, 10, valign, halign, 0);
-text.adjustForWindow = true;
+}text = JM.Text.newEcho (this.vwr, this.gdata, this.gdata.getFont3DFS ("Serif", 20), target, 10, valign, halign, 0);
+text.setAdjustForWindow (true);
 this.objects.put (target, text);
 if (this.currentFont != null) text.setFont (this.currentFont, true);
-if (this.currentColor != null) text.colix = JU.C.getColixO (this.currentColor);
-if (this.currentBgColor != null) text.bgcolix = JU.C.getColixO (this.currentBgColor);
+if (this.currentColor != null) text.setColixO (this.currentColor);
+if (this.currentBgColor != null) text.setBgColixO (this.currentBgColor);
 if (this.currentTranslucentLevel != 0) text.setTranslucent (this.currentTranslucentLevel, false);
 if (this.currentBgTranslucentLevel != 0) text.setTranslucent (this.currentBgTranslucentLevel, true);
 }this.currentObject = text;
@@ -85,10 +85,10 @@ if ("currentTarget" === property) {
 return (this.currentObject != null && (data[0] = this.currentObject.target) != null);
 }if (property === "checkID") {
 var key = (data[0]).toUpperCase ();
-var isWild = JU.PT.isWild (key);
+var isWild = JW.Txt.isWild (key);
 for (var t, $t = this.objects.values ().iterator (); $t.hasNext () && ((t = $t.next ()) || true);) {
 var id = t.target;
-if (id.equalsIgnoreCase (key) || isWild && JU.PT.isMatch (id.toUpperCase (), key, true, true)) {
+if (id.equalsIgnoreCase (key) || isWild && JW.Txt.isMatch (id.toUpperCase (), key, true, true)) {
 data[1] = id;
 return true;
 }}

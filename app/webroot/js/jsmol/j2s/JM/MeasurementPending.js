@@ -16,7 +16,7 @@ Clazz.defineMethod (c$, "checkPoint",
 for (var i = 1; i <= this.numSet; i++) if (this.countPlusIndices[i] == -1 - i && this.pts[i - 1].distance (ptClicked) < 0.01) return false;
 
 return true;
-}, "JU.Point3fi");
+}, "JW.Point3fi");
 Clazz.defineMethod (c$, "getIndexOf", 
 function (atomIndex) {
 for (var i = 1; i <= this.numSet; i++) if (this.countPlusIndices[i] == atomIndex) return i;
@@ -55,5 +55,5 @@ this.value = this.getMeasurement (null);
 this.strFormat = null;
 this.formatMeasurement (null);
 return this.count;
-}, "~N,JU.Point3fi,~B");
+}, "~N,JW.Point3fi,~B");
 });

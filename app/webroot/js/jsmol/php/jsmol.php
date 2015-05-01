@@ -3,7 +3,6 @@
 // jsmol.php
 // Bob Hanson hansonr@stolaf.edu 1/11/2013
 //
-// 23 Mar 2015 -- checking for missing :// in queries
 // 2 Feb 2014 -- stripped of any exec calls and image options-- this was for JSmol image option - abandoned
 // 30 Oct 2013 -- saveFile should not convert " to _
 // 30 Sep 2013 -- adjusted error handling to only report E_ERROR not E_WARNING
@@ -99,7 +98,6 @@ $isBinary = false;
 $filename = "";
 
 if ($call == "getInfoFromDatabase") {
-  // TODO: add PDBe annotation business here
 	if ($database == '=') {
 		$restQueryUrl = "http://www.pdb.org/pdb/rest/search";
 		$restReportUrl = "http://www.pdb.org/pdb/rest/customReport";
@@ -136,9 +134,7 @@ if ($call == "getInfoFromDatabase") {
 	$isBinary = (strpos(".gz", $query) >= 0);
 		if ($database != "_")
 			$query = $database.$query;
-		if (strpos($query, '://') == 0) {
-      $output = "";
-    } else if (strpos($query, '?POST?') > 0) {
+		if (strpos($query, '?POST?') > 0) {
 			list($query,$data) = explode('?POST?', $query, 2);
 			$context = stream_context_create(array('http' => array(
 				'method' => 'POST',

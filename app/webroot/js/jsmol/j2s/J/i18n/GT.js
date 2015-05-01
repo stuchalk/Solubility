@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.i18n");
-Clazz.load (["J.api.Translator", "java.text.MessageFormat", "java.util.Hashtable", "JU.PT", "J.i18n.Language", "$.Resource"], "J.i18n.GT", ["JU.Logger"], function () {
+Clazz.load (["J.api.Translator", "java.util.Hashtable", "J.i18n.Language", "$.Resource"], "J.i18n.GT", ["java.text.MessageFormat", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.resources = null;
 this.resourceCount = 0;
@@ -16,6 +16,7 @@ return J.i18n.GT._ (s);
 }, "~S");
 Clazz.makeConstructor (c$, 
 function (vwr, langCode) {
+J.i18n.GT.vwr = vwr;
 {
 }this.resources = null;
 this.resourceCount = 0;
@@ -60,10 +61,10 @@ la = this.getSupported (la);
 if (la === la_co || "en_US".equals (la)) la = null;
 if (la_co === la_co_va) la_co = null;
 if ("en_US".equals (la_co)) return;
-if (J.i18n.GT.allowDebug && JU.Logger.debugging) JU.Logger.debug ("Instantiating gettext wrapper for " + this.language + " using files for language:" + la + " country:" + la_co + " variant:" + la_co_va);
-if (!J.i18n.GT.$ignoreApplicationBundle) this.addBundles (vwr, "Jmol", la_co_va, la_co, la);
-this.addBundles (vwr, "JmolApplet", la_co_va, la_co, la);
-}, "JV.Viewer,~S");
+if (J.i18n.GT.allowDebug && JW.Logger.debugging) JW.Logger.debug ("Instantiating gettext wrapper for " + this.language + " using files for language:" + la + " country:" + la_co + " variant:" + la_co_va);
+if (!J.i18n.GT.$ignoreApplicationBundle) this.addBundles ("Jmol", la_co_va, la_co, la);
+this.addBundles ("JmolApplet", la_co_va, la_co, la);
+}, "J.api.JmolViewer,~S");
 c$.getLanguageList = Clazz.defineMethod (c$, "getLanguageList", 
 function (gt) {
 if (J.i18n.GT.languageList == null) {
@@ -95,14 +96,12 @@ return J.i18n.GT.getTextWrapper ().getString (string);
 }, "~S");
 c$.o = Clazz.defineMethod (c$, "o", 
 function (s, o) {
-if (Clazz.instanceOf (o, Array)) {
-if ((o).length != 1) return java.text.MessageFormat.format (s, o);
-o = (o)[0];
-}return JU.PT.rep (s, "{0}", o.toString ());
+if (!(Clazz.instanceOf (o, Array))) o = [o];
+return java.text.MessageFormat.format (s, o);
 }, "~S,~O");
 c$.i = Clazz.defineMethod (c$, "i", 
 function (s, n) {
-return JU.PT.rep (s, "{0}", "" + n);
+return J.i18n.GT.o (s, "" + n);
 }, "~S,~N");
 c$.escapeHTML = Clazz.defineMethod (c$, "escapeHTML", 
 function (msg) {
@@ -133,33 +132,33 @@ J.i18n.GT.htLanguages.put (code, (s == null ? "" : s));
 return s;
 }, "~S");
 Clazz.defineMethod (c$, "addBundles", 
- function (vwr, type, la_co_va, la_co, la) {
+ function (type, la_co_va, la_co, la) {
 try {
 var className = "J.translation." + type + ".";
-if (la_co_va != null) this.addBundle (vwr, className, la_co_va);
-if (la_co != null) this.addBundle (vwr, className, la_co);
-if (la != null) this.addBundle (vwr, className, la);
+if (la_co_va != null) this.addBundle (className, la_co_va);
+if (la_co != null) this.addBundle (className, la_co);
+if (la != null) this.addBundle (className, la);
 } catch (exception) {
 if (Clazz.exceptionOf (exception, Exception)) {
-if (J.i18n.GT.allowDebug) JU.Logger.errorEx ("Some exception occurred!", exception);
+if (J.i18n.GT.allowDebug) JW.Logger.errorEx ("Some exception occurred!", exception);
 this.resources = null;
 this.resourceCount = 0;
 } else {
 throw exception;
 }
 }
-}, "JV.Viewer,~S,~S,~S,~S");
+}, "~S,~S,~S,~S");
 Clazz.defineMethod (c$, "addBundle", 
- function (vwr, className, name) {
-var resource = J.i18n.Resource.getResource (vwr, className, name);
+ function (className, name) {
+var resource = J.i18n.Resource.getResource (className, name);
 if (resource != null) {
 if (this.resources == null) {
 this.resources =  new Array (8);
 this.resourceCount = 0;
 }this.resources[this.resourceCount] = resource;
 this.resourceCount++;
-if (J.i18n.GT.allowDebug) JU.Logger.debug ("GT adding " + className);
-}}, "JV.Viewer,~S,~S");
+if (J.i18n.GT.allowDebug) JW.Logger.debug ("GT adding " + className);
+}}, "~S,~S");
 Clazz.defineMethod (c$, "getString", 
  function (s) {
 var trans = null;
@@ -170,7 +169,7 @@ if (trans != null) {
 s = trans;
 break;
 }}
-if (this.resourceCount > 0 && trans == null && J.i18n.GT.allowDebug && JU.Logger.debugging) JU.Logger.debug ("No trans, using default: " + s);
+if (this.resourceCount > 0 && trans == null && J.i18n.GT.allowDebug && JW.Logger.debugging) JW.Logger.debug ("No trans, using default: " + s);
 }if (trans == null) {
 if (s.startsWith ("[")) s = s.substring (s.indexOf ("]") + 1);
  else if (s.endsWith ("]")) s = s.substring (0, s.indexOf ("["));

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.PmeshReader"], "J.jvxl.readers.MsmsReader", ["JU.PT", "$.Rdr", "JU.Logger"], function () {
+Clazz.load (["J.jvxl.readers.PmeshReader"], "J.jvxl.readers.MsmsReader", ["JU.PT", "$.Rdr", "JW.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.fileName = null;
 Clazz.instantialize (this, arguments);
@@ -28,12 +28,12 @@ Clazz.overrideMethod (c$, "readPolygons",
 function () {
 this.br.close ();
 this.fileName = JU.PT.rep (this.fileName, ".vert", ".face");
-JU.Logger.info ("reading from file " + this.fileName);
+JW.Logger.info ("reading from file " + this.fileName);
 try {
-this.br = JU.Rdr.getBufferedReader (this.sg.atomDataServer.getBufferedInputStream (this.fileName), null);
+this.br = JU.Rdr.getBufferedReader (this.sg.getAtomDataServer ().getBufferedInputStream (this.fileName), null);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.info ("Note: file " + this.fileName + " was not found");
+JW.Logger.info ("Note: file " + this.fileName + " was not found");
 this.br = null;
 return true;
 } else {
@@ -46,7 +46,7 @@ return this.readPolygonsPM ();
 });
 Clazz.defineMethod (c$, "skipHeader", 
  function () {
-while (this.rd () != null && this.line.indexOf ("#") >= 0) {
+while (this.readLine () != null && this.line.indexOf ("#") >= 0) {
 }
 this.tokens = this.getTokens ();
 this.iToken = 0;

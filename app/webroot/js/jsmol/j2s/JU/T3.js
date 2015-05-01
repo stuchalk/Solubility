@@ -6,6 +6,9 @@ this.y = 0;
 this.z = 0;
 Clazz.instantialize (this, arguments);
 }, JU, "T3", null, [javajs.api.JSONEncodable, java.io.Serializable]);
+Clazz.makeConstructor (c$, 
+function () {
+});
 Clazz.defineMethod (c$, "set", 
 function (x, y, z) {
 this.x = x;
@@ -71,12 +74,6 @@ this.x += a;
 this.y += b;
 this.z += c;
 }, "~N,~N,~N");
-Clazz.defineMethod (c$, "scaleT", 
-function (p) {
-this.x *= p.x;
-this.y *= p.y;
-this.z *= p.z;
-}, "JU.T3");
 Clazz.defineMethod (c$, "scaleAdd2", 
 function (s, t1, t2) {
 this.x = s * t1.x + t2.x;
@@ -108,10 +105,6 @@ this.x /= d;
 this.y /= d;
 this.z /= d;
 });
-Clazz.defineMethod (c$, "cross", 
-function (v1, v2) {
-this.set (v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
-}, "JU.T3,JU.T3");
 Clazz.overrideMethod (c$, "hashCode", 
 function () {
 var bits = 1;

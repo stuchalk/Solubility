@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["JSV.common.CoordComparator"], "JSV.common.Coordinate", ["java.lang.Double", "java.util.Arrays", "$.StringTokenizer", "JU.DF", "$.Lst"], function () {
+Clazz.load (["JSV.common.CoordComparator"], "JSV.common.Coordinate", ["java.lang.Double", "java.util.Arrays", "$.StringTokenizer", "JU.DF", "$.List"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.xVal = 0;
 this.yVal = 0;
@@ -79,7 +79,7 @@ function (dataPoints, xFactor, yFactor) {
 var point;
 var xval = 0;
 var yval = 0;
-var xyCoords =  new JU.Lst ();
+var xyCoords =  new JU.List ();
 var delim = " \t\n\r\f,;";
 var st =  new java.util.StringTokenizer (dataPoints, delim);
 var tmp1;
@@ -153,7 +153,7 @@ var tmp = JSV.common.Coordinate.getMinX (xyCoords, vd.getStartingPointIndex (i),
 if (tmp < min) min = tmp;
 }
 return min;
-}, "JU.Lst,JSV.common.ViewData");
+}, "JU.List,JSV.common.ViewData");
 c$.getMaxX = Clazz.defineMethod (c$, "getMaxX", 
 function (coords, start, end) {
 var max = -1.7976931348623157E308;
@@ -172,7 +172,7 @@ var tmp = JSV.common.Coordinate.getMaxX (xyCoords, vd.getStartingPointIndex (i),
 if (tmp > max) max = tmp;
 }
 return max;
-}, "JU.Lst,JSV.common.ViewData");
+}, "JU.List,JSV.common.ViewData");
 c$.getMinY = Clazz.defineMethod (c$, "getMinY", 
 function (coords, start, end) {
 var min = 1.7976931348623157E308;
@@ -193,7 +193,7 @@ var tmp = (JSV.common.Coordinate.getMinY (xyCoords, vd.getStartingPointIndex (i)
 if (tmp < min) min = tmp;
 }
 return min;
-}, "JU.Lst,JSV.common.ViewData");
+}, "JU.List,JSV.common.ViewData");
 c$.getMaxY = Clazz.defineMethod (c$, "getMaxY", 
 function (coords, start, end) {
 var max = -1.7976931348623157E308;
@@ -214,7 +214,7 @@ var tmp = (JSV.common.Coordinate.getMaxY (xyCoords, vd.getStartingPointIndex (i)
 if (tmp > max) max = tmp;
 }
 return max;
-}, "JU.Lst,JSV.common.ViewData");
+}, "JU.List,JSV.common.ViewData");
 c$.getYValueAt = Clazz.defineMethod (c$, "getYValueAt", 
 function (xyCoords, xPt) {
 var i = JSV.common.Coordinate.getNearestIndexForX (xyCoords, xPt);

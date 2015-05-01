@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.awtjs2d");
-Clazz.load (["J.popup.JmolGenericPopup"], "J.awtjs2d.JSModelKitPopup", ["J.i18n.GT", "J.modelkit.ModelKitPopupResourceBundle", "J.popup.JSSwingPopupHelper", "JU.Elements"], function () {
+Clazz.load (["J.popup.JmolGenericPopup"], "J.awtjs2d.JSModelKitPopup", ["J.i18n.GT", "J.modelkit.ModelKitPopupResourceBundle", "J.popup.JSSwingPopupHelper", "JW.Elements"], function () {
 c$ = Clazz.declareType (J.awtjs2d, "JSModelKitPopup", J.popup.JmolGenericPopup);
 Clazz.makeConstructor (c$, 
 function () {
@@ -17,7 +17,7 @@ J.i18n.GT.setDoTranslate (doTranslate);
 Clazz.overrideMethod (c$, "menuShowPopup", 
 function (popup, x, y) {
 try {
-(popup).show (this.isTainted ? this.vwr.html5Applet : null, x, y);
+(popup).show (this.isTainted ? this.vwr.getApplet () : null, x, y);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 } else {
@@ -44,7 +44,7 @@ function (item, name, what) {
 var element = J.i18n.GT._ ("Element?");
 {
 element = prompt(element, "");
-}if (element == null || JU.Elements.elementNumberFromSymbol (element, true) == 0) return null;
+}if (element == null || JW.Elements.elementNumberFromSymbol (element, true) == 0) return null;
 this.updateButton (item, element, "assignAtom_" + element + "P!:??");
 return "set picking assignAtom_" + element;
 }, "javajs.api.SC,~S,~S");

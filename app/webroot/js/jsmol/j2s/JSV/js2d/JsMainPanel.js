@@ -30,7 +30,7 @@ if (jsvp !== this.selectedPanel) this.selectedPanel = jsvp;
 var i = viewer.selectPanel (jsvp, panelNodes);
 if (i >= 0) this.currentPanelIndex = i;
 this.visible = true;
-}, "JSV.common.JSViewer,JSV.api.JSVPanel,JU.Lst");
+}, "JSV.common.JSViewer,JSV.api.JSVPanel,JU.List");
 Clazz.defineMethod (c$, "getHeight", 
 function () {
 return (this.selectedPanel == null ? 0 : this.selectedPanel.getHeight ());

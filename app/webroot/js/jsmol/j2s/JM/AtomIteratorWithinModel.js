@@ -52,17 +52,17 @@ distance = (rd.factorType === J.atomdata.RadiusData.EnumType.OFFSET ? 5 + rd.val
 this.vdw1 = this.atoms[atomIndex].getVanderwaalsRadiusFloat (this.vwr, rd.vdwType);
 }this.checkGreater = (this.isGreaterOnly && atomIndex != 2147483647);
 this.setCenter (center, distance);
-}, "JM.ModelSet,~N,~N,~N,JU.T3,~N,J.atomdata.RadiusData");
+}, "JM.ModelCollection,~N,~N,~N,JU.P3,~N,J.atomdata.RadiusData");
 Clazz.overrideMethod (c$, "setCenter", 
 function (center, distance) {
 this.setCenter2 (center, distance);
-}, "JU.T3,~N");
+}, "JU.P3,~N");
 Clazz.defineMethod (c$, "setCenter2", 
 function (center, distance) {
 if (this.cubeIterator == null) return;
 this.cubeIterator.initialize (center, distance, this.hemisphereOnly);
 this.distanceSquared = distance * distance;
-}, "JU.T3,~N");
+}, "JU.P3,~N");
 Clazz.overrideMethod (c$, "hasNext", 
 function () {
 return this.hasNext2 ();

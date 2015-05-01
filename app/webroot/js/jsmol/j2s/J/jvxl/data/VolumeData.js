@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.data");
-Clazz.load (["J.api.VolumeDataInterface", "JU.M3", "$.P3", "$.V3"], "J.jvxl.data.VolumeData", ["java.lang.Float", "java.util.Hashtable", "JU.SB", "JU.Escape", "$.Logger"], function () {
+Clazz.load (["J.api.VolumeDataInterface", "JU.M3", "$.P3", "$.V3"], "J.jvxl.data.VolumeData", ["java.lang.Float", "java.util.Hashtable", "JU.SB", "$.XmlUtil", "JW.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.sr = null;
 this.doIterate = true;
@@ -77,7 +77,7 @@ this.mappingPlaneNormalMag = Math.sqrt (plane.x * plane.x + plane.y * plane.y + 
 Clazz.defineMethod (c$, "distanceToMappingPlane", 
 function (pt) {
 return (this.mappingPlane.x * pt.x + this.mappingPlane.y * pt.y + this.mappingPlane.z * pt.z + this.mappingPlane.w) / this.mappingPlaneNormalMag;
-}, "JU.T3");
+}, "JU.P3");
 Clazz.overrideMethod (c$, "setVolumetricOrigin", 
 function (x, y, z) {
 this.volumetricOrigin.set (x, y, z);
@@ -85,6 +85,10 @@ this.volumetricOrigin.set (x, y, z);
 Clazz.overrideMethod (c$, "getOriginFloat", 
 function () {
 return this.origin;
+});
+Clazz.defineMethod (c$, "getSpanningVectors", 
+function () {
+return this.spanningVectors;
 });
 Clazz.defineMethod (c$, "getYzCount", 
 function () {
@@ -160,7 +164,7 @@ try {
 this.inverseMatrix.invertM (this.volumetricMatrix);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JU.Logger.error ("VolumeData error setting matrix -- bad unit vectors? ");
+JW.Logger.error ("VolumeData error setting matrix -- bad unit vectors? ");
 return false;
 } else {
 throw e;
@@ -194,13 +198,13 @@ return ((this.thePlane.x * this.ptXyzTemp.x + this.thePlane.y * this.ptXyzTemp.y
 Clazz.overrideMethod (c$, "distancePointToPlane", 
 function (pt) {
 return (this.thePlane.x * pt.x + this.thePlane.y * pt.y + this.thePlane.z * pt.z + this.thePlane.w) / this.thePlaneNormalMag;
-}, "JU.T3");
+}, "JU.P3");
 Clazz.overrideMethod (c$, "voxelPtToXYZ", 
 function (x, y, z, pt) {
 pt.scaleAdd2 (x, this.volumetricVectors[0], this.volumetricOrigin);
 pt.scaleAdd2 (y, this.volumetricVectors[1], pt);
 pt.scaleAdd2 (z, this.volumetricVectors[2], pt);
-}, "~N,~N,~N,JU.T3");
+}, "~N,~N,~N,JU.P3");
 Clazz.defineMethod (c$, "setUnitVectors", 
 function () {
 this.maxVectorLength = 0;
@@ -231,7 +235,7 @@ this.ptXyzTemp.set (x, y, z);
 this.ptXyzTemp.sub (this.volumetricOrigin);
 this.inverseMatrix.rotate (this.ptXyzTemp);
 pt3i.set (Math.round (this.ptXyzTemp.x), Math.round (this.ptXyzTemp.y), Math.round (this.ptXyzTemp.z));
-}, "~N,~N,~N,JU.T3i");
+}, "~N,~N,~N,JU.P3i");
 Clazz.overrideMethod (c$, "lookupInterpolatedVoxelValue", 
 function (point, getSource) {
 if (this.mappingPlane != null) return this.distanceToMappingPlane (point);
@@ -250,7 +254,7 @@ var zUpper = this.indexUpper (this.ptXyzTemp.z, zLower, iMax);
 var v1 = J.jvxl.data.VolumeData.getFractional2DValue (this.mantissa (this.ptXyzTemp.x - xLower), this.mantissa (this.ptXyzTemp.y - yLower), this.getVoxelValue (xLower, yLower, zLower), this.getVoxelValue (xUpper, yLower, zLower), this.getVoxelValue (xLower, yUpper, zLower), this.getVoxelValue (xUpper, yUpper, zLower));
 var v2 = J.jvxl.data.VolumeData.getFractional2DValue (this.mantissa (this.ptXyzTemp.x - xLower), this.mantissa (this.ptXyzTemp.y - yLower), this.getVoxelValue (xLower, yLower, zUpper), this.getVoxelValue (xUpper, yLower, zUpper), this.getVoxelValue (xLower, yUpper, zUpper), this.getVoxelValue (xUpper, yUpper, zUpper));
 return v1 + this.mantissa (this.ptXyzTemp.z - zLower) * (v2 - v1);
-}, "JU.T3,~B");
+}, "JU.P3,~B");
 Clazz.defineMethod (c$, "mantissa", 
  function (f) {
 return (this.isPeriodic ? f - Math.floor (f) : f);
@@ -343,13 +347,13 @@ Clazz.defineMethod (c$, "setVolumetricXml",
 function () {
 var sb =  new JU.SB ();
 if (this.voxelCounts[0] == 0) {
-sb.append ("<jvxlVolumeData>\n");
+JU.XmlUtil.appendTag (sb, "jvxlVolumeData", null);
 } else {
-sb.append ("<jvxlVolumeData origin=\"" + JU.Escape.eP (this.volumetricOrigin) + "\">\n");
-for (var i = 0; i < 3; i++) sb.append ("<jvxlVolumeVector type=\"" + i + "\" count=\"" + this.voxelCounts[i] + "\" vector=\"" + JU.Escape.eP (this.volumetricVectors[i]) + "\"></jvxlVolumeVector>\n");
+JU.XmlUtil.openTagAttr (sb, "jvxlVolumeData", ["origin", JW.Escape.eP (this.volumetricOrigin)]);
+for (var i = 0; i < 3; i++) JU.XmlUtil.appendTag (sb, "jvxlVolumeVector", ["type", "" + i, "count", "" + this.voxelCounts[i], "vector", JW.Escape.eP (this.volumetricVectors[i])]);
 
-}sb.append ("</jvxlVolumeData>\n");
-return this.xmlData = sb.toString ();
+JU.XmlUtil.closeTag (sb, "jvxlVolumeData");
+}return this.xmlData = sb.toString ();
 });
 Clazz.defineMethod (c$, "setVoxelMapValue", 
 function (x, y, z, v) {

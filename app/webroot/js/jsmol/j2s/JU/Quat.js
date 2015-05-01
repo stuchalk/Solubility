@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JU");
-Clazz.load (["JU.P4"], "JU.Quat", ["java.lang.Float", "JU.A4", "$.M3", "$.V3"], function () {
+Clazz.load (["JU.P4"], "JU.Quat", ["java.lang.Float", "JU.A4", "$.M3", "$.P3", "$.V3"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.q0 = 0;
 this.q1 = 0;
@@ -19,15 +19,15 @@ q1.set (q);
 return q1;
 }, "JU.Quat");
 c$.newVA = Clazz.defineMethod (c$, "newVA", 
-function (v, theta) {
+function (pt, theta) {
 var q =  new JU.Quat ();
-q.setTA (v, theta);
+q.setTA (pt, theta);
 return q;
 }, "JU.T3,~N");
 c$.newM = Clazz.defineMethod (c$, "newM", 
 function (mat) {
 var q =  new JU.Quat ();
-q.setM (JU.M3.newM3 (mat));
+q.setM (mat);
 return q;
 }, "JU.M3");
 c$.newAA = Clazz.defineMethod (c$, "newAA", 
@@ -43,7 +43,7 @@ q.setP4 (pt);
 return q;
 }, "JU.P4");
 c$.new4 = Clazz.defineMethod (c$, "new4", 
-function (q1, q2, q3, q0) {
+function (q0, q1, q2, q3) {
 var q =  new JU.Quat ();
 if (q0 < -1) {
 q.q0 = -1;
@@ -66,7 +66,7 @@ this.q3 = q.q3;
 }, "JU.Quat");
 Clazz.defineMethod (c$, "setP4", 
  function (pt) {
-var factor = (pt == null ? 0 : pt.distance4 (JU.Quat.qZero));
+var factor = (pt == null ? 0 : pt.distance (JU.Quat.qZero));
 if (factor == 0) {
 this.q0 = 1;
 return;
@@ -90,10 +90,12 @@ Clazz.defineMethod (c$, "setAA",
 function (a) {
 var aa = JU.A4.newAA (a);
 if (aa.angle == 0) aa.y = 1;
-this.setM ( new JU.M3 ().setAA (aa));
+var m3 =  new JU.M3 ();
+m3.setAA (aa);
+this.setM (m3);
 }, "JU.A4");
 Clazz.defineMethod (c$, "setM", 
- function (mat) {
+function (mat) {
 this.mat = mat;
 var trace = mat.m00 + mat.m11 + mat.m22;
 var temp;
@@ -188,11 +190,11 @@ return JU.Quat.newVA (this.getNormal (), this.getTheta () + x);
 }, "~N");
 Clazz.defineMethod (c$, "mul", 
 function (x) {
-return (x == 1 ? JU.Quat.new4 (this.q1, this.q2, this.q3, this.q0) : JU.Quat.newVA (this.getNormal (), this.getTheta () * x));
+return (x == 1 ? JU.Quat.new4 (this.q0, this.q1, this.q2, this.q3) : JU.Quat.newVA (this.getNormal (), this.getTheta () * x));
 }, "~N");
 Clazz.defineMethod (c$, "mulQ", 
 function (p) {
-return JU.Quat.new4 (this.q0 * p.q1 + this.q1 * p.q0 + this.q2 * p.q3 - this.q3 * p.q2, this.q0 * p.q2 + this.q2 * p.q0 + this.q3 * p.q1 - this.q1 * p.q3, this.q0 * p.q3 + this.q3 * p.q0 + this.q1 * p.q2 - this.q2 * p.q1, this.q0 * p.q0 - this.q1 * p.q1 - this.q2 * p.q2 - this.q3 * p.q3);
+return JU.Quat.new4 (this.q0 * p.q0 - this.q1 * p.q1 - this.q2 * p.q2 - this.q3 * p.q3, this.q0 * p.q1 + this.q1 * p.q0 + this.q2 * p.q3 - this.q3 * p.q2, this.q0 * p.q2 + this.q2 * p.q0 + this.q3 * p.q1 - this.q1 * p.q3, this.q0 * p.q3 + this.q3 * p.q0 + this.q1 * p.q2 - this.q2 * p.q1);
 }, "JU.Quat");
 Clazz.defineMethod (c$, "div", 
 function (p) {
@@ -208,11 +210,11 @@ return this.q0 * q.q0 + this.q1 * q.q1 + this.q2 * q.q2 + this.q3 * q.q3;
 }, "JU.Quat");
 Clazz.defineMethod (c$, "inv", 
 function () {
-return JU.Quat.new4 (-this.q1, -this.q2, -this.q3, this.q0);
+return JU.Quat.new4 (this.q0, -this.q1, -this.q2, -this.q3);
 });
 Clazz.defineMethod (c$, "negate", 
 function () {
-return JU.Quat.new4 (-this.q1, -this.q2, -this.q3, -this.q0);
+return JU.Quat.new4 (-this.q0, -this.q1, -this.q2, -this.q3);
 });
 Clazz.defineMethod (c$, "getFixFactor", 
  function () {
@@ -273,7 +275,7 @@ var v = this.getNormal ();
 if (axisAngle.x * this.q1 + axisAngle.y * this.q2 + axisAngle.z * this.q3 < 0) {
 v.scale (-1);
 theta = -theta;
-}axisAngle.set4 (v.x, v.y, v.z, theta);
+}axisAngle.set (v.x, v.y, v.z, theta);
 return axisAngle;
 }, "JU.P4");
 Clazz.defineMethod (c$, "getThetaDirectedV", 
@@ -299,12 +301,26 @@ v.scale (-1);
 theta = 3.141592653589793 - theta;
 }return JU.A4.newVA (v, theta);
 });
-Clazz.defineMethod (c$, "transform2", 
+Clazz.defineMethod (c$, "transformPt", 
+function (pt) {
+if (this.mat == null) this.setMatrix ();
+var ptNew = JU.P3.newP (pt);
+this.mat.rotate (ptNew);
+return ptNew;
+}, "JU.P3");
+Clazz.defineMethod (c$, "transformP2", 
 function (pt, ptNew) {
 if (this.mat == null) this.setMatrix ();
 this.mat.rotate2 (pt, ptNew);
 return ptNew;
 }, "JU.T3,JU.T3");
+Clazz.defineMethod (c$, "transform", 
+function (v) {
+if (this.mat == null) this.setMatrix ();
+var vNew = JU.V3.newV (v);
+this.mat.rotate (vNew);
+return vNew;
+}, "JU.V3");
 Clazz.defineMethod (c$, "leftDifference", 
 function (q2) {
 var q2adjusted = (this.dot (q2) < 0 ? q2.negate () : q2);
@@ -400,26 +416,20 @@ function () {
 var rA;
 var rB;
 var rG;
-if (this.q1 == 0 && this.q2 == 0) {
-var theta = this.getTheta ();
-return  Clazz.newFloatArray (-1, [this.q3 < 0 ? -theta : theta, 0, 0]);
-}rA = Math.atan2 (2 * (this.q2 * this.q3 + this.q0 * this.q1), 2 * (-this.q1 * this.q3 + this.q0 * this.q2));
+rA = Math.atan2 (2 * (this.q2 * this.q3 - this.q0 * this.q1), 2 * (this.q1 * this.q3 + this.q0 * this.q2));
 rB = Math.acos (this.q3 * this.q3 - this.q2 * this.q2 - this.q1 * this.q1 + this.q0 * this.q0);
-rG = Math.atan2 (2 * (this.q2 * this.q3 - this.q0 * this.q1), 2 * (this.q0 * this.q2 + this.q1 * this.q3));
-return  Clazz.newFloatArray (-1, [(rA / 0.017453292519943295), (rB / 0.017453292519943295), (rG / 0.017453292519943295)]);
+rG = Math.atan2 (2 * (this.q2 * this.q3 + this.q0 * this.q1), 2 * (this.q0 * this.q2 - this.q1 * this.q3));
+return [(rA / 0.017453292519943295), (rB / 0.017453292519943295), (rG / 0.017453292519943295)];
 });
 Clazz.defineMethod (c$, "getEulerZXZ", 
 function () {
 var rA;
 var rB;
 var rG;
-if (this.q1 == 0 && this.q2 == 0) {
-var theta = this.getTheta ();
-return  Clazz.newFloatArray (-1, [this.q3 < 0 ? -theta : theta, 0, 0]);
-}rA = Math.atan2 (2 * (this.q1 * this.q3 - this.q0 * this.q2), 2 * (this.q0 * this.q1 + this.q2 * this.q3));
+rA = Math.atan2 (2 * (this.q1 * this.q3 + this.q0 * this.q2), 2 * (this.q0 * this.q1 - this.q2 * this.q3));
 rB = Math.acos (this.q3 * this.q3 - this.q2 * this.q2 - this.q1 * this.q1 + this.q0 * this.q0);
-rG = Math.atan2 (2 * (this.q1 * this.q3 + this.q0 * this.q2), 2 * (-this.q2 * this.q3 + this.q0 * this.q1));
-return  Clazz.newFloatArray (-1, [(rA / 0.017453292519943295), (rB / 0.017453292519943295), (rG / 0.017453292519943295)]);
+rG = Math.atan2 (2 * (this.q1 * this.q3 - this.q0 * this.q2), 2 * (this.q2 * this.q3 + this.q0 * this.q1));
+return [(rA / 0.017453292519943295), (rB / 0.017453292519943295), (rG / 0.017453292519943295)];
 });
 c$.qZero = c$.prototype.qZero =  new JU.P4 ();
 Clazz.defineStatics (c$,

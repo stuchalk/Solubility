@@ -11,6 +11,7 @@ J.awtjs.Image.disposeGraphics (gOffscreen);
 }, "~O");
 Clazz.overrideMethod (c$, "drawImage", 
 function (g, img, x, y, width, height) {
+J.awtjs.Image.drawImage (g, img, x, y, width, height);
 }, "~O,~O,~N,~N,~N,~N");
 Clazz.overrideMethod (c$, "grabPixels", 
 function (imageobj, width, height, pixels, startRow, nRows) {

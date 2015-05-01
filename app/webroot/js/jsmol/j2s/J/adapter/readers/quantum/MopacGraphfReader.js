@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.quantum");
-Clazz.load (["J.adapter.readers.quantum.MopacSlaterReader"], "J.adapter.readers.quantum.MopacGraphfReader", ["java.lang.Float", "java.util.Hashtable", "JU.AU", "$.Lst", "J.adapter.smarter.AtomSetCollectionReader"], function () {
+Clazz.load (["J.adapter.readers.quantum.MopacSlaterReader"], "J.adapter.readers.quantum.MopacGraphfReader", ["java.lang.Float", "java.util.Hashtable", "JU.AU", "$.List", "J.adapter.smarter.AtomSetCollectionReader"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.ac = 0;
 this.nCoefficients = 0;
@@ -68,8 +68,8 @@ var list = null;
 if (this.rd () == null) return;
 this.isNewFormat = (this.line.indexOf ("ORBITAL") >= 0);
 if (this.isNewFormat) {
-this.orbitalData =  new JU.Lst ();
-if (this.line.length > 10) this.orbitalInfo =  new JU.Lst ();
+this.orbitalData =  new JU.List ();
+if (this.line.length > 10) this.orbitalInfo =  new JU.List ();
 } else {
 list =  Clazz.newFloatArray (this.nCoefficients, this.nCoefficients, 0);
 }for (var iMo = 0; iMo < this.nCoefficients; iMo++) {

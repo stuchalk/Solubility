@@ -1,11 +1,10 @@
 Clazz.declarePackage ("J.adapter.readers.more");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.GromacsReader", ["java.lang.Float", "JU.P3", "J.adapter.smarter.Atom", "JU.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.GromacsReader", ["java.lang.Float", "JU.P3", "J.adapter.smarter.Atom", "J.api.JmolAdapter", "JW.Logger"], function () {
 c$ = Clazz.declareType (J.adapter.readers.more, "GromacsReader", J.adapter.smarter.AtomSetCollectionReader);
 Clazz.overrideMethod (c$, "initializeReader", 
 function () {
-this.setIsPDB ();
 this.asc.newAtomSet ();
-this.setModelPDB (true);
+this.setIsPDB ();
 });
 Clazz.overrideMethod (c$, "checkLine", 
 function () {
@@ -23,7 +22,7 @@ for (var i = 0; i < modelAtomCount; ++i) {
 this.rd ();
 var len = this.line.length;
 if (len != 44 && len != 68) {
-JU.Logger.warn ("line cannot be read for GROMACS atom data: " + this.line);
+JW.Logger.warn ("line cannot be read for GROMACS atom data: " + this.line);
 continue;
 }var atom =  new J.adapter.smarter.Atom ();
 atom.sequenceNumber = this.parseIntRange (this.line, 0, 5);
@@ -33,7 +32,7 @@ atom.x = this.parseFloatRange (this.line, 20, 28) * 10;
 atom.y = this.parseFloatRange (this.line, 28, 36) * 10;
 atom.z = this.parseFloatRange (this.line, 36, 44) * 10;
 if (Float.isNaN (atom.x) || Float.isNaN (atom.y) || Float.isNaN (atom.z)) {
-JU.Logger.warn ("line cannot be read for GROMACS atom data: " + this.line);
+JW.Logger.warn ("line cannot be read for GROMACS atom data: " + this.line);
 atom.set (0, 0, 0);
 }this.setAtomCoord (atom);
 atom.elementSymbol = this.deduceElementSymbol (atom.group3, atom.atomName);
@@ -59,16 +58,16 @@ function (group3, atomName) {
 if (atomName.length <= 2 && group3.equals (atomName)) return atomName;
 var ch1 = (atomName.length == 4 ? atomName.charAt (0) : '\0');
 var ch2 = atomName.charAt (atomName.length == 4 ? 1 : 0);
-var isHetero = this.vwr.getJBR ().isHetero (group3);
-if (J.adapter.smarter.Atom.isValidSymNoCase (ch1, ch2)) return (isHetero || ch1 != 'H' ? "" + ch1 + ch2 : "H");
-if (J.adapter.smarter.Atom.isValidSym1 (ch2)) return "" + ch2;
-if (J.adapter.smarter.Atom.isValidSym1 (ch1)) return "" + ch1;
+var isHetero = J.api.JmolAdapter.isHetero (group3);
+if (J.adapter.smarter.Atom.isValidElementSymbolNoCaseSecondChar2 (ch1, ch2)) return (isHetero || ch1 != 'H' ? "" + ch1 + ch2 : "H");
+if (J.adapter.smarter.Atom.isValidElementSymbol (ch2)) return "" + ch2;
+if (J.adapter.smarter.Atom.isValidElementSymbol (ch1)) return "" + ch1;
 return "Xx";
 }, "~S,~S");
 Clazz.defineMethod (c$, "readUnitCell", 
  function () {
 if (this.rd () == null) return;
-var tokens = this.getTokens ();
+var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.line);
 if (tokens.length < 3 || !this.doApplySymmetry) return;
 var a = 10 * this.parseFloatStr (tokens[0]);
 var b = 10 * this.parseFloatStr (tokens[1]);

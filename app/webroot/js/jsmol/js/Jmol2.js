@@ -35,9 +35,7 @@ Procedure:
 
 3) Concatenate Jmol.min.js if you are not using jQuery (or Jmol.min.nojq.js if you are)
 	 with this file to form a new file (Jmol.min.js first, then Jmol2.js) and replace your
-	 current Jmol.js with it. Note that if you are using your own version of jQuery, it
-	 must be version 1.9 or higher, and note that 2.0 or higher will not work with MSIE
-	 used locally but accessing remote resources. See http://bugs.jquery.com/ticket/14876
+	 current Jmol.js with it.
 	 
 4) Try your page and see how it goes. You may still have some problems, because not all of the 
 	 methods in the original Jmol.js are included here. Let me know if that's the case.

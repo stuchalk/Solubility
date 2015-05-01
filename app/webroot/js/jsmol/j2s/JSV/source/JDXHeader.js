@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (["JU.Lst"], "JSV.source.JDXHeader", null, function () {
+Clazz.load (["JU.List"], "JSV.source.JDXHeader", null, function () {
 c$ = Clazz.decorateAsClass (function () {
 this.title = "";
 this.jcampdx = "5.01";
@@ -15,7 +15,7 @@ this.headerTable = null;
 Clazz.instantialize (this, arguments);
 }, JSV.source, "JDXHeader");
 Clazz.prepareFields (c$, function () {
-this.headerTable =  new JU.Lst ();
+this.headerTable =  new JU.List ();
 });
 Clazz.defineMethod (c$, "setTitle", 
 function (title) {
@@ -104,7 +104,7 @@ return this.dataClass;
 Clazz.defineMethod (c$, "setHeaderTable", 
 function (table) {
 this.headerTable = table;
-}, "JU.Lst");
+}, "JU.List");
 Clazz.defineMethod (c$, "getHeaderTable", 
 function () {
 return this.headerTable;
@@ -113,12 +113,12 @@ Clazz.defineMethod (c$, "getHeaderRowDataAsArray",
 function (addDataClass, nMore) {
 var rowData =  new Array ((addDataClass ? 6 : 5) + this.headerTable.size () + nMore);
 var i = 0;
-rowData[i++] =  Clazz.newArray (-1, ["##TITLE", this.title]);
-rowData[i++] =  Clazz.newArray (-1, ["##JCAMP-DX", this.jcampdx]);
-rowData[i++] =  Clazz.newArray (-1, ["##DATA TYPE", this.dataType]);
-if (addDataClass) rowData[i++] =  Clazz.newArray (-1, ["##DATA CLASS", this.dataClass]);
-rowData[i++] =  Clazz.newArray (-1, ["##ORIGIN", this.origin]);
-rowData[i++] =  Clazz.newArray (-1, ["##OWNER", this.owner]);
+rowData[i++] = ["##TITLE", this.title];
+rowData[i++] = ["##JCAMP-DX", this.jcampdx];
+rowData[i++] = ["##DATA TYPE", this.dataType];
+if (addDataClass) rowData[i++] = ["##DATA CLASS", this.dataClass];
+rowData[i++] = ["##ORIGIN", this.origin];
+rowData[i++] = ["##OWNER", this.owner];
 for (var j = 0; j < this.headerTable.size (); j++) rowData[i++] = this.getRow (j);
 
 return rowData;
@@ -130,5 +130,5 @@ var s = this.headerTable.get (j);
 return [s[0], JU.PT.rep(s[1], "<", "&lt;")];
 }}, "~N");
 Clazz.defineStatics (c$,
-"typeNames",  Clazz.newArray (-1, ["ND NMR SPECTRUM   NMR", "NMR SPECTRUM      NMR", "INFRARED SPECTRUM IR", "MASS SPECTRUM     MS", "RAMAN SPECTRUM    RAMAN", "GAS CHROMATOGRAM  GC", "UV/VIS SPECTRUM   UV/VIS"]));
+"typeNames", ["ND NMR SPECTRUM   NMR", "NMR SPECTRUM      NMR", "INFRARED SPECTRUM IR", "MASS SPECTRUM     MS", "RAMAN SPECTRUM    RAMAN", "GAS CHROMATOGRAM  GC", "UV/VIS SPECTRUM   UV/VIS"]);
 });

@@ -1,16 +1,6 @@
 // JSmolJavaExt.js
+// will be wrapped by anonymous function using ANT in build_03_tojs.xml
 
-// This library will be wrapped by an additional anonymous function using ANT in 
-// build_03_tojs.xml. This task will also modify variable names. References 
-// to Clazz._ will not be changed, but other Clazz.xxx will be changed to 
-// (local scope) Clazz_xxx, allowing them to be further compressed using
-// Google Closure Compiler in that same ANT task.
-
-// BH 1/16/2015 10:09:38 AM Chrome failure jqGrig due to new String("x").toString() not being a simple string
-// BH 8/14/2014 6:49:22 PM Character class efficiencies
-// BH 7/24/2014 9:02:18 AM most browsers do not support String.codePointAt()
-// BH 7/11/2014 4:17:22 PM fix for Boolean.valueOf("false") not being false 
-// BH 5/27/2014 6:29:59 AM ensure floats and doubles have decimal point in toString
 // BH 4/1/2014 12:23:41 PM Encoding moved to Clazz._Encoding; 
 // BH 4/1/2014 7:51:46 AM removing java.lang.B00lean
 // BH 3/7/2014 9:17:10 AM removing Array.toString; moving that code here from j2sJmol.js
@@ -34,39 +24,6 @@
 // BH 11/1/2012 added Short
 // BH 9/10/2012 6:27:21 AM added java.net.URL... classes
 // BH 1/7/2013 7:40:06 AM added Clazz.dateToString
-
-;(function(Clazz) {
-
-// moved here from package.js
-// these classes will be created as objects prior to any others
-// and are then available immediately
-
-	Clazz._Loader.registerPackages("java", [ "io", "lang", "lang.reflect", "util" ]);
-
-  var sJU = "java.util";
-
-  //var sJU = "JU";  
-	//Clazz._Loader.registerPackages (sJU, ["regex", "zip"]);
-	//var javautil = JU;
-
-  var javautil = java.util;
-
-	Clazz._Loader.ignore([
-		"net.sf.j2s.ajax.HttpRequest",
-		sJU + ".MapEntry.Type",
-		"java.net.UnknownServiceException",
-		"java.lang.Runtime",
-		"java.security.AccessController",
-		"java.security.PrivilegedExceptionAction",
-		"java.io.File",
-		"java.io.FileInputStream",
-		"java.io.FileWriter",
-		"java.io.OutputStreamWriter",
-		sJU + ".Calendar", // bypassed in ModelCollection
-		"java.text.SimpleDateFormat", // not used
-		"java.text.DateFormat", // not used
-		sJU + ".concurrent.Executors"
-	])
 
 Math.log10||(Math.log10=function(a){return Math.log(a)/2.302585092994046});
 
@@ -530,13 +487,6 @@ function(n){
 return new Byte(n);
 },"~S");
 
-Clazz._floatToString = function(f) {
- var s = ""+f
- if (s.indexOf(".") < 0 && s.indexOf("e") < 0)
- 	 s += ".0";
- return s;
-}
-
 java.lang.Float=Float=function(){
 Clazz.instantialize(this,arguments);
 };
@@ -544,11 +494,11 @@ Clazz.decorateAsType(Float,"Float",Number,Comparable,null,true);
 Float.prototype.valueOf=function(){return 0;};
 Float.toString=Float.prototype.toString=function(){
 if(arguments.length!=0){
-return Clazz._floatToString(arguments[0]);
+return""+arguments[0];
 }else if(this===Float){
 return"class java.lang.Float";
 }
-return Clazz._floatToString(this.valueOf());
+return""+this.valueOf();
 };
 
 Clazz.overrideConstructor(Float, function(v){
@@ -613,11 +563,11 @@ Clazz.decorateAsType(Double,"Double",Number,Comparable,null,true);
 Double.prototype.valueOf=function(){return 0;};
 Double.toString=Double.prototype.toString=function(){
 if(arguments.length!=0){
-return Clazz._floatToString(arguments[0]);
+return""+arguments[0];
 }else if(this===Double){
 return"class java.lang.Double";
 }
-return Clazz._floatToString(this.valueOf());
+return""+this.valueOf();
 };
 
 Clazz.overrideConstructor(Double, function(v){
@@ -720,7 +670,7 @@ return this.valueOf();
 });
 Boolean.$valueOf=Clazz.overrideMethod(Boolean,"$valueOf",
 function(b){
-return((typeof b == "string"? "true".equalsIgnoreCase(b) : b)?Boolean.TRUE:Boolean.FALSE);
+return(b?Boolean.TRUE:Boolean.FALSE);
 });
 
 /*
@@ -1048,8 +998,6 @@ return s1==s2;
 
 
 sp.$plit=function(regex,limit){
-if (!limit && regex == " ")
-	return this.split(regex);
 
 if(limit!=null&&limit>0){
 if(limit==1){
@@ -1345,9 +1293,6 @@ return String.instantialize(arguments[0],arguments[1],arguments[2]);
 }
 };
 
-sp.codePointAt || (sp.codePointAt = sp.charCodeAt); // Firefox only
-
-
 })(String.prototype);
 
 /*
@@ -1613,7 +1558,7 @@ default:
 };
 
 if(navigator.userAgent.toLowerCase().indexOf("chrome")!=-1){
-	String.prototype.toString=function(){return this.valueOf();};
+	String.prototype.toString=function(){return this;};
 }
 
 }
@@ -1658,34 +1603,39 @@ return(""+c).toUpperCase().charAt(0);
 },"~N");
 c$.isDigit=Clazz.defineMethod(c$,"isDigit",
 function(c){
-c = c.charCodeAt(0);
-return (48 <= c && c <= 57);
+if(('0').charCodeAt (0) <= (c).charCodeAt (0) && (c).charCodeAt (0) <= ('9').charCodeAt(0))return true;
+if((c).charCodeAt(0)<1632)return false;
+return false;
 },"~N");
 c$.isUpperCase=Clazz.defineMethod(c$,"isUpperCase",
 function(c){
-c = c.charCodeAt(0);
-return (65 <= c && c <= 90);
+if(('A').charCodeAt (0) <= (c).charCodeAt (0) && (c).charCodeAt (0) <= ('Z').charCodeAt(0)){
+return true;
+}return false;
 },"~N");
 c$.isLowerCase=Clazz.defineMethod(c$,"isLowerCase",
 function(c){
-c = c.charCodeAt(0);
-return (97 <= c && c <= 122);
+if(('a').charCodeAt (0) <= (c).charCodeAt (0) && (c).charCodeAt (0) <= ('z').charCodeAt(0)){
+return true;
+}return false;
 },"~N");
 c$.isWhitespace=Clazz.defineMethod(c$,"isWhitespace",
 function(c){
-c = (c).charCodeAt(0);
-return (c >= 0x1c && c <= 0x20 || c >= 0x9 && c <= 0xd || c == 0x1680
-	|| c >= 0x2000 && c != 0x2007 && (c <= 0x200b || c == 0x2028 || c == 0x2029 || c == 0x3000));
+ var i = (c).charCodeAt (0);
+if((i>=0x1c&&i<=0x20)||(i>=0x9&&i<=0xd))return true;
+if(i==0x1680)return true;
+if(i<0x2000||i==0x2007)return false;
+returni<=0x200b||i==0x2028||i==0x2029||i==0x3000;
 },"~N");
 c$.isLetter=Clazz.defineMethod(c$,"isLetter",
 function(c){
-c = c.charCodeAt(0);
-return (65 <= c && c <= 90 || 97 <= c && c <= 122);
+ var i = c.charCodeAt(0);
+return ((('A').charCodeAt (0) <= i && i <= ('Z').charCodeAt (0)) 
+  || (('a').charCodeAt (0) <= i && i <= ('z').charCodeAt(0)))
 },"~N");
 c$.isLetterOrDigit=Clazz.defineMethod(c$,"isLetterOrDigit",
 function(c){
-c = c.charCodeAt(0);
-return (65 <= c && c <= 90 || 97 <= c && c <= 122 || 48 <= c && c <= 57);
+return Character.isLetter(c)||Character.isDigit(c);
 },"~N");
 c$.isSpaceChar=Clazz.defineMethod(c$,"isSpaceChar",
 function(c){
@@ -1696,21 +1646,18 @@ returni<=0x200b||i==0x2028||i==0x2029||i==0x202f||i==0x3000;
 },"~N");
 c$.digit=Clazz.defineMethod(c$,"digit",
 function(c,radix){
-var i = c.charCodeAt(0);
-if(radix >= 2 && radix <= 36){
-	if(i < 128){
-		var result = -1;
-		if(48 <= i && i <= 57){
-		result = i - 48;
-		}else if(97 <= i && i <= 122){
-		result = i - 87;
-		}else if(65 <= i && i <= 90){
-		result=i-(55);
-		}
-		return (result < radix ? result : -1);
-	}
-}
-return -1;
+ var i = c.charCodeAt(0);
+if(radix>=2&&radix<=36){
+if(i<128){
+var result=-1;
+if(('0').charCodeAt (0) <= i && i <= ('9').charCodeAt(0)){
+result=i-('0').charCodeAt(0);
+}else if(('a').charCodeAt (0) <= i && i <= ('z').charCodeAt(0)){
+result=i-(87);
+}else if(('A').charCodeAt (0) <= i && i <= ('Z').charCodeAt(0)){
+result=i-(55);
+}return result<radix?result:-1;
+}}return-1;
 },"~N,~N");
 Clazz.overrideMethod(c$,"toString",
 function(){
@@ -1741,39 +1688,39 @@ function(componentType,size){
 return Clazz.newArray(length);
 },"Class,~N");
 
-javautil.Date=Date;
-Date.TYPE="javautil.Date";
+java.util.Date=Date;
+Date.TYPE="java.util.Date";
 Date.__CLASS_NAME__="Date";
 Clazz.implementOf(Date,[java.io.Serializable,java.lang.Comparable]);
 
-Clazz.defineMethod(javautil.Date,"clone",
+Clazz.defineMethod(java.util.Date,"clone",
 function(){
 return new Date(this.getTime());
 });
 
-Clazz.defineMethod(javautil.Date,"before",
+Clazz.defineMethod(java.util.Date,"before",
 function(when){
 return this.getTime()<when.getTime();
-},"javautil.Date");
-Clazz.defineMethod(javautil.Date,"after",
+},"java.util.Date");
+Clazz.defineMethod(java.util.Date,"after",
 function(when){
 return this.getTime()>when.getTime();
-},"javautil.Date");
-Clazz.defineMethod(javautil.Date,"equals",
+},"java.util.Date");
+Clazz.defineMethod(java.util.Date,"equals",
 function(obj){
-return Clazz.instanceOf(obj,javautil.Date)&&this.getTime()==(obj).getTime();
+return Clazz.instanceOf(obj,java.util.Date)&&this.getTime()==(obj).getTime();
 },"Object");
-Clazz.defineMethod(javautil.Date,"compareTo",
+Clazz.defineMethod(java.util.Date,"compareTo",
 function(anotherDate){
 var thisTime=this.getTime();
 var anotherTime=anotherDate.getTime();
 return(thisTime<anotherTime?-1:(thisTime==anotherTime?0:1));
-},"javautil.Date");
-Clazz.defineMethod(javautil.Date,"compareTo",
+},"java.util.Date");
+Clazz.defineMethod(java.util.Date,"compareTo",
 function(o){
 return this.compareTo(o);
 },"Object");
-Clazz.overrideMethod(javautil.Date,"hashCode",
+Clazz.overrideMethod(java.util.Date,"hashCode",
 function(){
 var ht=this.getTime();
 return parseInt(ht)^parseInt((ht>>32));
@@ -1782,7 +1729,7 @@ return parseInt(ht)^parseInt((ht>>32));
 c$=Clazz.decorateAsClass(function(){
 this.source=null;
 Clazz.instantialize(this,arguments);
-},javautil,"EventObject",null,java.io.Serializable);
+},java.util,"EventObject",null,java.io.Serializable);
 Clazz.makeConstructor(c$,
 function(source){
 if(source!=null)this.source=source;
@@ -1796,34 +1743,34 @@ Clazz.overrideMethod(c$,"toString",
 function(){
 return this.getClass().getName()+"[source="+String.valueOf(this.source)+']';
 });
-Clazz.declareInterface(javautil,"EventListener");
+Clazz.declareInterface(java.util,"EventListener");
 
 c$=Clazz.decorateAsClass(function(){
 this.listener=null;
 Clazz.instantialize(this,arguments);
-},javautil,"EventListenerProxy",null,javautil.EventListener);
+},java.util,"EventListenerProxy",null,java.util.EventListener);
 Clazz.makeConstructor(c$,
 function(listener){
 this.listener=listener;
-},"javautil.EventListener");
+},"java.util.EventListener");
 Clazz.defineMethod(c$,"getListener",
 function(){
 return this.listener;
 });
-Clazz.declareInterface(javautil,"Iterator");
+Clazz.declareInterface(java.util,"Iterator");
 
-Clazz.declareInterface(javautil,"ListIterator",javautil.Iterator);
-Clazz.declareInterface(javautil,"Enumeration");
-Clazz.declareInterface(javautil,"Collection",Iterable);
+Clazz.declareInterface(java.util,"ListIterator",java.util.Iterator);
+Clazz.declareInterface(java.util,"Enumeration");
+Clazz.declareInterface(java.util,"Collection",Iterable);
 
-Clazz.declareInterface(javautil,"Set",javautil.Collection);
-Clazz.declareInterface(javautil,"Map");
-Clazz.declareInterface(javautil.Map,"Entry");
+Clazz.declareInterface(java.util,"Set",java.util.Collection);
+Clazz.declareInterface(java.util,"Map");
+Clazz.declareInterface(java.util.Map,"Entry");
 
-Clazz.declareInterface(javautil,"List",javautil.Collection);
+Clazz.declareInterface(java.util,"List",java.util.Collection);
 
-Clazz.declareInterface(javautil,"Queue",javautil.Collection);
-Clazz.declareInterface(javautil,"RandomAccess");
+Clazz.declareInterface(java.util,"Queue",java.util.Collection);
+Clazz.declareInterface(java.util,"RandomAccess");
 c$=Clazz.decorateAsClass(function(){
 this.detailMessage=null;
 this.cause=null;
@@ -1882,7 +1829,7 @@ return(message ? s+": "+message : s);
 });
 Clazz.defineMethod(c$,"printStackTrace",
 function(){
-System.err.println(this.getStackTrace ? this.getStackTrace() : this.message + " " + Clazz.getStackTrace());
+System.err.println(this.getStackTrace());
 });
 
 Clazz.defineMethod(c$,"getStackTrace",
@@ -2056,7 +2003,7 @@ buf.append(lineNum);
 }buf.append(')');
 }}return buf.toString();
 });
-TypeError.prototype.getMessage || (TypeError.prototype.getMessage = function(){ return (this.message || this.toString()) + (this.getStackTrace ? this.getStackTrace() : Clazz.getStackTrace())});
+TypeError.prototype.getMessage || (TypeError.prototype.getMessage = function(){ return (this.message || this.toString()) + this.getStackTrace()});
 c$=Clazz.declareType(java.lang,"Error",Throwable);
 
 c$=Clazz.declareType(java.lang,"LinkageError",Error);
@@ -2369,22 +2316,22 @@ function(){
 return this.detail;
 });
 
-c$=Clazz.declareType(javautil,"ConcurrentModificationException",RuntimeException);
+c$=Clazz.declareType(java.util,"ConcurrentModificationException",RuntimeException);
 Clazz.makeConstructor(c$,
 function(){
-Clazz.superConstructor(this,javautil.ConcurrentModificationException,[]);
+Clazz.superConstructor(this,java.util.ConcurrentModificationException,[]);
 });
 
-c$=Clazz.declareType(javautil,"EmptyStackException",RuntimeException);
+c$=Clazz.declareType(java.util,"EmptyStackException",RuntimeException);
 
 c$=Clazz.decorateAsClass(function(){
 this.className=null;
 this.key=null;
 Clazz.instantialize(this,arguments);
-},javautil,"MissingResourceException",RuntimeException);
+},java.util,"MissingResourceException",RuntimeException);
 Clazz.makeConstructor(c$,
 function(detailMessage,className,resourceName){
-Clazz.superConstructor(this,javautil.MissingResourceException,[detailMessage]);
+Clazz.superConstructor(this,java.util.MissingResourceException,[detailMessage]);
 this.className=className;
 this.key=resourceName;
 },"~S,~S,~S");
@@ -2397,9 +2344,9 @@ function(){
 return this.key;
 });
 
-c$=Clazz.declareType(javautil,"NoSuchElementException",RuntimeException);
+c$=Clazz.declareType(java.util,"NoSuchElementException",RuntimeException);
 
-c$=Clazz.declareType(javautil,"TooManyListenersException",Exception);
+c$=Clazz.declareType(java.util,"TooManyListenersException",Exception);
 
 c$=Clazz.declareType(java.lang,"Void");
 Clazz.defineStatics(c$,
@@ -2818,4 +2765,4 @@ function(){
 return null;
 });
 
-})(Clazz);
+
