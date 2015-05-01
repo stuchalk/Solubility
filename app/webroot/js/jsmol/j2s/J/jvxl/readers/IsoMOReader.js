@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.AtomDataReader"], "J.jvxl.readers.IsoMOReader", ["java.lang.Float", "java.util.Random", "JU.AU", "$.P3", "$.V3", "J.api.Interface", "J.c.QS", "JW.Logger", "$.Measure", "$.Txt"], function () {
+Clazz.load (["J.jvxl.readers.AtomDataReader"], "J.jvxl.readers.IsoMOReader", ["java.lang.Float", "java.util.Random", "JU.AU", "$.Measure", "$.P3", "$.PT", "$.V3", "J.api.Interface", "J.quantum.QS", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.random = null;
 this.vDist = null;
@@ -47,14 +47,14 @@ if (this.isNci) this.setHeader ("NCI (promolecular)", "see NCIPLOT: A Program fo
 this.setRanges (this.params.qm_ptsPerAngstrom, this.params.qm_gridMax, 0);
 var className = (this.isNci ? "quantum.NciCalculation" : "quantum.MOCalculation");
 if (haveVolumeData) {
-for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine2 (i, mo);
+for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine (i, mo);
 
 } else {
-this.q = J.api.Interface.getOption (className);
+this.q = J.api.Interface.getOption (className, this.sg.atomDataServer, "file");
 if (this.isNci) {
 this.qpc = this.q;
 } else if (this.linearCombination == null) {
-for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine2 (i, mo);
+for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine (i, mo);
 
 this.coef = mo.get ("coefficients");
 this.dfCoefMaps = mo.get ("dfCoefMaps");
@@ -65,7 +65,7 @@ var j = Clazz.floatToInt (this.linearCombination[i]);
 if (j > this.mos.size () || j < 1) return;
 this.coefs[j - 1] = this.mos.get (j - 1).get ("coefficients");
 }
-for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine2 (i, null);
+for (var i = this.params.title.length; --i >= 0; ) this.fixTitleLine (i, null);
 
 }this.isElectronDensityCalc = (this.coef == null && this.linearCombination == null && !this.isNci);
 }this.volumeData.sr = null;
@@ -86,16 +86,21 @@ this.setup (isMapData);
 if (this.volumeData.sr == null) this.initializeVolumetricData ();
 return true;
 }, "~B");
-Clazz.defineMethod (c$, "fixTitleLine2", 
+Clazz.defineMethod (c$, "fixTitleLine", 
  function (iLine, mo) {
-if (!this.fixTitleLine (iLine)) return;
+if (this.params.title == null) return;
 var line = this.params.title[iLine];
+if (line.indexOf (" MO ") >= 0) {
+var nboType = this.params.moData.get ("nboType");
+if (nboType != null) line = JU.PT.rep (line, " MO ", " " + nboType + " ");
+}if (line.indexOf ("%M") > 0) line = this.params.title[iLine] = JU.PT.formatStringS (line, "M", this.atomData.modelName);
+if (line.indexOf ("%F") > 0) line = this.params.title[iLine] = JU.PT.formatStringS (line, "F", this.atomData.fileName);
 var pt = line.indexOf ("%");
 if (line.length == 0 || pt < 0) return;
 var rep = 0;
-if (line.indexOf ("%F") >= 0) line = JW.Txt.formatStringS (line, "F", this.params.fileName);
-if (line.indexOf ("%I") >= 0) line = JW.Txt.formatStringS (line, "I", this.params.qm_moLinearCombination == null ? "" + this.params.qm_moNumber : J.c.QS.getMOString (this.params.qm_moLinearCombination));
-if (line.indexOf ("%N") >= 0) line = JW.Txt.formatStringS (line, "N", "" + this.params.qmOrbitalCount);
+if (line.indexOf ("%F") >= 0) line = JU.PT.formatStringS (line, "F", this.params.fileName);
+if (line.indexOf ("%I") >= 0) line = JU.PT.formatStringS (line, "I", this.params.qm_moLinearCombination == null ? "" + this.params.qm_moNumber : J.quantum.QS.getMOString (this.params.qm_moLinearCombination));
+if (line.indexOf ("%N") >= 0) line = JU.PT.formatStringS (line, "N", "" + this.params.qmOrbitalCount);
 var energy = null;
 if (mo == null) {
 for (var i = 0; i < this.linearCombination.length; i += 2) if (this.linearCombination[i] != 0) {
@@ -110,11 +115,14 @@ break;
 }}
 } else {
 if (mo.containsKey ("energy")) energy = mo.get ("energy");
-}if (line.indexOf ("%E") >= 0) line = JW.Txt.formatStringS (line, "E", energy != null && ++rep != 0 ? "" + energy : "");
-if (line.indexOf ("%U") >= 0) line = JW.Txt.formatStringS (line, "U", energy != null && this.params.moData.containsKey ("energyUnits") && ++rep != 0 ? this.params.moData.get ("energyUnits") : "");
-if (line.indexOf ("%S") >= 0) line = JW.Txt.formatStringS (line, "S", mo != null && mo.containsKey ("symmetry") && ++rep != 0 ? "" + mo.get ("symmetry") : "");
-if (line.indexOf ("%O") >= 0) line = JW.Txt.formatStringS (line, "O", mo != null && mo.containsKey ("occupancy") && ++rep != 0 ? "" + mo.get ("occupancy") : "");
-if (line.indexOf ("%T") >= 0) line = JW.Txt.formatStringS (line, "T", mo != null && mo.containsKey ("type") && ++rep != 0 ? "" + mo.get ("type") : "");
+}if (line.indexOf ("%E") >= 0) line = JU.PT.formatStringS (line, "E", energy != null && ++rep != 0 ? "" + energy : "");
+if (line.indexOf ("%U") >= 0) line = JU.PT.formatStringS (line, "U", energy != null && this.params.moData.containsKey ("energyUnits") && ++rep != 0 ? this.params.moData.get ("energyUnits") : "");
+if (line.indexOf ("%S") >= 0) line = JU.PT.formatStringS (line, "S", mo != null && mo.containsKey ("symmetry") && ++rep != 0 ? "" + mo.get ("symmetry") : "");
+if (line.indexOf ("%O") >= 0) {
+var obj = (mo == null ? null : mo.get ("occupancy"));
+var o = (obj == null ? 0 : obj.floatValue ());
+line = JU.PT.formatStringS (line, "O", obj != null && ++rep != 0 ? (o == Clazz.floatToInt (o) ? "" + Clazz.floatToInt (o) : JU.PT.formatF (o, 0, 4, false, false)) : "");
+}if (line.indexOf ("%T") >= 0) line = JU.PT.formatStringS (line, "T", mo != null && mo.containsKey ("type") && ++rep != 0 ? "" + mo.get ("type") : "");
 if (line.equals ("string")) {
 this.params.title[iLine] = "";
 return;
@@ -147,7 +155,7 @@ for (var j = 0; j < 1000; j++) {
 value = this.voxelData[j][0][0];
 var absValue = Math.abs (value);
 if (absValue <= this.getRnd (f)) continue;
-this.addVC (this.points[j], value, 0);
+this.addVC (this.points[j], value, 0, false);
 if (++i == this.params.psi_monteCarloCount) break;
 }
 }
@@ -160,14 +168,14 @@ Clazz.defineMethod (c$, "getValues",
 for (var j = 0; j < 1000; j++) {
 this.voxelData[j][0][0] = 0;
 this.points[j].set (this.volumeData.volumetricOrigin.x + this.getRnd (this.vDist[0]), this.volumeData.volumetricOrigin.y + this.getRnd (this.vDist[1]), this.volumeData.volumetricOrigin.z + this.getRnd (this.vDist[2]));
-if (this.params.thePlane != null) JW.Measure.getPlaneProjection (this.points[j], this.params.thePlane, this.points[j], this.vTemp);
+if (this.params.thePlane != null) JU.Measure.getPlaneProjection (this.points[j], this.params.thePlane, this.points[j], this.vTemp);
 }
 this.createOrbital ();
 });
 Clazz.overrideMethod (c$, "getValueAtPoint", 
 function (pt, getSource) {
 return (this.q == null ? 0 : this.q.processPt (pt));
-}, "JU.P3,~B");
+}, "JU.T3,~B");
 Clazz.defineMethod (c$, "getRnd", 
  function (f) {
 return this.random.nextFloat () * f;
@@ -184,7 +192,7 @@ var isMonteCarlo = (this.params.psi_monteCarloCount > 0);
 if (this.isElectronDensityCalc) {
 if (this.mos == null || isMonteCarlo) return;
 for (var i = this.params.qm_moNumber; --i >= 0; ) {
-JW.Logger.info (" generating isosurface data for MO " + (i + 1));
+JU.Logger.info (" generating isosurface data for MO " + (i + 1));
 var mo = this.mos.get (i);
 this.coef = mo.get ("coefficients");
 this.dfCoefMaps = mo.get ("dfCoefMaps");
@@ -192,7 +200,7 @@ if (!this.setupCalculation ()) return;
 this.q.createCube ();
 }
 } else {
-if (!isMonteCarlo) JW.Logger.info ("generating isosurface data for MO using cutoff " + this.params.cutoff);
+if (!isMonteCarlo) JU.Logger.info ("generating isosurface data for MO using cutoff " + this.params.cutoff);
 if (!this.setupCalculation ()) return;
 this.q.createCube ();
 }});
@@ -223,5 +231,5 @@ if (this.q != null && !Float.isNaN (zero)) {
 zero = this.q.processPt (ptReturn);
 if (this.params.isSquared) zero *= zero;
 }return zero;
-}, "~N,~B,~N,~N,JU.P3,JU.V3,~N,~N,~N,~N,~N,~A,JU.P3");
+}, "~N,~B,~N,~N,JU.T3,JU.V3,~N,~N,~N,~N,~N,~A,JU.T3");
 });

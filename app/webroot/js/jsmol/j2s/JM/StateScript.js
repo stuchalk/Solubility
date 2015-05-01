@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM");
-Clazz.load (null, "JM.StateScript", ["JU.SB", "JW.BSUtil", "$.Escape"], function () {
+Clazz.load (null, "JM.StateScript", ["JU.SB", "JU.BSUtil", "$.Escape"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.modelIndex = 0;
 this.bsBonds = null;
@@ -14,9 +14,9 @@ Clazz.makeConstructor (c$,
 function (modelIndex, script1, bsBonds, bsAtoms1, bsAtoms2, script2, inDefinedStateBlock) {
 this.modelIndex = modelIndex;
 this.script1 = script1;
-this.bsBonds = JW.BSUtil.copy (bsBonds);
-this.bsAtoms1 = JW.BSUtil.copy (bsAtoms1);
-this.bsAtoms2 = JW.BSUtil.copy (bsAtoms2);
+this.bsBonds = JU.BSUtil.copy (bsBonds);
+this.bsAtoms1 = JU.BSUtil.copy (bsAtoms1);
+this.bsAtoms2 = JU.BSUtil.copy (bsAtoms2);
 this.script2 = script2;
 this.inDefinedStateBlock = inDefinedStateBlock;
 }, "~N,~S,JU.BS,JU.BS,JU.BS,~S,~B");
@@ -28,9 +28,9 @@ Clazz.overrideMethod (c$, "toString",
 function () {
 if (!this.isValid ()) return "";
 var sb = JU.SB.newS (this.script1);
-if (this.bsBonds != null) sb.append (" ").append (JW.Escape.eBond (this.bsBonds));
-if (this.bsAtoms1 != null) sb.append (" ").append (JW.Escape.eBS (this.bsAtoms1));
-if (this.bsAtoms2 != null) sb.append (" ").append (JW.Escape.eBS (this.bsAtoms2));
+if (this.bsBonds != null) sb.append (" ").append (JU.Escape.eBond (this.bsBonds));
+if (this.bsAtoms1 != null) sb.append (" ").append (JU.Escape.eBS (this.bsAtoms1));
+if (this.bsAtoms2 != null) sb.append (" ").append (JU.Escape.eBS (this.bsAtoms2));
 if (this.script2 != null) sb.append (" ").append (this.script2);
 var s = sb.toString ();
 if (!s.endsWith (";")) s += ";";
@@ -45,9 +45,9 @@ function (modelIndex, bsBonds, bsAtoms) {
 if (modelIndex == this.modelIndex) return false;
 if (modelIndex > this.modelIndex) {
 return true;
-}JW.BSUtil.deleteBits (this.bsBonds, bsBonds);
-JW.BSUtil.deleteBits (this.bsAtoms1, bsAtoms);
-JW.BSUtil.deleteBits (this.bsAtoms2, bsAtoms);
+}JU.BSUtil.deleteBits (this.bsBonds, bsBonds);
+JU.BSUtil.deleteBits (this.bsAtoms1, bsAtoms);
+JU.BSUtil.deleteBits (this.bsAtoms2, bsAtoms);
 return this.isValid ();
 }, "~N,JU.BS,JU.BS");
 Clazz.defineMethod (c$, "setModelIndex", 

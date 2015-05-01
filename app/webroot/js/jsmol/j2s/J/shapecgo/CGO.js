@@ -16,7 +16,7 @@ Clazz.overrideMethod (c$, "allocMesh",
 function (thisID, m) {
 var index = this.meshCount++;
 this.meshes = this.cmeshes = JU.AU.ensureLength (this.cmeshes, this.meshCount * 2);
-this.currentMesh = this.thisMesh = this.cgoMesh = this.cmeshes[index] = (m == null ?  new J.shapecgo.CGOMesh (thisID, this.colix, index) : m);
+this.currentMesh = this.thisMesh = this.cgoMesh = this.cmeshes[index] = (m == null ?  new J.shapecgo.CGOMesh (this.vwr, thisID, this.colix, index) : m);
 this.currentMesh.color = this.color;
 this.currentMesh.index = index;
 this.currentMesh.useColix = this.useColix;
@@ -52,6 +52,11 @@ this.cgoMesh.visible = true;
 return;
 }this.setPropertySuper (propertyName, value, bs);
 }, "~S,~O,JU.BS");
+Clazz.overrideMethod (c$, "getPropertyData", 
+function (property, data) {
+if (property === "data") return J.shapecgo.CGOMesh.getData (data);
+return this.getPropDataMC (property, data);
+}, "~S,~A");
 Clazz.overrideMethod (c$, "deleteMeshElement", 
 function (i) {
 if (this.meshes[i] === this.currentMesh) this.currentMesh = this.cgoMesh = null;
@@ -73,7 +78,7 @@ Clazz.defineMethod (c$, "setCGO",
 if (this.cgoMesh == null) this.allocMesh (null, null);
 this.cgoMesh.clear ("cgo");
 return this.cgoMesh.set (data);
-}, "JU.List");
+}, "JU.Lst");
 Clazz.overrideMethod (c$, "scale", 
 function (mesh, newScale) {
 }, "J.shape.Mesh,~N");
@@ -93,7 +98,7 @@ Clazz.overrideMethod (c$, "getCommand2",
 function (mesh, iModel) {
 var cmesh = mesh;
 var str =  new JU.SB ();
-var modelCount = this.vwr.getModelCount ();
+var modelCount = this.vwr.ms.mc;
 if (iModel >= 0 && modelCount > 1) J.shape.Shape.appendCmd (str, "frame " + this.vwr.getModelNumberDotted (iModel));
 str.append ("  CGO ID ").append (JU.PT.esc (mesh.thisID));
 if (iModel < 0) iModel = 0;

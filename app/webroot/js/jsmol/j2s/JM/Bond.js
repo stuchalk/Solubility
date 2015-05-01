@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM");
-Clazz.load (["JW.Edge", "JV.JC"], "JM.Bond", ["JW.C"], function () {
+Clazz.load (["JU.Edge", "JV.JC"], "JM.Bond", ["JU.C"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.atom1 = null;
 this.atom2 = null;
@@ -7,10 +7,9 @@ this.mad = 0;
 this.colix = 0;
 this.shapeVisibilityFlags = 0;
 Clazz.instantialize (this, arguments);
-}, JM, "Bond", JW.Edge);
+}, JM, "Bond", JU.Edge);
 Clazz.makeConstructor (c$, 
 function (atom1, atom2, order, mad, colix) {
-Clazz.superConstructor (this, JM.Bond, []);
 this.atom1 = atom1;
 this.atom2 = atom2;
 this.colix = colix;
@@ -22,14 +21,6 @@ function (mad) {
 this.mad = mad;
 this.setShapeVisibility (mad != 0);
 }, "~N");
-Clazz.defineMethod (c$, "setShapeVisibilityFlags", 
-function (shapeVisibilityFlags) {
-this.shapeVisibilityFlags = shapeVisibilityFlags;
-}, "~N");
-Clazz.defineMethod (c$, "getShapeVisibilityFlags", 
-function () {
-return this.shapeVisibilityFlags;
-});
 Clazz.defineMethod (c$, "setShapeVisibility", 
 function (isVisible) {
 var wasVisible = ((this.shapeVisibilityFlags & JM.Bond.myVisibilityFlag) != 0);
@@ -41,7 +32,7 @@ if (isVisible) this.shapeVisibilityFlags |= JM.Bond.myVisibilityFlag;
 }, "~B");
 Clazz.defineMethod (c$, "getIdentity", 
 function () {
-return (this.index + 1) + " " + this.getOrderNumberAsString () + " " + this.atom1.getInfo () + " -- " + this.atom2.getInfo () + " " + this.atom1.distance (this.atom2);
+return (this.index + 1) + " " + JU.Edge.getBondOrderNumberFromOrder (this.order) + " " + this.atom1.getInfo () + " -- " + this.atom2.getInfo () + " " + this.atom1.distance (this.atom2);
 });
 Clazz.overrideMethod (c$, "isCovalent", 
 function () {
@@ -71,9 +62,6 @@ Clazz.defineMethod (c$, "isPymolStyle",
 function () {
 return (this.order & 98304) == 98304;
 });
-Clazz.defineMethod (c$, "setPaletteID", 
-function (pid) {
-}, "~N");
 Clazz.defineMethod (c$, "getEnergy", 
 function () {
 return 0;
@@ -88,13 +76,9 @@ if (this.atom1 != null) this.atom1.deleteBond (this);
 if (this.atom2 != null) this.atom2.deleteBond (this);
 this.atom1 = this.atom2 = null;
 });
-Clazz.defineMethod (c$, "setColix", 
-function (colix) {
-this.colix = colix;
-}, "~N");
 Clazz.defineMethod (c$, "setTranslucent", 
 function (isTranslucent, translucentLevel) {
-this.colix = JW.C.getColixTranslucent3 (this.colix, isTranslucent, translucentLevel);
+this.colix = JU.C.getColixTranslucent3 (this.colix, isTranslucent, translucentLevel);
 }, "~B,~N");
 Clazz.defineMethod (c$, "setOrder", 
 function (order) {
@@ -102,14 +86,6 @@ if (this.atom1.getElementNumber () == 16 && this.atom2.getElementNumber () == 16
 if (order == 512) order = 515;
 this.order = order | (this.order & 131072);
 }, "~N");
-Clazz.defineMethod (c$, "getAtom1", 
-function () {
-return this.atom1;
-});
-Clazz.defineMethod (c$, "getAtom2", 
-function () {
-return this.atom2;
-});
 Clazz.overrideMethod (c$, "getAtomIndex1", 
 function () {
 return this.atom1.i;
@@ -118,38 +94,14 @@ Clazz.overrideMethod (c$, "getAtomIndex2",
 function () {
 return this.atom2.i;
 });
-Clazz.defineMethod (c$, "getRadius", 
-function () {
-return this.mad / 2000;
-});
 Clazz.overrideMethod (c$, "getCovalentOrder", 
 function () {
-return JW.Edge.getCovalentBondOrder (this.order);
-});
-Clazz.defineMethod (c$, "getOrderName", 
-function () {
-return JW.Edge.getBondOrderNameFromOrder (this.order);
-});
-Clazz.defineMethod (c$, "getOrderNumberAsString", 
-function () {
-return JW.Edge.getBondOrderNumberFromOrder (this.order);
-});
-Clazz.defineMethod (c$, "getColix1", 
-function () {
-return JW.C.getColixInherited (this.colix, this.atom1.colixAtom);
-});
-Clazz.defineMethod (c$, "getColix2", 
-function () {
-return JW.C.getColixInherited (this.colix, this.atom2.colixAtom);
+return JU.Edge.getCovalentBondOrder (this.order);
 });
 Clazz.defineMethod (c$, "getOtherAtom", 
 function (thisAtom) {
 return (this.atom1 === thisAtom ? this.atom2 : this.atom2 === thisAtom ? this.atom1 : null);
 }, "JM.Atom");
-Clazz.defineMethod (c$, "setIndex", 
-function (i) {
-this.index = i;
-}, "~N");
 Clazz.defineMethod (c$, "is", 
 function (bondType) {
 return (this.order & -131073) == bondType;
@@ -157,7 +109,7 @@ return (this.order & -131073) == bondType;
 Clazz.overrideMethod (c$, "getOtherAtomNode", 
 function (thisAtom) {
 return (this.atom1 === thisAtom ? this.atom2 : this.atom2 === thisAtom ? this.atom1 : null);
-}, "JW.Node");
+}, "JU.Node");
 Clazz.overrideMethod (c$, "toString", 
 function () {
 return this.atom1 + " - " + this.atom2;

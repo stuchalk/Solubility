@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.more");
-Clazz.load (["J.adapter.readers.more.ForceFieldReader"], "J.adapter.readers.more.MdTopReader", ["java.lang.Boolean", "JU.List", "J.adapter.smarter.Atom", "J.api.JmolAdapter", "JW.Logger"], function () {
+Clazz.load (["J.adapter.readers.more.ForceFieldReader"], "J.adapter.readers.more.MdTopReader", ["java.lang.Boolean", "JU.Lst", "J.adapter.smarter.Atom", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.nAtoms = 0;
 this.ac = 0;
@@ -9,6 +9,7 @@ Clazz.instantialize (this, arguments);
 }, J.adapter.readers.more, "MdTopReader", J.adapter.readers.more.ForceFieldReader);
 Clazz.overrideMethod (c$, "initializeReader", 
 function () {
+this.setIsPDB ();
 this.setUserAtomTypes ();
 });
 Clazz.overrideMethod (c$, "checkLine", 
@@ -24,14 +25,14 @@ if (this.line.equals ("POINTERS")) this.getPointers ();
  else if (this.line.equals ("MASS")) this.getMasses ();
 return false;
 });
-Clazz.overrideMethod (c$, "finalizeReader", 
+Clazz.overrideMethod (c$, "finalizeSubclassReader", 
 function () {
 this.finalizeReaderASCR ();
 var atoms = this.asc.atoms;
 var atom;
 for (var i = 0; i < this.ac; i++) {
 atom = atoms[i];
-atom.isHetero = J.api.JmolAdapter.isHetero (atom.group3);
+atom.isHetero = this.vwr.getJBR ().isHetero (atom.group3);
 var atomType = this.$atomTypes[i];
 if (!this.getElementSymbol (atom, atomType)) atom.elementSymbol = J.adapter.readers.more.ForceFieldReader.deducePdbElementSymbol (atom.isHetero, atom.atomName, atom.group3);
 }
@@ -52,13 +53,13 @@ if (atoms2 != null) {
 this.asc.discardPreviousAtoms ();
 for (var i = 0; i < this.nAtoms; i++) this.asc.addAtom (atoms2[i]);
 
-}JW.Logger.info ("Total number of atoms used=" + this.nAtoms);
-this.setIsPDB ();
+}JU.Logger.info ("Total number of atoms used=" + this.nAtoms);
+this.setModelPDB (true);
 this.htParams.put ("defaultType", "mdcrd");
 });
 Clazz.defineMethod (c$, "getDataBlock", 
  function () {
-var vdata =  new JU.List ();
+var vdata =  new JU.Lst ();
 this.discardLinesUntilContains ("FORMAT");
 var n = J.adapter.smarter.AtomSetCollectionReader.getFortranFormatLengths (this.line.substring (this.line.indexOf ("("))).get (0).intValue ();
 var i = 0;
@@ -80,9 +81,9 @@ var tokens = this.getDataBlock ();
 this.ac = this.parseIntStr (tokens[0]);
 var isPeriodic = (tokens[27].charAt (0) != '0');
 if (isPeriodic) {
-JW.Logger.info ("Periodic type: " + tokens[27]);
+JU.Logger.info ("Periodic type: " + tokens[27]);
 this.htParams.put ("isPeriodic", Boolean.TRUE);
-}JW.Logger.info ("Total number of atoms read=" + this.ac);
+}JU.Logger.info ("Total number of atoms read=" + this.ac);
 this.htParams.put ("templateAtomCount", Integer.$valueOf (this.ac));
 for (var i = 0; i < this.ac; i++) this.asc.addAtom ( new J.adapter.smarter.Atom ());
 
@@ -102,7 +103,7 @@ for (var i = this.ac; --i >= 0; ) atoms[i].partialCharge = this.parseFloatStr (d
 Clazz.defineMethod (c$, "getResiduePointers", 
  function () {
 var resPtrs = this.getDataBlock ();
-JW.Logger.info ("Total number of residues=" + resPtrs.length);
+JU.Logger.info ("Total number of residues=" + resPtrs.length);
 var pt1 = this.ac;
 var pt2;
 var atoms = this.asc.atoms;

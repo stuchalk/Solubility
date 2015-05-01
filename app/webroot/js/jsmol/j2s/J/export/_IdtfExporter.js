@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.export");
-Clazz.load (["J.export.__CartesianExporter", "java.util.Hashtable", "JU.AU", "$.M4", "$.P3", "$.SB"], "J.export._IdtfExporter", ["java.lang.Boolean", "JU.List", "$.Quat", "JW.C", "$.Geodesic", "JV.Viewer"], function () {
+Clazz.load (["J.export.__CartesianExporter", "java.util.Hashtable", "JU.AU", "$.M4", "$.P3", "$.SB"], "J.export._IdtfExporter", ["java.lang.Boolean", "JU.Lst", "$.Quat", "JU.C", "$.Geodesic", "JV.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.haveSphere = false;
 this.haveCylinder = false;
@@ -32,7 +32,7 @@ this.htNodes =  new java.util.Hashtable ();
 this.cylinderMatrix =  new JU.M4 ();
 this.triangleFace = JU.AU.newInt2 (1);
 {
-this.triangleFace[0] = [0, 1, 2];
+this.triangleFace[0] =  Clazz.newIntArray (-1, [0, 1, 2]);
 }});
 Clazz.makeConstructor (c$, 
 function () {
@@ -61,9 +61,8 @@ Clazz.overrideMethod (c$, "outputHeader",
 function () {
 this.output ("FILE_FORMAT \"IDTF\"\nFORMAT_VERSION 100\n");
 this.m.setIdentity ();
-var q = this.vwr.getRotationQuaternion ();
-this.m.setToM3 (q.getMatrix ());
-q.transformP2 (this.referenceCenter, this.tempP1);
+this.m.setToM3 (this.tm.matrixRotate);
+this.m.rotate2 (this.referenceCenter, this.tempP1);
 this.m.m03 = -this.tempP1.x;
 this.m.m13 = -this.tempP1.y;
 this.m.m23 = -this.tempP1.z;
@@ -86,7 +85,7 @@ var fName = this.fileName.substring (this.fileName.lastIndexOf ("/") + 1);
 fName = fName.substring (fName.lastIndexOf ("\\") + 1);
 var name = fName + ".";
 name = name.substring (0, name.indexOf ("."));
-return "% Created by: Jmol " + JV.Viewer.getJmolVersion () + "\n% Creation date: " + this.getExportDate () + "\n% File created: " + this.fileName + " (" + this.out.getByteCount () + " bytes)\n\n" + "\n\\documentclass[12pt,letter]{article}" + "\n\\usepackage{hyperref}" + "\n\\usepackage{media9}" + "\n\\usepackage{verbatim}" + "\n\\pagestyle{empty}" + "\n\\begin{document}" + "\n    \\begin{center}" + "\n        \\addmediapath{./} % here you can set the path where is been saved the u3d file" + "\n        \\includemedia[" + "\n            label=" + name + "," + "\n            width=0.9\\textwidth," + "\n            height=0.9\\textheight," + "\n            activate=pageopen," + "\n            deactivate=pageclose," + "\n            3Dtoolbar=false," + "\n            3Dnavpane=false," + "\n            3Dmenu," + "\n            3Droo=" + this.cameraDistance + "," + "\n            3Dcoo= 0.0 0.0 -" + this.cameraDistance + "," + "\n            3Dc2c=0.0 0.0 1.0," + "\n            3Daac=" + this.aperatureAngle + "," + "\n            3Droll=0.0," + "\n            3Dbg=" + this.rgbFractionalFromColix (this.backgroundColix) + ", % to set the background color for 3D vwr; white = 1 1 1; so, you need to do the proportion: '255:1=[RGB]:x'" + "\n            transparent=false," + "\n            3Dlights=Headlamp," + "\n            3Drender=Solid," + "\n            3Dpartsattrs=restore," + "\n        ]{}{" + name + ".u3d}" + "\n%  \\\\" + "\n%\\movieref[3Dcalculate]{" + name + "}{Click here!}" + "\n\\end{center}" + "\n\\end{document}" + "\n\\begin{comment}" + this.vwr.getWrappedStateScript () + "\n\\end{comment}";
+return "% Created by: Jmol " + JV.Viewer.getJmolVersion () + "\n% Creation date: " + this.getExportDate () + "\n% File created: " + this.fileName + " (" + this.out.getByteCount () + " bytes)\n\n" + "\n\\documentclass[12pt,letter]{article}" + "\n\\usepackage{hyperref}" + "\n\\usepackage{media9}" + "\n\\usepackage{verbatim}" + "\n\\pagestyle{empty}" + "\n\\begin{document}" + "\n    \\begin{center}" + "\n        \\addmediapath{./} % here you can set the path where is been saved the u3d file" + "\n        \\includemedia[" + "\n            label=" + name + "," + "\n            width=0.9\\textwidth," + "\n            height=0.9\\textheight," + "\n            activate=pageopen," + "\n            deactivate=pageclose," + "\n            3Dtoolbar=false," + "\n            3Dnavpane=false," + "\n            3Dmenu," + "\n            3Droo=" + this.cameraDistance + "," + "\n            3Dcoo= 0.0 0.0 0.0," + "\n            3Dc2c=0.0 0.0 1.0," + "\n            3Daac=" + this.aperatureAngle + "," + "\n            3Droll=0.0," + "\n            3Dbg=" + this.rgbFractionalFromColix (this.backgroundColix) + ", % to set the background color for 3D vwr; white = 1 1 1; so, you need to do the proportion: '255:1=[RGB]:x'" + "\n            transparent=false," + "\n            3Dlights=Headlamp," + "\n            3Drender=Solid," + "\n            3Dpartsattrs=restore," + "\n        ]{}{" + name + ".u3d}" + "\n%  \\\\" + "\n%\\movieref[3Dcalculate]{" + name + "}{Click here!}" + "\n\\end{center}" + "\n\\end{document}" + "\n\\begin{comment}" + this.vwr.getWrappedStateScript () + "\n\\end{comment}";
 });
 Clazz.defineMethod (c$, "getParentItem", 
  function (name, m) {
@@ -202,7 +201,7 @@ this.addColix (colix, false);
 var key = "Sphere_" + colix;
 var v = this.htNodes.get (key);
 if (v == null) {
-v =  new JU.List ();
+v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }v.addLast (this.getParentItem ("Jmol", sphereMatrix));
@@ -211,15 +210,15 @@ Clazz.defineMethod (c$, "getSphereResource",
  function () {
 var sb =  new JU.SB ();
 sb.append ("RESOURCE_LIST \"MODEL\" {\n").append ("RESOURCE_COUNT 1\n").append ("RESOURCE 0 {\n").append ("RESOURCE_NAME \"Sphere_Mesh\"\n").append ("MODEL_TYPE \"MESH\"\n").append ("MESH {\n");
-var vertexCount = JW.Geodesic.getVertexCount (2);
-var f = JW.Geodesic.getFaceVertexes (2);
+var vertexCount = JU.Geodesic.getVertexCount (2);
+var f = JU.Geodesic.getFaceVertexes (2);
 var nFaces = Clazz.doubleToInt (f.length / 3);
 var faces = JU.AU.newInt2 (nFaces);
 var fpt = -1;
-for (var i = 0; i < nFaces; i++) faces[i] = [f[++fpt], f[++fpt], f[++fpt]];
+for (var i = 0; i < nFaces; i++) faces[i] =  Clazz.newIntArray (-1, [f[++fpt], f[++fpt], f[++fpt]]);
 
 var vertexes =  new Array (vertexCount);
-for (var i = 0; i < vertexCount; i++) vertexes[i] = JW.Geodesic.getVertexVector (i);
+for (var i = 0; i < vertexCount; i++) vertexes[i] = JU.Geodesic.getVertexVector (i);
 
 return this.getMeshData ("Sphere", faces, vertexes, vertexes);
 });
@@ -288,7 +287,7 @@ for (var i = 0; i < n; i++) {
 var key = "Cylinder" + (i == 0 ? "_" : "In_") + colix;
 var v = this.htNodes.get (key);
 if (v == null) {
-v =  new JU.List ();
+v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }if (ptX == null) this.cylinderMatrix.setToM3 (this.getRotationMatrix (pt1, pt2, radius));
@@ -318,7 +317,7 @@ this.cylinderMatrix =  new JU.M4 ();
 var key = "Ellipse_" + colix;
 var v = this.htNodes.get (key);
 if (v == null) {
-v =  new JU.List ();
+v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }this.checkPoint (ptCenter);
@@ -340,7 +339,7 @@ this.cylinderMatrix =  new JU.M4 ();
 var key = "Circle_" + colix;
 var v = this.htNodes.get (key);
 if (v == null) {
-v =  new JU.List ();
+v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }this.checkPoint (ptCenter);
@@ -360,11 +359,11 @@ var faces = JU.AU.newInt2 (vertexCount);
 var fpt = -1;
 for (var i = 0; i < n; i++) {
 if (inSide) {
-faces[++fpt] = [i + n, (i + 1) % n, i];
-faces[++fpt] = [i + n, (i + 1) % n + n, (i + 1) % n];
+faces[++fpt] =  Clazz.newIntArray (-1, [i + n, (i + 1) % n, i]);
+faces[++fpt] =  Clazz.newIntArray (-1, [i + n, (i + 1) % n + n, (i + 1) % n]);
 } else {
-faces[++fpt] = [i, (i + 1) % n, i + n];
-faces[++fpt] = [(i + 1) % n, (i + 1) % n + n, i + n];
+faces[++fpt] =  Clazz.newIntArray (-1, [i, (i + 1) % n, i + n]);
+faces[++fpt] =  Clazz.newIntArray (-1, [(i + 1) % n, (i + 1) % n + n, i + n]);
 }}
 var vertexes =  new Array (vertexCount);
 var normals =  new Array (vertexCount);
@@ -402,7 +401,7 @@ this.outputIndices (indices, map, nPolygons, bsPolygons, faceVertexMax);
 var sbFaceNormalIndices = this.sbTemp =  new JU.SB ();
 var vNormals = null;
 if (normals != null) {
-vNormals =  new JU.List ();
+vNormals =  new JU.Lst ();
 map = this.getNormalMap (normals, nVertices, null, vNormals);
 this.outputIndices (indices, map, nPolygons, bsPolygons, faceVertexMax);
 }map = null;
@@ -433,12 +432,12 @@ sbColors.append (this.rgbFractionalFromColix (c)).append (" ").append (J["export
 }
 }var key = "mesh" + (++this.iObj);
 this.addMeshData (key, nFaces, nCoord, nNormals, nColors, sbFaceCoordIndices, sbFaceNormalIndices, sbColorIndexes, sbCoords, sbNormals, sbColors);
-var v =  new JU.List ();
+var v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 this.cylinderMatrix.setIdentity ();
 v.addLast (this.getParentItem ("Jmol", this.cylinderMatrix));
-}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.List,java.util.Map,JU.P3");
+}, "~A,~A,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,JU.Lst,java.util.Map,JU.P3");
 Clazz.defineMethod (c$, "addMeshData", 
  function (key, nFaces, nCoord, nNormals, nColors, sbFaceCoordIndices, sbFaceNormalIndices, sbColorIndices, sbCoords, sbNormals, sbColors) {
 this.getMeshHeader (key, nFaces, nCoord, nNormals, nColors, this.models);
@@ -463,7 +462,7 @@ this.addColix (colix, false);
 var key = "Cone_" + colix;
 var v = this.htNodes.get (key);
 if (v == null) {
-v =  new JU.List ();
+v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }this.cylinderMatrix.setToM3 (this.getRotationMatrix (ptBase, ptTip, radius));
@@ -484,7 +483,7 @@ var ndeg = 10;
 var n = Clazz.doubleToInt (360 / ndeg);
 var vertexCount = n + 1;
 var faces = JU.AU.newInt2 (n);
-for (var i = 0; i < n; i++) faces[i] = [i, (i + 1) % n, n];
+for (var i = 0; i < n; i++) faces[i] =  Clazz.newIntArray (-1, [i, (i + 1) % n, n]);
 
 var vertexes =  new Array (vertexCount);
 var normals =  new Array (vertexCount);
@@ -505,7 +504,7 @@ this.outputEllipsoid (center, this.sphereMatrix, colix);
 }, "JU.P3,~N,~N,~B");
 Clazz.overrideMethod (c$, "outputTextPixel", 
 function (pt, argb) {
-var colix = JW.C.getColix (argb);
+var colix = JU.C.getColix (argb);
 this.outputSphere (pt, 0.02, colix, true);
 }, "JU.P3,~N");
 Clazz.overrideMethod (c$, "outputTriangle", 
@@ -513,21 +512,21 @@ function (pt1, pt2, pt3, colix) {
 this.addColix (colix, false);
 var key = "T" + (++this.iObj);
 this.models.append (this.getTriangleResource (key, pt1, pt2, pt3));
-var v =  new JU.List ();
+var v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 if (this.cylinderMatrix == null) this.cylinderMatrix =  new JU.M4 ();
 this.cylinderMatrix.setIdentity ();
 v.addLast (this.getParentItem ("Jmol", this.cylinderMatrix));
-}, "JU.P3,JU.P3,JU.P3,~N");
+}, "JU.T3,JU.T3,JU.T3,~N");
 Clazz.defineMethod (c$, "getTriangleResource", 
  function (key, pt1, pt2, pt3) {
-var vertexes = [pt1, pt2, pt3];
+var vertexes =  Clazz.newArray (-1, [pt1, pt2, pt3]);
 this.tempV1.sub2 (pt3, pt1);
 this.tempV2.sub2 (pt2, pt1);
 this.tempV2.cross (this.tempV2, this.tempV1);
 this.tempV2.normalize ();
-var normals = [this.tempV2, this.tempV2, this.tempV2];
+var normals =  Clazz.newArray (-1, [this.tempV2, this.tempV2, this.tempV2]);
 return this.getMeshData (key, this.triangleFace, vertexes, normals);
-}, "~S,JU.P3,JU.P3,JU.P3");
+}, "~S,JU.T3,JU.T3,JU.T3");
 });

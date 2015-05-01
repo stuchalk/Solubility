@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.thread");
-Clazz.load (["J.thread.JmolThread"], "J.thread.AnimationThread", ["JW.Logger"], function () {
+Clazz.load (["J.thread.JmolThread"], "J.thread.AnimationThread", ["JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.am = null;
 this.framePointer1 = 0;
@@ -8,10 +8,6 @@ this.intThread = 0;
 this.isFirst = false;
 Clazz.instantialize (this, arguments);
 }, J.thread, "AnimationThread", J.thread.JmolThread);
-Clazz.makeConstructor (c$, 
-function () {
-Clazz.superConstructor (this, J.thread.AnimationThread, []);
-});
 Clazz.overrideMethod (c$, "setManager", 
 function (manager, vwr, params) {
 var options = params;
@@ -27,7 +23,7 @@ Clazz.defineMethod (c$, "interrupt",
 function () {
 if (this.stopped) return;
 this.stopped = true;
-if (JW.Logger.debugging) JW.Logger.debug ("animation thread interrupted!");
+if (JU.Logger.debugging) JU.Logger.debug ("animation thread interrupted!");
 try {
 this.am.setAnimationOn (false);
 } catch (e) {
@@ -43,7 +39,7 @@ function (mode) {
 while (true) {
 switch (mode) {
 case -1:
-if (JW.Logger.debugging) JW.Logger.debug ("animation thread " + this.intThread + " running");
+if (JU.Logger.debugging) JU.Logger.debug ("animation thread " + this.intThread + " running");
 this.vwr.requestRepaintAndWait ("animationThread");
 this.vwr.startHoverWatcher (false);
 this.haveReference = true;
@@ -72,20 +68,20 @@ if (!this.isFirst && this.am.currentIsLast () && !this.am.setAnimationNext ()) {
 mode = -2;
 break;
 }this.isFirst = false;
-this.targetTime += Clazz.floatToInt ((1000 / this.am.animationFps) + this.vwr.getFrameDelayMs (this.am.getCurrentModelIndex ()));
+this.targetTime += Clazz.floatToInt ((1000 / this.am.animationFps) + this.vwr.ms.getFrameDelayMs (this.am.cmi));
 mode = 3;
 break;
 case 3:
 while (this.am.animationOn && !this.checkInterrupted (this.am.animationThread) && !this.vwr.getRefreshing ()) {
 if (!this.runSleep (10, 3)) return;
 }
-if (!this.vwr.getSpinOn ()) this.vwr.refresh (1, "animationThread");
+if (!this.vwr.tm.spinOn) this.vwr.refresh (1, "animationThread");
 this.sleepTime = (this.targetTime - (System.currentTimeMillis () - this.startTime));
 if (!this.runSleep (this.sleepTime, 0)) return;
 mode = 0;
 break;
 case -2:
-if (JW.Logger.debugging) JW.Logger.debug ("animation thread " + this.intThread + " exiting");
+if (JU.Logger.debugging) JU.Logger.debug ("animation thread " + this.intThread + " exiting");
 this.am.stopThread (false);
 return;
 }

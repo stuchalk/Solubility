@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.common");
-Clazz.load (["JSV.common.XYScaleConverter", "java.util.Hashtable", "JU.BS", "$.List", "JSV.common.Coordinate", "JSV.dialog.JSVDialog"], "JSV.common.GraphSet", ["java.lang.Boolean", "$.Double", "$.Float", "JU.DF", "$.PT", "JSV.common.Annotation", "$.ColorParameters", "$.ColoredAnnotation", "$.ImageView", "$.Integral", "$.IntegralData", "$.Measurement", "$.MeasurementData", "$.PanelData", "$.Parameters", "$.PeakData", "$.PeakPickEvent", "$.PlotWidget", "$.ScaleData", "$.ScriptToken", "$.Spectrum", "$.ViewData", "JW.Logger"], function () {
+Clazz.load (["JSV.common.XYScaleConverter", "java.util.Hashtable", "JU.BS", "$.Lst", "JSV.common.Coordinate", "JSV.dialog.JSVDialog"], "JSV.common.GraphSet", ["java.lang.Boolean", "$.Double", "$.Float", "JU.DF", "$.PT", "JSV.common.Annotation", "$.ColorParameters", "$.ColoredAnnotation", "$.ImageView", "$.Integral", "$.IntegralData", "$.Measurement", "$.MeasurementData", "$.PanelData", "$.Parameters", "$.PeakData", "$.PeakPickEvent", "$.PlotWidget", "$.ScaleData", "$.ScriptToken", "$.Spectrum", "$.ViewData", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.gs2dLinkedX = null;
 this.gs2dLinkedY = null;
@@ -123,9 +123,9 @@ this.gMain = null;
 Clazz.instantialize (this, arguments);
 }, JSV.common, "GraphSet", null, JSV.common.XYScaleConverter);
 Clazz.prepareFields (c$, function () {
-this.highlights =  new JU.List ();
-this.spectra =  new JU.List ();
-this.graphsTemp =  new JU.List ();
+this.highlights =  new JU.Lst ();
+this.spectra =  new JU.Lst ();
+this.graphsTemp =  new JU.Lst ();
 this.bsSelected =  new JU.BS ();
 this.coordTemp =  new JSV.common.Coordinate ();
 this.mapX =  new java.util.Hashtable ();
@@ -221,7 +221,7 @@ this.showAllStacked = this.allowStacking && !doSplit;
 this.setSpectrumClicked (this.iSpectrumSelected);
 }this.stackSelected = false;
 JSV.common.GraphSet.setFractionalPositions (this.pd, graphSets, JSV.common.PanelData.LinkMode.NONE);
-}, "JU.List,~B");
+}, "JU.Lst,~B");
 Clazz.defineMethod (c$, "setPositionForFrame", 
  function (iSplit) {
 if (iSplit < 0) iSplit = 0;
@@ -287,7 +287,7 @@ endIndices[i] = JSV.common.Coordinate.intoRange (endIndex, 0, iLast);
 this.allowStackedYScale = new Boolean (this.allowStackedYScale & (this.spectra.get (i).getYUnits ().equals (this.spectra.get (0).getYUnits ()) && this.spectra.get (i).getUserYFactor () == this.spectra.get (0).getUserYFactor ())).valueOf ();
 }
 this.getView (0, 0, 0, 0, startIndices, endIndices, null, null);
-this.viewList =  new JU.List ();
+this.viewList =  new JU.Lst ();
 this.viewList.addLast (this.viewData);
 }, "~N,~N");
 Clazz.defineMethod (c$, "getView", 
@@ -419,7 +419,7 @@ return null;
 }, "JSV.common.Coordinate");
 Clazz.defineMethod (c$, "addAnnotation", 
  function (annotation, isToggle) {
-if (this.annotations == null) this.annotations =  new JU.List ();
+if (this.annotations == null) this.annotations =  new JU.Lst ();
 var removed = false;
 for (var i = this.annotations.size (); --i >= 0; ) if (annotation.is2D ? this.isNearby (this.annotations.get (i), annotation, this.imageView, 10) : annotation.equals (this.annotations.get (i))) {
 removed = true;
@@ -761,7 +761,7 @@ this.pin2Dy1.setY (n, this.imageView.toPixelY0 (n));
 this.setWidgetX (this.pin1Dx1, this.getScale ().maxX);
 this.setWidgetY (this.pin1Dy0, this.getScale ().minY);
 this.setWidgetY (this.pin1Dy1, this.getScale ().maxY);
-this.widgets = [this.zoomBox1D, this.zoomBox2D, this.pin1Dx0, this.pin1Dx01, this.pin1Dx1, this.pin1Dy0, this.pin1Dy01, this.pin1Dy1, this.pin2Dx0, this.pin2Dx01, this.pin2Dx1, this.pin2Dy0, this.pin2Dy01, this.pin2Dy1, this.cur2Dx0, this.cur2Dx1, this.cur2Dy, this.cur1D2x1, this.cur1D2x2];
+this.widgets =  Clazz.newArray (-1, [this.zoomBox1D, this.zoomBox2D, this.pin1Dx0, this.pin1Dx01, this.pin1Dx1, this.pin1Dy0, this.pin1Dy01, this.pin1Dy1, this.pin2Dx0, this.pin2Dx01, this.pin2Dx1, this.pin2Dy0, this.pin2Dy01, this.pin2Dy1, this.cur2Dx0, this.cur2Dx1, this.cur2Dy, this.cur1D2x1, this.cur1D2x2]);
 });
 Clazz.defineMethod (c$, "setWidgetX", 
  function (pw, x) {
@@ -1161,7 +1161,7 @@ Clazz.defineMethod (c$, "drawBar",
 var r = xMax + xMin;
 var d = Math.abs (xMax - xMin);
 var range = Math.abs (this.toX (this.xPixel1) - this.toX (this.xPixel0));
-if (d > range / 20) {
+if (tickSize > 0 && d > range / 20) {
 d = range / 20;
 xMin = r / 2 - d;
 xMax = r / 2 + d;
@@ -1203,19 +1203,22 @@ Clazz.defineMethod (c$, "drawPlot",
  function (g, index, spec, isContinuous, yOffset, isGrey, ig, isSelected) {
 var xyCoords = (ig == null ? spec.getXYCoords () : this.getIntegrationGraph (index).getXYCoords ());
 var isIntegral = (ig != null);
-var bsDraw = (ig == null ? null : ig.getBitSet ());
-var fillPeaks = (!isIntegral && !isGrey && this.pendingIntegral != null && this.pendingIntegral.spec === this.spectra.get (index) || spec.fillColor != null && isSelected);
+var bsDraw = (isIntegral ? ig.getBitSet () : null);
+var hasPendingIntegral = (!isIntegral && !isGrey && this.pendingIntegral != null && this.pendingIntegral.spec === this.spectra.get (index));
+var fillPeaks = (hasPendingIntegral || spec.fillColor != null && isSelected);
 var iColor = (isGrey ? -2 : isIntegral ? -1 : !this.allowStacking ? 0 : index);
 this.setPlotColor (g, iColor);
 var plotOn = true;
 var y0 = this.toPixelY (0);
 if (isIntegral) fillPeaks = new Boolean (fillPeaks & (y0 == this.fixY (y0))).valueOf ();
  else y0 = this.fixY (y0);
+var cInt = (isIntegral || fillPeaks ? this.pd.getColor (JSV.common.ScriptToken.INTEGRALPLOTCOLOR) : null);
+var cFill = (cInt == null || spec.fillColor == null ? cInt : spec.fillColor);
 var iFirst = this.viewData.getStartingPointIndex (index);
 var iLast = this.viewData.getEndingPointIndex (index);
 if (isContinuous) {
 iLast--;
-var doLineTo = !fillPeaks && this.g2d.canDoLineTo ();
+var doLineTo = (isIntegral || this.pendingIntegral != null) && this.g2d.canDoLineTo ();
 if (doLineTo) this.g2d.doStroke (g, true);
 var isDown = false;
 for (var i = iFirst; i <= iLast; i++) {
@@ -1225,8 +1228,10 @@ var y1 = (isIntegral ? this.toPixelYint (point1.getYVal ()) : this.toPixelY (poi
 if (y1 == -2147483648) continue;
 var y2 = (isIntegral ? this.toPixelYint (point2.getYVal ()) : this.toPixelY (point2.getYVal ()));
 if (y2 == -2147483648) continue;
-var x1 = this.toPixelX (point1.getXVal ());
-var x2 = this.toPixelX (point2.getXVal ());
+var xv1 = point1.getXVal ();
+var xv2 = point2.getXVal ();
+var x1 = this.toPixelX (xv1);
+var x2 = this.toPixelX (xv2);
 y1 = this.fixY (yOffset + y1);
 y2 = this.fixY (yOffset + y2);
 if (isIntegral) {
@@ -1236,20 +1241,26 @@ this.yPixelPlot0 = y1;
 }this.xPixelPlot0 = x2;
 this.yPixelPlot1 = y2;
 }if (x2 == x1 && y1 == y2) continue;
-if (fillPeaks && (!isIntegral || this.pendingIntegral.overlaps (point1.getXVal (), point2.getXVal ()))) {
-if (isIntegral) {
-this.g2d.setGraphicsColor (g, this.pd.getColor (JSV.common.ScriptToken.INTEGRALPLOTCOLOR));
-this.g2d.drawLine (g, x1, y0, x1, y1);
-} else {
-this.g2d.setGraphicsColor (g, spec.fillColor);
-this.g2d.fillRect (g, x1, Math.min (y0, y1), x2 - x1, Math.abs (y0 - y1));
-}this.setPlotColor (g, iColor);
-continue;
+if (fillPeaks && hasPendingIntegral && this.pendingIntegral.overlaps (xv1, xv2)) {
+if (cFill != null) {
+this.g2d.doStroke (g, false);
+this.g2d.setGraphicsColor (g, cFill);
+}this.g2d.fillRect (g, Math.min (x1, x2), Math.min (y0, y1), Math.max (1, Math.abs (x2 - x1)), Math.abs (y0 - y1));
+if (cFill != null) {
+this.g2d.doStroke (g, false);
+this.g2d.doStroke (g, true);
+isDown = false;
+this.setPlotColor (g, iColor);
+}continue;
 }if (y1 == y2 && (y1 == this.yPixel0)) {
 continue;
 }if (bsDraw != null && bsDraw.get (i) != plotOn) {
 plotOn = bsDraw.get (i);
-if (!this.pd.isPrinting && this.pd.integralShiftMode != 0) this.setPlotColor (g, 0);
+if (doLineTo && isDown) {
+this.g2d.doStroke (g, false);
+this.g2d.doStroke (g, true);
+isDown = false;
+}if (!this.pd.isPrinting && this.pd.integralShiftMode != 0) this.setPlotColor (g, 0);
  else if (plotOn) this.setColorFromToken (g, JSV.common.ScriptToken.INTEGRALPLOTCOLOR);
  else this.setPlotColor (g, -3);
 }if (this.pd.isPrinting && !plotOn) continue;
@@ -1522,7 +1533,7 @@ var x = c.toPixelX (note.getXVal ());
 var y = (note.isPixels () ? Clazz.doubleToInt (this.yPixel0 + 10 * this.pd.scalingFactor - note.getYVal ()) : note.is2D ? this.imageView.subIndexToPixelY (Clazz.doubleToInt (note.getYVal ())) : this.toPixelY (note.getYVal ()));
 this.g2d.drawString (g, note.text, x + note.offsetX * this.pd.scalingFactor, y - note.offsetY * this.pd.scalingFactor);
 }
-}, "~O,JU.List,JSV.common.ScriptToken");
+}, "~O,JU.Lst,JSV.common.ScriptToken");
 Clazz.defineMethod (c$, "drawIntegralValues", 
  function (g, iSpec, yOffset) {
 var integrals = this.getMeasurements (JSV.common.Annotation.AType.Integration, iSpec);
@@ -1739,7 +1750,7 @@ c$.findCompatibleGraphSet = Clazz.defineMethod (c$, "findCompatibleGraphSet",
 for (var i = 0; i < graphSets.size (); i++) if (JSV.common.Spectrum.areXScalesCompatible (spec, graphSets.get (i).getSpectrum (), false, false)) return graphSets.get (i);
 
 return null;
-}, "JU.List,JSV.common.Spectrum");
+}, "JU.Lst,JSV.common.Spectrum");
 c$.isGoodEvent = Clazz.defineMethod (c$, "isGoodEvent", 
  function (zOrP, p, asX) {
 return (p == null ? (Math.abs (zOrP.xPixel1 - zOrP.xPixel0) > 5 && Math.abs (zOrP.yPixel1 - zOrP.yPixel0) > 5) : asX ? Math.abs (zOrP.xPixel0 - p.xPixel0) > 5 : Math.abs (zOrP.yPixel0 - p.yPixel0) > 5);
@@ -1815,7 +1826,7 @@ gs.fY0 = 0;
 gs.fracX = 0.5;
 gs.fracY = 1;
 }}
-}}, "JSV.common.PanelData,JU.List,JSV.common.PanelData.LinkMode");
+}}, "JSV.common.PanelData,JU.Lst,JSV.common.PanelData.LinkMode");
 Clazz.defineMethod (c$, "addAnnotation", 
 function (args, title) {
 if (args.size () == 0 || args.size () == 1 && args.get (0).equalsIgnoreCase ("none")) {
@@ -1832,7 +1843,7 @@ return s;
 }this.lastAnnotation = annotation;
 this.addAnnotation (annotation, false);
 return null;
-}, "JU.List,~S");
+}, "JU.Lst,~S");
 Clazz.defineMethod (c$, "addHighlight", 
 function (x1, x2, spec, color) {
 if (spec == null) spec = this.getSpectrumAt (0);
@@ -2019,7 +2030,7 @@ this.removeDialog (this.getFixedSelectedSpectrumIndex (), JSV.common.Annotation.
 });
 c$.createGraphSetsAndSetLinkMode = Clazz.defineMethod (c$, "createGraphSetsAndSetLinkMode", 
 function (pd, jsvp, spectra, startIndex, endIndex, linkMode) {
-var graphSets =  new JU.List ();
+var graphSets =  new JU.Lst ();
 for (var i = 0; i < spectra.size (); i++) {
 var spec = spectra.get (i);
 var graphSet = (linkMode === JSV.common.PanelData.LinkMode.NONE ? JSV.common.GraphSet.findCompatibleGraphSet (graphSets, spec) : null);
@@ -2029,10 +2040,10 @@ graphSet.addSpec (spec);
 JSV.common.GraphSet.setFractionalPositions (pd, graphSets, linkMode);
 for (var i = graphSets.size (); --i >= 0; ) {
 graphSets.get (i).initGraphSet (startIndex, endIndex);
-JW.Logger.info ("JSVGraphSet " + (i + 1) + " nSpectra = " + graphSets.get (i).nSpectra);
+JU.Logger.info ("JSVGraphSet " + (i + 1) + " nSpectra = " + graphSets.get (i).nSpectra);
 }
 return graphSets;
-}, "JSV.common.PanelData,JSV.api.JSVPanel,JU.List,~N,~N,JSV.common.PanelData.LinkMode");
+}, "JSV.common.PanelData,JSV.api.JSVPanel,JU.Lst,~N,~N,JSV.common.PanelData.LinkMode");
 Clazz.defineMethod (c$, "drawGraphSet", 
 function (gMain, gFront, gRear, width, height, left, right, top, bottom, isResized, taintedAll) {
 this.zoomEnabled = this.pd.getBoolean (JSV.common.ScriptToken.ENABLEZOOM);
@@ -2080,7 +2091,7 @@ function (graphSets, xPixel, yPixel) {
 for (var i = graphSets.size (); --i >= 0; ) if (graphSets.get (i).hasPoint (xPixel, yPixel)) return graphSets.get (i);
 
 return null;
-}, "JU.List,~N,~N");
+}, "JU.Lst,~N,~N");
 Clazz.defineMethod (c$, "findMatchingPeakInfo", 
 function (pi) {
 var pi2 = null;
@@ -2614,7 +2625,7 @@ Clazz.defineMethod (c$, "getInfo",
 function (key, iSpec) {
 var spectraInfo =  new java.util.Hashtable ();
 if ("viewInfo".equalsIgnoreCase (key)) return this.getScale ().getInfo (spectraInfo);
-var specInfo =  new JU.List ();
+var specInfo =  new JU.Lst ();
 spectraInfo.put ("spectra", specInfo);
 for (var i = 0; i < this.nSpectra; i++) {
 if (iSpec >= 0 && i != iSpec) continue;
@@ -2775,7 +2786,7 @@ return  new JSV.common.ColoredAnnotation ().setCA (x, y, this.getSpectrum (), te
 Clazz.defineMethod (c$, "getAnnotation", 
  function (args, lastAnnotation) {
 return JSV.common.Annotation.getColoredAnnotation (this.g2d, this.getSpectrum (), args, lastAnnotation);
-}, "JU.List,JSV.common.Annotation");
+}, "JU.Lst,JSV.common.Annotation");
 Clazz.defineMethod (c$, "fillBox", 
  function (g, x0, y0, x1, y1, whatColor) {
 this.setColorFromToken (g, whatColor);
@@ -2799,8 +2810,8 @@ case 3:
 f = -1;
 break;
 }
-var axPoints = [x - 5, x - 5, x + 5, x + 5, x + 8, x, x - 8];
-var ayPoints = [y + 5 * f, y - f, y - f, y + 5 * f, y + 5 * f, y + 10 * f, y + 5 * f];
+var axPoints =  Clazz.newIntArray (-1, [x - 5, x - 5, x + 5, x + 5, x + 8, x, x - 8]);
+var ayPoints =  Clazz.newIntArray (-1, [y + 5 * f, y - f, y - f, y + 5 * f, y + 5 * f, y + 10 * f, y + 5 * f]);
 switch (type) {
 case 1:
 case 2:

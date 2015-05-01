@@ -25,7 +25,7 @@ function () {
 Clazz.makeConstructor (c$, 
 function ($in) {
 Clazz.superConstructor (this, java.io.BufferedInputStream, [$in]);
-this.buf =  Clazz.newByteArray (java.io.BufferedInputStream.defaultBufferSize, 0);
+this.buf =  Clazz.newByteArray (8192, 0);
 }, "java.io.InputStream");
 Clazz.defineMethod (c$, "fill", 
  function () {
@@ -131,5 +131,5 @@ if (input != null) input.close ();
 return;
 });
 Clazz.defineStatics (c$,
-"defaultBufferSize", 8192);
+"DEFAULT_BUFFER_SIZE", 8192);
 });

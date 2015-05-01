@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.render");
-Clazz.load (["J.render.LabelsRenderer"], "J.render.MeasuresRenderer", ["java.util.Hashtable", "JU.A4", "$.M3", "$.P3", "J.render.FontLineShapeRenderer", "JW.Measure", "$.Point3fi"], function () {
+Clazz.load (["J.render.LabelsRenderer"], "J.render.MeasuresRenderer", ["java.util.Hashtable", "JU.A4", "$.M3", "$.Measure", "$.P3", "J.render.FontLineShapeRenderer", "JU.Point3fi"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.doJustify = false;
 this.modulating = false;
@@ -20,29 +20,30 @@ this.p =  new Array (4);
 Clazz.overrideMethod (c$, "render", 
 function () {
 if (!this.g3d.checkTranslucent (false)) return false;
-if (this.atomPt == null) this.atomPt =  new JW.Point3fi ();
+if (this.atomPt == null) this.atomPt =  new JU.Point3fi ();
 var measures = this.shape;
-this.doJustify = this.vwr.getBoolean (603979872);
+this.doJustify = this.vwr.getBoolean (603979871);
 this.modulating = this.ms.bsModulated != null;
-this.imageFontScaling = this.vwr.getImageFontScaling ();
+this.imageFontScaling = this.vwr.imageFontScaling;
 this.mad0 = measures.mad;
-this.font3d = this.g3d.getFont3DScaled (measures.font3d, this.imageFontScaling);
+this.font3d = this.vwr.gdata.getFont3DScaled (measures.font3d, this.imageFontScaling);
 this.m = measures.mPending;
 if (!this.isExport && this.m != null && (this.count = this.m.count) != 0) this.renderPendingMeasurement ();
 if (!this.vwr.getBoolean (603979926)) return false;
 var showMeasurementLabels = this.vwr.getBoolean (603979879);
 measures.setVisibilityInfo ();
+this.setZcutoff ();
 for (var i = measures.measurementCount; --i >= 0; ) {
 this.m = measures.measurements.get (i);
 if (!this.m.isVisible || !this.m.$isValid || (this.count = this.m.count) == 1 && this.m.traceX == -2147483648) continue;
 this.getPoints ();
 this.colix = this.m.colix;
 if (this.colix == 0) this.colix = measures.colix;
-if (this.colix == 0) this.colix = this.vwr.getColixBackgroundContrast ();
+if (this.colix == 0) this.colix = this.vwr.cm.colixBackgroundContrast;
 this.labelColix = this.m.labelColix;
-if (this.labelColix == 0) this.labelColix = this.vwr.getColixBackgroundContrast ();
+if (this.labelColix == 0) this.labelColix = this.vwr.cm.colixBackgroundContrast;
  else if (this.labelColix == -1) this.labelColix = this.colix;
-this.g3d.setColix (this.colix);
+this.g3d.setC (this.colix);
 this.colixA = this.colixB = this.colix;
 this.renderMeasurement (showMeasurementLabels);
 }
@@ -54,7 +55,7 @@ for (var j = this.count; --j >= 0; ) {
 var i = this.m.getAtomIndex (j + 1);
 var pt = (i >= 0 && this.modulating ? this.getModAtom (i) : this.m.getAtom (j + 1));
 if (pt.sD < 0) {
-this.vwr.transformPtScr (pt, this.pt0i);
+this.tm.transformPtScr (pt, this.pt0i);
 pt.sX = this.pt0i.x;
 pt.sY = this.pt0i.y;
 pt.sZ = this.pt0i.z;
@@ -67,8 +68,15 @@ Clazz.defineMethod (c$, "getModAtom",
 var ii = Integer.$valueOf (i);
 var pt = this.mpts.get (ii);
 if (pt != null) ii = null;
-pt = this.ms.getDynamicAtom (i, pt);
-if (ii != null) this.mpts.put (ii, pt);
+var v = this.ms.getModulation (i);
+if (v == null) {
+pt = this.ms.at[i];
+} else {
+if (pt == null) pt =  new JU.Point3fi ();
+pt.setT (this.ms.at[i]);
+if (this.vwr.tm.vibrationOn) this.vwr.tm.getVibrationPoint (v, pt, NaN);
+pt.sD = -1;
+}if (ii != null) this.mpts.put (ii, pt);
 return pt;
 }, "~N");
 Clazz.defineMethod (c$, "renderMeasurement", 
@@ -79,7 +87,7 @@ if (s.length == 0) {
 s = null;
 } else if (this.m.text != null) {
 this.m.text.setText (s);
-this.m.text.setColix (this.labelColix);
+this.m.text.colix = this.labelColix;
 }}if (this.m.mad == 0) {
 this.dotsOrDashes = false;
 this.mad = this.mad0;
@@ -112,21 +120,21 @@ return;
 }var zA = a.sZ - a.sD - 10;
 var zB = b.sZ - b.sD - 10;
 var radius = this.drawLine (a.sX, a.sY, zA, b.sX, b.sY, zB, this.mad);
-if (s == null) return;
+if (s == null || zB >= this.zCutoff) return;
 if (this.mad > 0) radius <<= 1;
 var z = Clazz.doubleToInt ((zA + zB) / 2);
 if (z < 1) z = 1;
 var x = Clazz.doubleToInt ((a.sX + b.sX) / 2);
 var y = Clazz.doubleToInt ((a.sY + b.sY) / 2);
 if (this.m.text == null) {
-this.g3d.setColix (this.labelColix);
+this.g3d.setC (this.labelColix);
 this.drawString (x, y, z, radius, this.doJustify && (x - a.sX) * (y - a.sY) > 0, false, false, (this.doJustify ? 0 : 2147483647), s);
 } else {
 this.atomPt.ave (a, b);
 this.atomPt.sX = Clazz.doubleToInt ((a.sX + b.sX) / 2);
 this.atomPt.sY = Clazz.doubleToInt ((a.sY + b.sY) / 2);
 this.renderLabelOrMeasure (this.m.text, s);
-}}, "~S,JW.Point3fi,JW.Point3fi");
+}}, "~S,JU.Point3fi,JU.Point3fi");
 Clazz.defineMethod (c$, "renderAngle", 
  function (s, a, b, c) {
 var zOffset = b.sD + 10;
@@ -135,19 +143,19 @@ var zB = b.sZ - zOffset;
 var zC = c.sZ - c.sD - 10;
 var radius = this.drawLine (a.sX, a.sY, zA, b.sX, b.sY, zB, this.mad);
 radius += this.drawLine (b.sX, b.sY, zB, c.sX, c.sY, zC, this.mad);
-if (s == null) return;
+if (s == null || zB >= this.zCutoff) return;
 radius = Clazz.doubleToInt ((radius + 1) / 2);
 if (this.m.value > 175) {
 if (this.m.text == null) {
 var offset = Clazz.doubleToInt (Math.floor (5 * this.imageFontScaling));
-this.g3d.setColix (this.labelColix);
+this.g3d.setC (this.labelColix);
 this.drawString (b.sX + offset, b.sY - offset, zB, radius, false, false, false, (this.doJustify ? 0 : 2147483647), s);
 } else {
 this.atomPt.setT (b);
 this.renderLabelOrMeasure (this.m.text, s);
 }return;
 }if (this.m.isTainted ()) {
-var radians = JW.Measure.computeAngle (this.p[0], this.p[1], this.p[2], this.vectorT2, this.vectorT3, false);
+var radians = JU.Measure.computeAngle (this.p[0], this.p[1], this.p[2], this.vectorT2, this.vectorT3, false);
 this.vectorT.cross (this.vectorT2, this.vectorT3);
 this.m.renderAxis = JU.A4.new4 (this.vectorT.x, this.vectorT.y, this.vectorT.z, radians);
 this.vectorT2.normalize ();
@@ -162,11 +170,10 @@ this.aaT.setAA (this.m.renderAxis);
 var iMid = Clazz.doubleToInt (dotCount / 2);
 for (var i = dotCount; --i >= 0; ) {
 this.aaT.angle = i * stepAngle;
-this.matrixT.setAA (this.aaT);
 this.pointT.setT (this.m.renderArc);
-this.matrixT.rotate (this.pointT);
+this.matrixT.setAA (this.aaT).rotate (this.pointT);
 this.pointT.add (b);
-var p3i = this.vwr.transformPt (this.pointT);
+var p3i = this.tm.transformPt (this.pointT);
 var zArc = p3i.z - zOffset;
 if (zArc < 0) zArc = 0;
 this.g3d.drawPixel (p3i.x, p3i.y, zArc);
@@ -175,16 +182,16 @@ this.pointT.setT (this.m.renderArc);
 this.pointT.scale (1.1);
 this.matrixT.rotate (this.pointT);
 this.pointT.add (b);
-this.vwr.transformPt (this.pointT);
+this.tm.transformPt (this.pointT);
 var zLabel = p3i.z - zOffset;
 if (this.m.text == null) {
-this.g3d.setColix (this.labelColix);
+this.g3d.setC (this.labelColix);
 this.drawString (p3i.x, p3i.y, zLabel, radius, p3i.x < b.sX, false, false, (this.doJustify ? b.sY : 2147483647), s);
 } else {
 this.atomPt.setT (this.pointT);
 this.renderLabelOrMeasure (this.m.text, s);
 }}
-}, "~S,JW.Point3fi,JW.Point3fi,JW.Point3fi");
+}, "~S,JU.Point3fi,JU.Point3fi,JU.Point3fi");
 Clazz.defineMethod (c$, "renderTorsion", 
  function (s, a, b, c, d) {
 var zA = a.sZ - a.sD - 10;
@@ -194,23 +201,24 @@ var zD = d.sZ - d.sD - 10;
 var radius = this.drawLine (a.sX, a.sY, zA, b.sX, b.sY, zB, this.mad);
 radius += this.drawLine (b.sX, b.sY, zB, c.sX, c.sY, zC, this.mad);
 radius += this.drawLine (c.sX, c.sY, zC, d.sX, d.sY, zD, this.mad);
-if (s == null) return;
+var zLabel = Clazz.doubleToInt ((zA + zB + zC + zD) / 4);
+if (s == null || zLabel >= this.zCutoff) return;
 radius /= 3;
 if (this.m.text == null) {
-this.g3d.setColix (this.labelColix);
-this.drawString (Clazz.doubleToInt ((a.sX + b.sX + c.sX + d.sX) / 4), Clazz.doubleToInt ((a.sY + b.sY + c.sY + d.sY) / 4), Clazz.doubleToInt ((zA + zB + zC + zD) / 4), radius, false, false, false, (this.doJustify ? 0 : 2147483647), s);
+this.g3d.setC (this.labelColix);
+this.drawString (Clazz.doubleToInt ((a.sX + b.sX + c.sX + d.sX) / 4), Clazz.doubleToInt ((a.sY + b.sY + c.sY + d.sY) / 4), zLabel, radius, false, false, false, (this.doJustify ? 0 : 2147483647), s);
 } else {
 this.atomPt.add2 (a, b);
 this.atomPt.add (c);
 this.atomPt.add (d);
 this.atomPt.scale (0.25);
 this.renderLabelOrMeasure (this.m.text, s);
-}}, "~S,JW.Point3fi,JW.Point3fi,JW.Point3fi,JW.Point3fi");
+}}, "~S,JU.Point3fi,JU.Point3fi,JU.Point3fi,JU.Point3fi");
 Clazz.defineMethod (c$, "renderPendingMeasurement", 
  function () {
 this.getPoints ();
 var renderLabel = (this.m.traceX == -2147483648);
-this.g3d.setColix (this.labelColix = (renderLabel ? this.vwr.getColixRubberband () : this.count == 2 ? 20 : 23));
+this.g3d.setC (this.labelColix = (renderLabel ? this.vwr.cm.colixRubberband : this.count == 2 ? 20 : 23));
 if ((this.m).haveTarget) {
 this.renderMeasurement (renderLabel);
 return;
@@ -226,7 +234,7 @@ y <<= 1;
 });
 Clazz.overrideMethod (c$, "drawLine", 
 function (x1, y1, z1, x2, y2, z2, mad) {
-var diameter = Clazz.floatToInt (mad >= 20 && this.exportType != 1 ? this.vwr.scaleToScreen (Clazz.doubleToInt ((z1 + z2) / 2), mad) : mad);
+var diameter = Clazz.floatToInt (mad >= 20 && this.exportType != 1 ? this.vwr.tm.scaleToScreen (Clazz.doubleToInt ((z1 + z2) / 2), mad) : mad);
 if (this.dotsOrDashes && (this.dashDots == null || this.dashDots === J.render.FontLineShapeRenderer.ndots)) this.width = diameter;
 return this.drawLine2 (x1, y1, z1, x2, y2, z2, diameter);
 }, "~N,~N,~N,~N,~N,~N,~N");

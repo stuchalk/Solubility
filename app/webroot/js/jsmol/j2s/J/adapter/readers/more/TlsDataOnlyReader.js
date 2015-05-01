@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.more");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.TlsDataOnlyReader", ["java.lang.Float", "java.util.Hashtable", "JU.List", "$.P3", "$.PT", "$.SB", "JW.Escape", "$.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.TlsDataOnlyReader", ["java.lang.Float", "java.util.Hashtable", "JU.Lst", "$.P3", "$.PT", "$.SB", "JU.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vTlsModels = null;
 this.sbTlsErrors = null;
@@ -13,18 +13,18 @@ this.continuing = false;
 });
 Clazz.defineMethod (c$, "readTlsData", 
  function () {
-this.vTlsModels =  new JU.List ();
+this.vTlsModels =  new JU.Lst ();
 var tlsGroups;
 var tlsGroup = null;
 var ranges = null;
 var range = null;
-tlsGroups =  new JU.List ();
+tlsGroups =  new JU.Lst ();
 while (this.rd () != null) {
-var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.line.$replace ('\'', ' '));
+var tokens = JU.PT.getTokens (this.line.$replace ('\'', ' '));
 if (tokens.length == 0) continue;
 if (tokens[0].equals ("TLS")) {
 tlsGroup =  new java.util.Hashtable ();
-ranges =  new JU.List ();
+ranges =  new JU.Lst ();
 tlsGroup.put ("ranges", ranges);
 tlsGroups.addLast (tlsGroup);
 tlsGroup.put ("id", Integer.$valueOf (++this.tlsGroupID));
@@ -37,7 +37,7 @@ var res2 = JU.PT.parseInt (tokens[4]);
 if (chain1 == chain2) {
 range.put ("chains", "" + chain1 + chain2);
 if (res1 <= res2) {
-range.put ("residues", [res1, res2]);
+range.put ("residues",  Clazz.newIntArray (-1, [res1, res2]));
 ranges.addLast (range);
 } else {
 this.tlsAddError (" TLS group residues are not in order (range ignored)");
@@ -63,11 +63,11 @@ if (ti < tj) tensor[tj][ti] = tensor[ti][tj];
 }
 if (tensorType == 'S') tensor[0][0] = -tensor[0][0];
 for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) if (Float.isNaN (tensor[i][j])) {
-this.tlsAddError ("invalid tensor: " + JW.Escape.escapeFloatAA (tensor, false));
+this.tlsAddError ("invalid tensor: " + JU.Escape.escapeFloatAA (tensor, false));
 }
 
 }}
-JW.Logger.info (this.tlsGroupID + " TLS groups read");
+JU.Logger.info (this.tlsGroupID + " TLS groups read");
 var groups =  new java.util.Hashtable ();
 groups.put ("groupCount", Integer.$valueOf (this.tlsGroupID));
 groups.put ("groups", tlsGroups);
@@ -79,6 +79,6 @@ Clazz.defineMethod (c$, "tlsAddError",
 if (this.sbTlsErrors == null) this.sbTlsErrors =  new JU.SB ();
 this.sbTlsErrors.append (this.fileName).appendC ('\t').append ("TLS group ").appendI (this.tlsGroupID).appendC ('\t').append (error).appendC ('\n');
 }, "~S");
-c$.TLnn = c$.prototype.TLnn = ["11", "22", "33", "12", "13", "23"];
-c$.Snn = c$.prototype.Snn = ["22", "11", "12", "13", "23", "21", "31", "32"];
+c$.TLnn = c$.prototype.TLnn =  Clazz.newArray (-1, ["11", "22", "33", "12", "13", "23"]);
+c$.Snn = c$.prototype.Snn =  Clazz.newArray (-1, ["22", "11", "12", "13", "23", "21", "31", "32"]);
 });

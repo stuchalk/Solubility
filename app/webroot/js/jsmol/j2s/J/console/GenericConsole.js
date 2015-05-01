@@ -1,10 +1,9 @@
 Clazz.declarePackage ("J.console");
-Clazz.load (["J.api.JmolAppConsoleInterface", "$.JmolCallbackListener", "java.util.Hashtable"], "J.console.GenericConsole", ["java.lang.Boolean", "JU.PT", "J.c.CBK", "J.i18n.GT", "J.script.T", "JV.Viewer"], function () {
+Clazz.load (["J.api.JmolAppConsoleInterface", "$.JmolCallbackListener", "java.util.Hashtable"], "J.console.GenericConsole", ["java.lang.Boolean", "JU.PT", "J.c.CBK", "J.i18n.GT", "JS.T", "JV.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.input = null;
 this.output = null;
 this.vwr = null;
-this.labels = null;
 this.menuMap = null;
 this.editButton = null;
 this.runButton = null;
@@ -25,7 +24,12 @@ this.menuMap =  new java.util.Hashtable ();
 Clazz.defineMethod (c$, "setViewer", 
 function (vwr) {
 this.vwr = vwr;
-}, "J.api.JmolViewer");
+if (J.console.GenericConsole.labels == null) {
+var l =  new java.util.Hashtable ();
+l.put ("title", J.i18n.GT._ ("Jmol Script Console") + " " + JV.Viewer.getJmolVersion ());
+this.setupLabels (l);
+J.console.GenericConsole.labels = l;
+}}, "JV.Viewer");
 Clazz.defineMethod (c$, "addButton", 
 function (b, label) {
 b.addConsoleListener (this);
@@ -37,23 +41,30 @@ function () {
 return null;
 });
 Clazz.defineMethod (c$, "setupLabels", 
-function () {
-this.labels.put ("help", J.i18n.GT._ ("&Help"));
-this.labels.put ("search", J.i18n.GT._ ("&Search..."));
-this.labels.put ("commands", J.i18n.GT._ ("&Commands"));
-this.labels.put ("functions", J.i18n.GT._ ("Math &Functions"));
-this.labels.put ("parameters", J.i18n.GT._ ("Set &Parameters"));
-this.labels.put ("more", J.i18n.GT._ ("&More"));
-this.labels.put ("Editor", J.i18n.GT._ ("Editor"));
-this.labels.put ("State", J.i18n.GT._ ("State"));
-this.labels.put ("Run", J.i18n.GT._ ("Run"));
-this.labels.put ("Clear Output", J.i18n.GT._ ("Clear Output"));
-this.labels.put ("Clear Input", J.i18n.GT._ ("Clear Input"));
-this.labels.put ("History", J.i18n.GT._ ("History"));
-this.labels.put ("Load", J.i18n.GT._ ("Load"));
-this.labels.put ("label1", J.i18n.GT._ ("press CTRL-ENTER for new line or paste model data and press Load"));
-this.labels.put ("default", J.i18n.GT._ ("Messages will appear here. Enter commands in the box below. Click the console Help menu item for on-line help, which will appear in a new browser window."));
-});
+function (labels) {
+labels.put ("saveas", J.i18n.GT._ ("&Save As..."));
+labels.put ("file", J.i18n.GT._ ("&File"));
+labels.put ("close", J.i18n.GT._ ("&Close"));
+this.setupLabels0 (labels);
+}, "java.util.Map");
+Clazz.defineMethod (c$, "setupLabels0", 
+function (labels) {
+labels.put ("help", J.i18n.GT._ ("&Help"));
+labels.put ("search", J.i18n.GT._ ("&Search..."));
+labels.put ("commands", J.i18n.GT._ ("&Commands"));
+labels.put ("functions", J.i18n.GT._ ("Math &Functions"));
+labels.put ("parameters", J.i18n.GT._ ("Set &Parameters"));
+labels.put ("more", J.i18n.GT._ ("&More"));
+labels.put ("Editor", J.i18n.GT._ ("Editor"));
+labels.put ("State", J.i18n.GT._ ("State"));
+labels.put ("Run", J.i18n.GT._ ("Run"));
+labels.put ("Clear Output", J.i18n.GT._ ("Clear Output"));
+labels.put ("Clear Input", J.i18n.GT._ ("Clear Input"));
+labels.put ("History", J.i18n.GT._ ("History"));
+labels.put ("Load", J.i18n.GT._ ("Load"));
+labels.put ("label1", J.i18n.GT._ ("press CTRL-ENTER for new line or paste model data and press Load"));
+labels.put ("default", J.i18n.GT._ ("Messages will appear here. Enter commands in the box below. Click the console Help menu item for on-line help, which will appear in a new browser window."));
+}, "java.util.Map");
 Clazz.defineMethod (c$, "setLabels", 
 function () {
 var doTranslate = J.i18n.GT.setDoTranslate (true);
@@ -64,21 +75,13 @@ this.clearOutButton = this.setButton ("Clear Output");
 this.clearInButton = this.setButton ("Clear Input");
 this.historyButton = this.setButton ("History");
 this.loadButton = this.setButton ("Load");
-this.defaultMessage = this.getLabel ("default");
+this.defaultMessage = J.console.GenericConsole.getLabel ("default");
 this.setTitle ();
-J.i18n.GT.setDoTranslate (false);
-{
-this.defaultMessage = this.getLabel("default").split("Click")[0];
-}J.i18n.GT.setDoTranslate (doTranslate);
-this.defaultMessage = this.getLabel ("default");
+J.i18n.GT.setDoTranslate (doTranslate);
 });
-Clazz.defineMethod (c$, "getLabel", 
+c$.getLabel = Clazz.defineMethod (c$, "getLabel", 
 function (key) {
-if (this.labels == null) {
-this.labels =  new java.util.Hashtable ();
-this.labels.put ("title", J.i18n.GT._ ("Jmol Script Console") + " " + JV.Viewer.getJmolVersion ());
-this.setupLabels ();
-}return this.labels.get (key);
+return J.console.GenericConsole.labels.get (key);
 }, "~S");
 Clazz.defineMethod (c$, "displayConsole", 
 function () {
@@ -101,9 +104,9 @@ var inBrace = (splitCmd[3] != null);
 var notThis = splitCmd[asCommand ? 1 : 2];
 var s = splitCmd[1];
 if (notThis.length == 0) return null;
-var token = J.script.T.getTokenFromName (s.trim ().toLowerCase ());
+var token = JS.T.getTokenFromName (s.trim ().toLowerCase ());
 var cmdtok = (token == null ? 0 : token.tok);
-var isSelect = J.script.T.tokAttr (cmdtok, 12288);
+var isSelect = JS.T.tokAttr (cmdtok, 12288);
 splitCmd = J.console.GenericConsole.splitCommandLine (strCommand);
 var cmd = null;
 if (!asCommand && (notThis.charAt (0) == '"' || notThis.charAt (0) == '\'')) {
@@ -116,10 +119,10 @@ if (cmd != null) cmd = splitCmd[0] + splitCmd[1] + q + cmd + q;
 var map = null;
 if (!asCommand) {
 notThis = s;
-if (inBrace || splitCmd[2].startsWith ("$") || J.script.T.isIDcmd (cmdtok) || isSelect) {
+if (inBrace || splitCmd[2].startsWith ("$") || isSelect) {
 map =  new java.util.Hashtable ();
 this.vwr.getObjectMap (map, inBrace || isSelect ? '{' : splitCmd[2].startsWith ("$") ? '$' : '0');
-}}cmd = J.script.T.completeCommand (map, s.equalsIgnoreCase ("set "), asCommand, asCommand ? splitCmd[1] : splitCmd[2], this.nTab);
+}}cmd = JS.T.completeCommand (map, s.equalsIgnoreCase ("set "), asCommand, asCommand ? splitCmd[1] : splitCmd[2], this.nTab);
 cmd = splitCmd[0] + (cmd == null ? notThis : asCommand ? cmd : splitCmd[1] + cmd);
 }return (cmd == null || cmd.equals (strCommand) ? null : cmd);
 }, "~S");
@@ -155,7 +158,7 @@ if (strErrorMessage != null && !strErrorMessage.equals ("pending")) this.outputM
 }, "~S");
 Clazz.defineMethod (c$, "destroyConsole", 
 function () {
-if (this.vwr.isApplet ()) this.vwr.getProperty ("DATA_API", "getAppConsole", Boolean.FALSE);
+if (this.vwr.isApplet) this.vwr.getProperty ("DATA_API", "getAppConsole", Boolean.FALSE);
 });
 c$.setAbstractButtonLabels = Clazz.defineMethod (c$, "setAbstractButtonLabels", 
 function (menuMap, labels) {
@@ -193,7 +196,7 @@ c$.map = Clazz.defineMethod (c$, "map",
 function (button, key, label, menuMap) {
 var mnemonic = J.console.GenericConsole.getMnemonic (label);
 if (mnemonic != ' ') (button).setMnemonic (mnemonic);
-menuMap.put (key, button);
+if (menuMap != null) menuMap.put (key, button);
 }, "~O,~S,~S,java.util.Map");
 Clazz.overrideMethod (c$, "notifyEnabled", 
 function (type) {
@@ -207,11 +210,14 @@ case J.c.CBK.ANIMFRAME:
 case J.c.CBK.APPLETREADY:
 case J.c.CBK.ATOMMOVED:
 case J.c.CBK.CLICK:
+case J.c.CBK.DRAGDROP:
 case J.c.CBK.ERROR:
 case J.c.CBK.EVAL:
 case J.c.CBK.HOVER:
+case J.c.CBK.IMAGE:
 case J.c.CBK.LOADSTRUCT:
 case J.c.CBK.MINIMIZATION:
+case J.c.CBK.SERVICE:
 case J.c.CBK.RESIZE:
 case J.c.CBK.SCRIPT:
 case J.c.CBK.SYNC:
@@ -220,6 +226,26 @@ break;
 }
 return false;
 }, "J.c.CBK");
+Clazz.overrideMethod (c$, "notifyCallback", 
+function (type, data) {
+var strInfo = (data == null || data[1] == null ? null : data[1].toString ());
+switch (type) {
+case J.c.CBK.ECHO:
+this.sendConsoleEcho (strInfo);
+break;
+case J.c.CBK.MEASURE:
+var mystatus = data[3];
+if (mystatus.indexOf ("Picked") >= 0 || mystatus.indexOf ("Sequence") >= 0) this.sendConsoleMessage (strInfo);
+ else if (mystatus.indexOf ("Completed") >= 0) this.sendConsoleEcho (strInfo.substring (strInfo.lastIndexOf (",") + 2, strInfo.length - 1));
+break;
+case J.c.CBK.MESSAGE:
+this.sendConsoleMessage (data == null ? null : strInfo);
+break;
+case J.c.CBK.PICK:
+this.sendConsoleMessage (strInfo);
+break;
+}
+}, "J.c.CBK,~A");
 Clazz.overrideMethod (c$, "getText", 
 function () {
 return this.output.getText ();
@@ -249,26 +275,6 @@ function (strInfo) {
 if (strInfo != null && this.output.getText ().startsWith (this.defaultMessage)) this.outputMsg (null);
 this.outputMsg (strInfo);
 }, "~S");
-Clazz.overrideMethod (c$, "notifyCallback", 
-function (type, data) {
-var strInfo = (data == null || data[1] == null ? null : data[1].toString ());
-switch (type) {
-case J.c.CBK.ECHO:
-this.sendConsoleEcho (strInfo);
-break;
-case J.c.CBK.MEASURE:
-var mystatus = data[3];
-if (mystatus.indexOf ("Picked") >= 0 || mystatus.indexOf ("Sequence") >= 0) this.sendConsoleMessage (strInfo);
- else if (mystatus.indexOf ("Completed") >= 0) this.sendConsoleEcho (strInfo.substring (strInfo.lastIndexOf (",") + 2, strInfo.length - 1));
-break;
-case J.c.CBK.MESSAGE:
-this.sendConsoleMessage (data == null ? null : strInfo);
-break;
-case J.c.CBK.PICK:
-this.sendConsoleMessage (strInfo);
-break;
-}
-}, "J.c.CBK,~A");
 Clazz.overrideMethod (c$, "setCallbackFunction", 
 function (callbackType, callbackFunction) {
 }, "~S,~S");
@@ -278,8 +284,7 @@ function () {
 Clazz.defineMethod (c$, "recallCommand", 
 function (up) {
 var cmd = this.vwr.getSetHistory (up ? -1 : 1);
-if (cmd == null) return;
-this.input.setText (cmd);
+if (cmd != null) this.input.setText (JU.PT.escUnicode (cmd));
 }, "~B");
 Clazz.defineMethod (c$, "processKey", 
 function (kcode, kid, isControlDown) {
@@ -288,10 +293,12 @@ switch (kid) {
 case 401:
 switch (kcode) {
 case 9:
+var s = this.input.getText ();
+if (s.endsWith ("\n") || s.endsWith ("\t")) return 0;
 mode = 1;
-if (this.input.getCaretPosition () == this.input.getText ().length) {
-var cmd = this.completeCommand (this.getText ());
-if (cmd != null) this.input.setText (cmd.$replace ('\t', ' '));
+if (this.input.getCaretPosition () == s.length) {
+var cmd = this.completeCommand (s);
+if (cmd != null) this.input.setText (JU.PT.escUnicode (cmd).$replace ('\t', ' '));
 this.nTab++;
 return mode;
 }break;
@@ -370,4 +377,6 @@ sout[2] = (ptToken == ptCmd ? null : cmd.substring (ptToken));
 sout[3] = (nBrace > 0 ? "{" : null);
 return sout;
 }, "~S");
+Clazz.defineStatics (c$,
+"labels", null);
 });

@@ -1,13 +1,12 @@
 Clazz.declarePackage ("JM");
-Clazz.load (["JM.AtomCollection", "JU.BS"], "JM.BondCollection", ["JU.AU", "JM.Bond", "$.BondIteratorSelected", "$.HBond", "JW.BSUtil", "$.Edge", "$.Logger"], function () {
+Clazz.load (["JM.AtomCollection"], "JM.BondCollection", ["JU.AU", "$.BS", "JM.Bond", "$.BondIteratorSelected", "$.BondSet", "$.HBond", "JU.BSUtil", "$.C", "$.Edge", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
-this.molecules = null;
-this.moleculeCount = 0;
 this.bo = null;
 this.bondCount = 0;
 this.numCached = null;
 this.freeBonds = null;
-this.haveWarned = false;
+this.molecules = null;
+this.moleculeCount = 0;
 this.defaultCovalentMad = 0;
 this.bsAromaticSingle = null;
 this.bsAromaticDouble = null;
@@ -15,13 +14,14 @@ this.bsAromatic = null;
 this.haveHiddenBonds = false;
 Clazz.instantialize (this, arguments);
 }, JM, "BondCollection", JM.AtomCollection);
-Clazz.prepareFields (c$, function () {
+Clazz.defineMethod (c$, "setupBC", 
+function () {
+this.bsAromatic =  new JU.BS ();
 this.numCached =  Clazz.newIntArray (5, 0);
 this.freeBonds =  new Array (5);
-{
 for (var i = 5; --i > 0; ) this.freeBonds[i] =  new Array (200);
 
-}this.bsAromatic =  new JU.BS ();
+this.setupAC ();
 });
 Clazz.overrideMethod (c$, "releaseModelSet", 
 function () {
@@ -38,10 +38,6 @@ function () {
 this.molecules = null;
 this.moleculeCount = 0;
 });
-Clazz.defineMethod (c$, "getBondAt", 
-function (bondIndex) {
-return this.bo[bondIndex];
-}, "~N");
 Clazz.defineMethod (c$, "getBondIteratorForType", 
 function (bondType, bsAtoms) {
 return  new JM.BondIteratorSelected (this.bo, this.bondCount, bondType, bsAtoms, this.vwr.getBoolean (603979812));
@@ -50,33 +46,13 @@ Clazz.defineMethod (c$, "getBondIterator",
 function (bsBonds) {
 return  new JM.BondIteratorSelected (this.bo, this.bondCount, 131071, bsBonds, false);
 }, "JU.BS");
-Clazz.defineMethod (c$, "getBondAtom1", 
-function (i) {
-return this.bo[i].atom1;
-}, "~N");
-Clazz.defineMethod (c$, "getBondAtom2", 
-function (i) {
-return this.bo[i].atom2;
-}, "~N");
-Clazz.defineMethod (c$, "getBondRadius", 
-function (i) {
-return this.bo[i].getRadius ();
-}, "~N");
-Clazz.defineMethod (c$, "getBondOrder", 
-function (i) {
-return this.bo[i].order;
-}, "~N");
 Clazz.defineMethod (c$, "getBondColix1", 
 function (i) {
-return this.bo[i].getColix1 ();
+return JU.C.getColixInherited (this.bo[i].colix, this.bo[i].atom1.colixAtom);
 }, "~N");
 Clazz.defineMethod (c$, "getBondColix2", 
 function (i) {
-return this.bo[i].getColix2 ();
-}, "~N");
-Clazz.defineMethod (c$, "getBondModelIndex", 
-function (i) {
-return this.bo[i].atom1.mi;
+return JU.C.getColixInherited (this.bo[i].colix, this.bo[i].atom2.colixAtom);
 }, "~N");
 Clazz.defineMethod (c$, "getBondCountInModel", 
 function (modelIndex) {
@@ -107,7 +83,7 @@ atom1.group.addAtoms (atom1.i);
 }}return bond;
 }, "JM.Atom,JM.Atom,~N,~N,JU.BS,~N,~B,~B");
 Clazz.defineMethod (c$, "getOrAddBond", 
- function (atom, atomOther, order, mad, bsBonds, energy, overrideBonding) {
+function (atom, atomOther, order, mad, bsBonds, energy, overrideBonding) {
 var i;
 if (order == 131071 || order == 65535) order = 1;
 if (atom.isBonded (atomOther)) {
@@ -175,20 +151,6 @@ var maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
 var maxAcceptable2 = maxAcceptable * maxAcceptable;
 return (distance2 > maxAcceptable2 ? 0 : 1);
 }, "~N,~N,~N,~N,~N");
-Clazz.defineMethod (c$, "checkValencesAndBond", 
-function (atomA, atomB, order, mad, bsBonds) {
-if (atomA.getCurrentBondCount () > 20 || atomB.getCurrentBondCount () > 20) {
-if (!this.haveWarned) JW.Logger.warn ("maximum auto bond count reached");
-this.haveWarned = true;
-return false;
-}var formalChargeA = atomA.getFormalCharge ();
-if (formalChargeA != 0) {
-var formalChargeB = atomB.getFormalCharge ();
-if ((formalChargeA < 0 && formalChargeB < 0) || (formalChargeA > 0 && formalChargeB > 0)) return false;
-}if (atomA.altloc != atomB.altloc && atomA.altloc != '\0' && atomB.altloc != '\0' && this.getVibration (atomA.i, false) == null) return false;
-this.getOrAddBond (atomA, atomB, order, mad, bsBonds, 0, false);
-return true;
-}, "JM.Atom,JM.Atom,~N,~N,JU.BS");
 Clazz.defineMethod (c$, "deleteAllBonds2", 
 function () {
 this.vwr.setShapeProperty (1, "reset", null);
@@ -231,7 +193,7 @@ bsDelete.set (i);
 nDeleted++;
 }}
 if (nDeleted > 0) this.dBm (bsDelete, false);
-return [0, nDeleted];
+return  Clazz.newIntArray (-1, [0, nDeleted]);
 }, "~N,~N,~N,JU.BS,JU.BS,~B,~B");
 Clazz.defineMethod (c$, "fixD", 
 function (d, isF) {
@@ -272,9 +234,9 @@ for (var i = this.bondCount; --i >= iDst; ) this.bo[i] = null;
 
 this.bondCount = iDst;
 var sets = this.vwr.getShapeProperty (1, "sets");
-if (sets != null) for (var i = 0; i < sets.length; i++) JW.BSUtil.deleteBits (sets[i], bsBond);
+if (sets != null) for (var i = 0; i < sets.length; i++) JU.BSUtil.deleteBits (sets[i], bsBond);
 
-JW.BSUtil.deleteBits (this.bsAromatic, bsBond);
+JU.BSUtil.deleteBits (this.bsAromatic, bsBond);
 }, "JU.BS,~B");
 Clazz.defineMethod (c$, "resetAromatic", 
 function () {
@@ -282,10 +244,6 @@ for (var i = this.bondCount; --i >= 0; ) {
 var bond = this.bo[i];
 if (bond.isAromatic ()) bond.setOrder (515);
 }
-});
-Clazz.defineMethod (c$, "assignAromaticBonds", 
-function () {
-this.assignAromaticBondsBs (true, null);
 });
 Clazz.defineMethod (c$, "assignAromaticBondsBs", 
 function (isUserCalculation, bsBonds) {
@@ -316,6 +274,7 @@ for (var i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit (i + 1))) {
 bond = this.bo[i];
 if (!bond.is (515) || this.bsAromaticDouble.get (i) || this.bsAromaticSingle.get (i)) continue;
 if (!this.assignAromaticDouble (bond)) this.assignAromaticSingle (bond);
+System.out.println (bond + " " + bond.order);
 }
 for (var i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit (i + 1))) {
 bond = this.bo[i];
@@ -448,12 +407,11 @@ break;
 }, "JU.BS");
 Clazz.defineMethod (c$, "getAtomBitsMDb", 
 function (tokType, specInfo) {
-var bs;
+var bs =  new JU.BS ();
 switch (tokType) {
 default:
-return this.getAtomBitsMDa (tokType, specInfo);
+return this.getAtomBitsMDa (tokType, specInfo, bs);
 case 1678770178:
-bs =  new JU.BS ();
 var bsBonds = specInfo;
 for (var i = bsBonds.nextSetBit (0); i >= 0; i = bsBonds.nextSetBit (i + 1)) {
 bs.set (this.bo[i].atom1.i);
@@ -461,7 +419,6 @@ bs.set (this.bo[i].atom2.i);
 }
 return bs;
 case 1048585:
-bs =  new JU.BS ();
 for (var i = this.bondCount; --i >= 0; ) if (this.bo[i].isAromatic ()) {
 bs.set (this.bo[i].atom1.i);
 bs.set (this.bo[i].atom2.i);
@@ -481,7 +438,7 @@ case '3':
 break;
 case 'p':
 case 'm':
-bondOrder = JW.Edge.getBondOrderNumberFromOrder (bond.getCovalentOrder ()).charCodeAt (0) - 48 + (type == 'p' ? 1 : -1);
+bondOrder = JU.Edge.getBondOrderNumberFromOrder (bond.getCovalentOrder ()).charCodeAt (0) - 48 + (type == 'p' ? 1 : -1);
 if (bondOrder > 3) bondOrder = 1;
  else if (bondOrder < 0) bondOrder = 3;
 break;
@@ -493,18 +450,18 @@ try {
 if (bondOrder == 0) {
 var bs =  new JU.BS ();
 bs.set (bond.index);
-bsAtoms.set (bond.getAtomIndex1 ());
-bsAtoms.set (bond.getAtomIndex2 ());
+bsAtoms.set (bond.atom1.i);
+bsAtoms.set (bond.atom2.i);
 this.dBm (bs, false);
 return bsAtoms;
 }bond.setOrder (bondOrder | 131072);
 this.removeUnnecessaryBonds (bond.atom1, false);
 this.removeUnnecessaryBonds (bond.atom2, false);
-bsAtoms.set (bond.getAtomIndex1 ());
-bsAtoms.set (bond.getAtomIndex2 ());
+bsAtoms.set (bond.atom1.i);
+bsAtoms.set (bond.atom2.i);
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.error ("Exception in seBondOrder: " + e.toString ());
+JU.Logger.error ("Exception in seBondOrder: " + e.toString ());
 } else {
 throw e;
 }
@@ -533,6 +490,36 @@ if (!isDisplay) this.haveHiddenBonds = true;
 for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) if (i < this.bondCount && this.bo[i].mad != 0) this.bo[i].setShapeVisibility (isDisplay);
 
 }, "JM.BondSet,~B");
+Clazz.defineMethod (c$, "getAtomsConnected", 
+function (min, max, intType, bs) {
+var isBonds = Clazz.instanceOf (bs, JM.BondSet);
+var bsResult = (isBonds ?  new JM.BondSet () :  new JU.BS ());
+var nBonded =  Clazz.newIntArray (this.ac, 0);
+var i;
+var ishbond = (intType == 30720);
+var isall = (intType == 65535);
+for (var ibond = 0; ibond < this.bondCount; ibond++) {
+var bond = this.bo[ibond];
+if (isall || bond.is (intType) || ishbond && bond.isHydrogen ()) {
+if (isBonds) {
+bsResult.set (ibond);
+} else {
+if (bs.get (bond.atom1.i)) {
+nBonded[i = bond.atom2.i]++;
+bsResult.set (i);
+}if (bs.get (bond.atom2.i)) {
+nBonded[i = bond.atom1.i]++;
+bsResult.set (i);
+}}}}
+if (isBonds) return bsResult;
+var nonbonded = (min == 0);
+for (i = this.ac; --i >= 0; ) {
+var n = nBonded[i];
+if (n < min || n > max) bsResult.clear (i);
+ else if (nonbonded && n == 0) bsResult.set (i);
+}
+return bsResult;
+}, "~N,~N,~N,JU.BS");
 Clazz.defineStatics (c$,
 "BOND_GROWTH_INCREMENT", 250,
 "MAX_BONDS_LENGTH_TO_CACHE", 5,

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.PolygonFileReader"], "J.jvxl.readers.PmeshReader", ["JU.P3", "J.jvxl.data.JvxlCoder", "JW.Logger"], function () {
+Clazz.load (["J.jvxl.readers.PolygonFileReader"], "J.jvxl.readers.PmeshReader", ["JU.CU", "$.P3", "J.jvxl.data.JvxlCoder", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.isBinary = false;
 this.nPolygons = 0;
@@ -49,7 +49,7 @@ this.br.read (buf, 0, 5);
 if (( String.instantialize (buf)).startsWith ("PM\u0001\u0000")) {
 this.br.close ();
 this.binarydoc = this.newBinaryDocument ();
-this.binarydoc.setStream (this.sg.getAtomDataServer ().getBufferedInputStream (fileName), (buf[4] == '\0'));
+this.setStream (fileName, (buf[4] == '\0'));
 return true;
 }this.br.reset ();
 } catch (e) {
@@ -62,8 +62,8 @@ return false;
 }, "~S");
 Clazz.overrideMethod (c$, "getSurfaceData", 
 function () {
-if (this.readVerticesAndPolygons ()) JW.Logger.info ((this.isBinary ? "binary " : "") + this.type + " file contains " + this.nVertices + " vertices and " + this.nPolygons + " polygons for " + this.nTriangles + " triangles");
- else JW.Logger.error (this.params.fileName + ": " + (this.pmeshError == null ? "Error reading pmesh data " : this.pmeshError));
+if (this.readVerticesAndPolygons ()) JU.Logger.info ((this.isBinary ? "binary " : "") + this.type + " file contains " + this.nVertices + " vertices and " + this.nPolygons + " polygons for " + this.nTriangles + " triangles");
+ else JU.Logger.error (this.params.fileName + ": " + (this.pmeshError == null ? "Error reading pmesh data " : this.pmeshError));
 });
 Clazz.defineMethod (c$, "readVerticesAndPolygons", 
 function () {
@@ -113,13 +113,12 @@ if (this.nVertices <= 0) {
 this.pmeshError += " (" + this.nVertices + ")";
 return false;
 }this.pmeshError = this.type + " ERROR: invalid vertex list";
-var pt =  new JU.P3 ();
 this.vertexMap =  Clazz.newIntArray (this.nVertices, 0);
 for (var i = 0; i < this.nVertices; i++) {
-pt.set (this.getFloat (), this.getFloat (), this.getFloat ());
+var pt = JU.P3.new3 (this.getFloat (), this.getFloat (), this.getFloat ());
 if (this.isAnisotropic) this.setVertexAnisotropy (pt);
-if (JW.Logger.debugging) JW.Logger.debug (i + ": " + pt);
-this.vertexMap[i] = this.addVertexCopy (pt, 0, i);
+if (JU.Logger.debugging) JU.Logger.debug (i + ": " + pt);
+this.vertexMap[i] = this.addVertexCopy (pt, 0, i, false);
 if (this.onePerLine) this.iToken = 2147483647;
 }
 this.pmeshError = null;
@@ -140,6 +139,8 @@ return false;
 var vertices =  Clazz.newIntArray (5, 0);
 for (var iPoly = 0; iPoly < this.nPolygons; iPoly++) {
 var intCount = (this.fixedCount == 0 ? this.getInt () : this.fixedCount);
+var haveColor = (intCount < 0);
+if (haveColor) intCount = -intCount;
 var vertexCount = intCount - (this.isClosedFace ? 1 : 0);
 if (vertexCount < 1 || vertexCount > 4) {
 this.pmeshError = this.type + " ERROR: bad polygon (must have 1-4 vertices) at #" + (iPoly + 1);
@@ -155,13 +156,19 @@ if (this.onePerLine) this.iToken = 2147483647;
 if (!isOK) continue;
 if (vertexCount < 3) for (var i = vertexCount; i < 3; ++i) vertices[i] = vertices[i - 1];
 
-if (vertexCount == 4) {
+var color = 0;
+if (haveColor) {
+var c = this.nextToken ();
+color = this.parseIntStr (c);
+if (color == -2147483648) color = JU.CU.getArgbFromString (c);
+color |= 0xFF000000;
+}if (vertexCount == 4) {
 this.nTriangles += 2;
-this.addTriangleCheck (vertices[0], vertices[1], vertices[3], 5, 0, false, 0);
-this.addTriangleCheck (vertices[1], vertices[2], vertices[3], 3, 0, false, 0);
+this.addTriangleCheck (vertices[0], vertices[1], vertices[3], 5, color, false, -1);
+this.addTriangleCheck (vertices[1], vertices[2], vertices[3], 3, color, false, -1);
 } else {
 this.nTriangles++;
-this.addTriangleCheck (vertices[0], vertices[1], vertices[2], 7, 0, false, 0);
+this.addTriangleCheck (vertices[0], vertices[1], vertices[2], 7, color, false, -1);
 }}
 if (this.isBinary) this.nBytes = this.binarydoc.getPosition ();
 return true;
@@ -170,7 +177,7 @@ Clazz.defineMethod (c$, "nextToken",
  function () {
 while (this.iToken >= this.tokens.length) {
 this.iToken = 0;
-this.readLine ();
+this.rd ();
 this.tokens = this.getTokens ();
 }
 return this.tokens[this.iToken++];

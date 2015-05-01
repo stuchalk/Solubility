@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.source");
-Clazz.load (null, "JSV.source.JDXDecompressor", ["java.lang.Double", "JSV.common.Coordinate", "JW.Logger"], function () {
+Clazz.load (null, "JSV.source.JDXDecompressor", ["java.lang.Double", "JSV.common.Coordinate", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.xFactor = 0;
 this.yFactor = 0;
@@ -44,7 +44,7 @@ this.yFactor = yFactor;
 this.deltaX = deltaX;
 this.nPoints = nPoints;
 this.lineNumber = t.labelLineNo;
-this.debugging = JW.Logger.isActiveLevel (6);
+this.debugging = JU.Logger.isActiveLevel (6);
 }, "JSV.source.JDXSourceStreamTokenizer,~N,~N,~N,~N,~N");
 Clazz.defineMethod (c$, "addPoint", 
  function (pt) {
@@ -116,7 +116,7 @@ this.xyCoords = temp;
 }, "JU.SB,~A");
 Clazz.defineMethod (c$, "logError", 
  function (s) {
-if (this.debugging) JW.Logger.debug (s);
+if (this.debugging) JU.Logger.debug (s);
 this.errorLog.append (s).appendC ('\n');
 }, "~S");
 Clazz.defineMethod (c$, "getYValue", 
@@ -132,7 +132,7 @@ this.difVal = -2147483648;
 return this.yval;
 }if (this.ich == this.lineLen) return NaN;
 var ch = this.line.charAt (this.ich);
-if (this.debugging) JW.Logger.info ("" + ch);
+if (this.debugging) JU.Logger.info ("" + ch);
 switch (ch) {
 case '%':
 this.difVal = 0;

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.quantum");
-Clazz.load (["J.adapter.readers.quantum.MOReader", "java.util.Hashtable", "JU.List"], "J.adapter.readers.quantum.PsiReader", ["java.lang.Float", "JU.AU", "$.PT", "J.api.JmolAdapter", "JW.Logger"], function () {
+Clazz.load (["J.adapter.readers.quantum.MOReader", "java.util.Hashtable", "JU.Lst"], "J.adapter.readers.quantum.PsiReader", ["java.lang.Float", "JU.AU", "$.PT", "J.adapter.readers.quantum.BasisFunctionReader", "J.api.JmolAdapter", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.atomNames = null;
 this.shellsByUniqueAtom = null;
@@ -7,8 +7,8 @@ this.uniqueAtomMap = null;
 Clazz.instantialize (this, arguments);
 }, J.adapter.readers.quantum, "PsiReader", J.adapter.readers.quantum.MOReader);
 Clazz.prepareFields (c$, function () {
-this.atomNames =  new JU.List ();
-this.shellsByUniqueAtom =  new JU.List ();
+this.atomNames =  new JU.Lst ();
+this.shellsByUniqueAtom =  new JU.Lst ();
 this.uniqueAtomMap =  new java.util.Hashtable ();
 });
 Clazz.overrideMethod (c$, "checkLine", 
@@ -70,7 +70,7 @@ this.setAtomCoordScaled (atom, tokens, 1, 0.5291772);
 }, "~B");
 Clazz.defineMethod (c$, "readBasis", 
 function () {
-var gdata =  new JU.List ();
+var gdata =  new JU.Lst ();
 this.gaussianCount = 0;
 this.shellCount = 0;
 var tokens;
@@ -78,7 +78,7 @@ var slater = null;
 var slatersByUniqueAtom = null;
 this.rd ();
 while (this.rd () != null && this.line.startsWith ("   -Basis set on")) {
-slatersByUniqueAtom =  new JU.List ();
+slatersByUniqueAtom =  new JU.Lst ();
 var nGaussians = 0;
 while (this.rd () != null && !this.line.startsWith ("       )")) {
 this.line = this.line.$replace ('(', ' ').$replace (')', ' ');
@@ -90,7 +90,7 @@ if (slater != null) {
 slatersByUniqueAtom.addLast (slater);
 }ipt = 1;
 slater =  Clazz.newIntArray (3, 0);
-slater[0] = J.api.JmolAdapter.getQuantumShellTagID (tokens[0]);
+slater[0] = J.adapter.readers.quantum.BasisFunctionReader.getQuantumShellTagID (tokens[0]);
 slater[1] = this.gaussianCount;
 this.shellCount++;
 break;
@@ -98,7 +98,7 @@ case 2:
 break;
 }
 nGaussians++;
-gdata.addLast ([tokens[ipt], tokens[ipt + 1]]);
+gdata.addLast ( Clazz.newArray (-1, [tokens[ipt], tokens[ipt + 1]]));
 slater[2] = nGaussians;
 }
 if (slater != null) {
@@ -115,13 +115,13 @@ for (var j = 0; j < tokens.length; j++) garray[i][j] = this.parseFloatStr (token
 
 }
 this.moData.put ("gaussians", garray);
-if (JW.Logger.debugging) {
-JW.Logger.debug (this.shellCount + " slater shells read");
-JW.Logger.debug (this.gaussianCount + " gaussian primitives read");
+if (JU.Logger.debugging) {
+JU.Logger.debug (this.shellCount + " slater shells read");
+JU.Logger.debug (this.gaussianCount + " gaussian primitives read");
 }});
 Clazz.defineMethod (c$, "readUniqueAtoms", 
  function () {
-var sdata =  new JU.List ();
+var sdata =  new JU.Lst ();
 this.discardLinesUntilContains ("----");
 var n = 0;
 while (this.rd () != null && this.line.length > 0) {
@@ -134,11 +134,11 @@ var atomType = this.atomNames.get (i);
 var iUnique = this.uniqueAtomMap.get (atomType).intValue ();
 var slaters = this.shellsByUniqueAtom.get (iUnique);
 if (slaters == null) {
-JW.Logger.error ("slater for atom " + i + " atomType " + atomType + " was not found in listing. Ignoring molecular orbitals");
+JU.Logger.error ("slater for atom " + i + " atomType " + atomType + " was not found in listing. Ignoring molecular orbitals");
 return;
 }for (var j = 0; j < slaters.size (); j++) {
 var slater = slaters.get (j);
-sdata.addLast ([i, slater[0], slater[1], slater[2]]);
+sdata.addLast ( Clazz.newIntArray (-1, [i, slater[0], slater[1], slater[2]]));
 }
 }
 this.moData.put ("shells", sdata);
@@ -154,10 +154,10 @@ var ptData = (this.line.charAt (5) == ' ' ? 2 : 4);
 if (this.line.indexOf ("                    ") == 0) {
 this.addMOData (nThisLine, data, mos);
 nThisLine = tokens.length;
-tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (this.rd ());
+tokens = JU.PT.getTokens (this.rd ());
 for (var i = 0; i < nThisLine; i++) {
 mos[i] =  new java.util.Hashtable ();
-data[i] =  new JU.List ();
+data[i] =  new JU.Lst ();
 mos[i].put ("symmetry", tokens[i]);
 }
 tokens = J.adapter.smarter.AtomSetCollectionReader.getStrings (this.rd ().substring (21), nThisLine, 10);
@@ -171,7 +171,7 @@ data[i].addLast (tokens[i + ptData]);
 }
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.error ("Error reading Psi3 file molecular orbitals at line: " + this.line);
+JU.Logger.error ("Error reading Psi3 file molecular orbitals at line: " + this.line);
 break;
 } else {
 throw e;

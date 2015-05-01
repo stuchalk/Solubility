@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.quantum");
-Clazz.load (["J.adapter.readers.quantum.SlaterReader", "java.util.Hashtable"], "J.adapter.readers.quantum.DgridReader", ["java.lang.Float", "JU.SB", "J.quantum.SlaterData", "JW.Logger"], function () {
+Clazz.load (["J.adapter.readers.quantum.SlaterReader", "java.util.Hashtable"], "J.adapter.readers.quantum.DgridReader", ["java.lang.Float", "JU.PT", "$.SB", "J.quantum.SlaterData", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.title = null;
 this.htExponents = null;
@@ -64,7 +64,7 @@ var data =  new JU.SB ();
 data.append (this.line.substring (15));
 while (this.rd () != null && this.line.length >= 15) data.append (this.line);
 
-var tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (data.toString ());
+var tokens = JU.PT.getTokens (data.toString ());
 var nFuncs = Clazz.doubleToInt (tokens.length / 2);
 var ptSlater =  Clazz.newIntArray (nFuncs, 0);
 var atoms = this.asc.atoms;
@@ -92,8 +92,8 @@ if (this.line.charAt (3) != ' ') break;
 cData.append (this.line);
 }
 var list =  Clazz.newFloatArray (this.slaters.size (), 0);
-tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (cData.toString ());
-if (tokens.length != nFuncs) JW.Logger.error ("DgridReader: number of coefficients (" + tokens.length + ") does not equal number of functions (" + nFuncs + ")");
+tokens = JU.PT.getTokens (cData.toString ());
+if (tokens.length != nFuncs) JU.Logger.error ("DgridReader: number of coefficients (" + tokens.length + ") does not equal number of functions (" + nFuncs + ")");
 for (var i = 0; i < tokens.length; i++) {
 var pt = ptSlater[i];
 list[pt] = this.parseFloatStr (tokens[i]);
@@ -165,7 +165,7 @@ var code = atomSymbol + xyz.substring (0, 2);
 if (type != ' ') code += "_" + type;
 var f = this.htExponents.get (code);
 var zeta = 0;
-if (f == null) JW.Logger.error ("Exponent for " + code + " not found");
+if (f == null) JU.Logger.error ("Exponent for " + code + " not found");
  else zeta = f.floatValue ();
 return  new J.quantum.SlaterData (iAtom, x, y, z, r, zeta, 1);
 }, "~N,~S,~S");

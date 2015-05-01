@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.renderspecial");
-Clazz.load (["J.renderspecial.DotsRenderer", "JU.P3i"], "J.renderspecial.GeoSurfaceRenderer", ["JW.Geodesic"], function () {
+Clazz.load (["J.renderspecial.DotsRenderer", "JU.P3i"], "J.renderspecial.GeoSurfaceRenderer", ["JU.Geodesic"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.requireTranslucent = false;
 this.facePt1 = null;
@@ -16,20 +16,20 @@ Clazz.overrideMethod (c$, "render",
 function () {
 var gs = this.shape;
 this.iShowSolid = !(!this.vwr.checkMotionRendering (1113198597) && gs.ec.getDotsConvexMax () > 100);
-if (!this.iShowSolid && !this.g3d.setColix (4)) return false;
-var tcover = this.g3d.getTranslucentCoverOnly ();
-if (this.iShowSolid) this.g3d.setTranslucentCoverOnly (true);
+if (!this.iShowSolid && !this.g3d.setC (4)) return false;
+var tCover = this.vwr.gdata.translucentCoverOnly;
+if (this.iShowSolid) this.vwr.gdata.translucentCoverOnly = true;
 this.g3d.addRenderer (1073742182);
 if (this.iShowSolid && this.faceMap == null) this.faceMap =  Clazz.newIntArray (this.screenDotCount, 0);
 this.render1 (gs);
-this.g3d.setTranslucentCoverOnly (tcover);
+this.vwr.gdata.translucentCoverOnly = tCover;
 return this.requireTranslucent;
 });
 Clazz.overrideMethod (c$, "renderConvex", 
 function (colix, visibilityMap, nPoints) {
 this.colix = colix;
 if (this.iShowSolid) {
-if (this.g3d.setColix (colix)) this.renderSurface (visibilityMap);
+if (this.g3d.setC (colix)) this.renderSurface (visibilityMap);
  else this.requireTranslucent = true;
 return;
 }this.renderDots (nPoints);
@@ -37,7 +37,7 @@ return;
 Clazz.defineMethod (c$, "renderSurface", 
  function (points) {
 if (this.faceMap == null) return;
-var faces = JW.Geodesic.getFaceVertexes (this.screenLevel);
+var faces = JU.Geodesic.getFaceVertexes (this.screenLevel);
 var coords = this.screenCoordinates;
 var p1;
 var p2;

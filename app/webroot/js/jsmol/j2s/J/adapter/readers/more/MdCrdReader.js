@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.more");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.MdCrdReader", ["java.lang.Float", "JU.P3", "JW.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.more.MdCrdReader", ["java.lang.Float", "JU.P3", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.ptFloat = 0;
 this.lenLine = 0;
@@ -12,7 +12,7 @@ this.initializeTrajectoryFile ();
 Clazz.overrideMethod (c$, "checkLine", 
 function () {
 this.readCoordinates ();
-JW.Logger.info ("Total number of trajectory steps=" + this.trajectorySteps.size ());
+JU.Logger.info ("Total number of trajectory steps=" + this.trajectorySteps.size ());
 this.continuing = false;
 return false;
 });

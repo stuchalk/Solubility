@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.quantum");
-Clazz.load (null, "J.quantum.QuantumCalculation", ["JU.P3", "J.quantum.QMAtom", "JW.Escape", "$.Logger"], function () {
+Clazz.load (null, "J.quantum.QuantumCalculation", ["JU.P3", "J.quantum.QMAtom", "JU.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.doDebug = false;
 this.bsExcluded = null;
@@ -73,7 +73,7 @@ this.originBohr[i] = originXYZ[i] * this.unitFactor;
 this.stepBohr[i] = stepsXYZ[i] * this.unitFactor;
 this.volume *= this.stepBohr[i];
 }
-JW.Logger.info ("QuantumCalculation:\n origin = " + JW.Escape.eAF (originXYZ) + "\n steps = " + JW.Escape.eAF (stepsXYZ) + "\n origin(Bohr)= " + JW.Escape.eAF (this.originBohr) + "\n steps(Bohr)= " + JW.Escape.eAF (this.stepBohr) + "\n counts= " + this.nX + " " + this.nY + " " + this.nZ);
+JU.Logger.info ("QuantumCalculation:\n origin = " + JU.Escape.eAF (originXYZ) + "\n steps = " + JU.Escape.eAF (stepsXYZ) + "\n origin(Bohr)= " + JU.Escape.eAF (this.originBohr) + "\n steps(Bohr)= " + JU.Escape.eAF (this.stepBohr) + "\n counts= " + this.nX + " " + this.nY + " " + this.nZ);
 }if (atomCoordAngstroms != null) {
 this.qmAtoms =  new Array (renumber ? bsSelected.cardinality () : atomCoordAngstroms.length);
 var isAll = (bsSelected == null);
@@ -90,7 +90,7 @@ this.voxelDataTemp[0][0][0] = 0;
 this.setXYZBohr (this.points);
 this.processPoints ();
 return this.voxelData[0][0][0];
-}, "JU.P3");
+}, "JU.T3");
 Clazz.defineMethod (c$, "processPoints", 
 function () {
 this.process ();

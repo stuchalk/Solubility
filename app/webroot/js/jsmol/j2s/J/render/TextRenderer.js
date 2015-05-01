@@ -2,13 +2,13 @@ Clazz.declarePackage ("J.render");
 Clazz.load (null, "J.render.TextRenderer", ["java.lang.Float", "JM.Text"], function () {
 c$ = Clazz.declareType (J.render, "TextRenderer");
 c$.render = Clazz.defineMethod (c$, "render", 
-function (text, vwr, g3d, scalePixelsPerMicron, imageFontScaling, isExact, boxXY, temp) {
-if (text == null || text.image == null && text.lines == null) return;
-var showText = g3d.setColix (text.colix);
-if (!showText && (text.image == null && (text.bgcolix == 0 || !g3d.setColix (text.bgcolix)))) return;
-text.setPosition (vwr, g3d.getRenderWidth (), g3d.getRenderHeight (), scalePixelsPerMicron, imageFontScaling, isExact, boxXY);
+function (text, g3d, scalePixelsPerMicron, imageFontScaling, isExact, boxXY, temp) {
+if (text == null || text.image == null && !text.doFormatText && text.lines == null) return;
+var showText = g3d.setC (text.colix);
+if (!showText && (text.image == null && (text.bgcolix == 0 || !g3d.setC (text.bgcolix)))) return;
+text.setPosition (scalePixelsPerMicron, imageFontScaling, isExact, boxXY);
 if (text.image == null && text.bgcolix != 0) {
-if (g3d.setColix (text.bgcolix)) J.render.TextRenderer.showBox (g3d, text.colix, Clazz.floatToInt (text.boxX), Clazz.floatToInt (text.boxY) + text.boxYoff2 * 2, text.z + 2, text.zSlab, Clazz.floatToInt (text.boxWidth), Clazz.floatToInt (text.boxHeight), text.fontScale, text.isLabelOrHover);
+if (g3d.setC (text.bgcolix)) J.render.TextRenderer.showBox (g3d, text.colix, Clazz.floatToInt (text.boxX), Clazz.floatToInt (text.boxY) + text.boxYoff2 * 2, text.z + 2, text.zSlab, Clazz.floatToInt (text.boxWidth), Clazz.floatToInt (text.boxHeight), text.fontScale, text.isLabelOrHover);
 if (!showText) return;
 }if (text.image == null) {
 for (var i = 0; i < text.lines.length; i++) {
@@ -19,10 +19,10 @@ g3d.drawString (text.lines[i], text.font, Clazz.floatToInt (temp[0]), Clazz.floa
 g3d.drawImage (text.image, Clazz.floatToInt (text.boxX), Clazz.floatToInt (text.boxY), text.z, text.zSlab, text.bgcolix, Clazz.floatToInt (text.boxWidth), Clazz.floatToInt (text.boxHeight));
 }J.render.TextRenderer.drawPointer (text, g3d);
 return;
-}, "JM.Text,JV.Viewer,J.api.JmolRendererInterface,~N,~N,~B,~A,~A");
+}, "JM.Text,J.api.JmolRendererInterface,~N,~N,~B,~A,~A");
 c$.drawPointer = Clazz.defineMethod (c$, "drawPointer", 
 function (text, g3d) {
-if ((text.pointer & 1) == 0 || !g3d.setColix ((text.pointer & 2) != 0 && text.bgcolix != 0 ? text.bgcolix : text.colix)) return;
+if ((text.pointer & 1) == 0 || !g3d.setC ((text.pointer & 2) != 0 && text.bgcolix != 0 ? text.bgcolix : text.colix)) return;
 var w = text.boxWidth;
 var h = text.boxHeight;
 var pt = NaN;
@@ -40,18 +40,18 @@ var y0 = Clazz.floatToInt (boxXY[1]);
 JM.Text.setBoxXY (boxWidth, boxHeight, xOffset, yOffset, boxXY, isExact);
 var x = boxXY[0];
 var y = boxXY[1];
-if (bgcolix != 0 && g3d.setColix (bgcolix)) J.render.TextRenderer.showBox (g3d, colix, Clazz.floatToInt (x), Clazz.floatToInt (y), z, zSlab, Clazz.floatToInt (boxWidth), Clazz.floatToInt (boxHeight), 1, true);
- else g3d.setColix (colix);
+if (bgcolix != 0 && g3d.setC (bgcolix)) J.render.TextRenderer.showBox (g3d, colix, Clazz.floatToInt (x), Clazz.floatToInt (y), z, zSlab, Clazz.floatToInt (boxWidth), Clazz.floatToInt (boxHeight), 1, true);
+ else g3d.setC (colix);
 g3d.drawString (strLabel, font, Clazz.floatToInt (x + 4), Clazz.floatToInt (y + 4 + ascent), z - 1, zSlab, bgcolix);
 if (doPointer) {
-g3d.setColix (pointerColix);
+g3d.setC (pointerColix);
 if (xOffset > 0) g3d.drawLineXYZ (x0, y0, zSlab, Clazz.floatToInt (x), Clazz.floatToInt (y + boxHeight / 2), zSlab);
  else if (xOffset < 0) g3d.drawLineXYZ (x0, y0, zSlab, Clazz.floatToInt (x + boxWidth), Clazz.floatToInt (y + boxHeight / 2), zSlab);
 }}, "J.api.JmolRendererInterface,javajs.awt.Font,~S,~N,~N,~A,~N,~N,~N,~N,~N,~N,~B,~N,~B");
 c$.showBox = Clazz.defineMethod (c$, "showBox", 
  function (g3d, colix, x, y, z, zSlab, boxWidth, boxHeight, imageFontScaling, atomBased) {
 g3d.fillRect (x, y, z, zSlab, boxWidth, boxHeight);
-g3d.setColix (colix);
+g3d.setC (colix);
 if (!atomBased) return;
 if (imageFontScaling >= 2) {
 g3d.drawRect (x + 3, y + 3, z - 1, zSlab, boxWidth - 6, boxHeight - 6);

@@ -69,19 +69,19 @@ var node = panelNodes.get (i);
 if (id.equals (node.fileName)) return node.source;
 }
 return null;
-}, "~S,JU.List");
+}, "~S,JU.Lst");
 c$.findNodeById = Clazz.defineMethod (c$, "findNodeById", 
 function (id, panelNodes) {
 if (id != null) for (var i = panelNodes.size (); --i >= 0; ) if (id.equals (panelNodes.get (i).id) || id.equals (panelNodes.get (i).frameTitle)) return panelNodes.get (i);
 
 return null;
-}, "~S,JU.List");
+}, "~S,JU.Lst");
 c$.findNode = Clazz.defineMethod (c$, "findNode", 
 function (jsvp, panelNodes) {
 for (var i = panelNodes.size (); --i >= 0; ) if (panelNodes.get (i).jsvp === jsvp) return panelNodes.get (i);
 
 return null;
-}, "JSV.api.JSVPanel,JU.List");
+}, "JSV.api.JSVPanel,JU.Lst");
 c$.getSpectrumListAsString = Clazz.defineMethod (c$, "getSpectrumListAsString", 
 function (panelNodes) {
 var sb =  new JU.SB ();
@@ -90,7 +90,7 @@ var node = panelNodes.get (i);
 if (!node.isView) sb.append (" ").append (node.id);
 }
 return sb.toString ().trim ();
-}, "JU.List");
+}, "JU.Lst");
 c$.isOpen = Clazz.defineMethod (c$, "isOpen", 
 function (panelNodes, filePath) {
 var pt = -1;
@@ -98,7 +98,7 @@ if (filePath != null) for (var i = panelNodes.size (); --i >= 0; ) {
 if (filePath.equals (panelNodes.get (i).source.getFilePath ()) || filePath.equals (panelNodes.get (i).frameTitle)) return pt;
 }
 return -1;
-}, "JU.List,~S");
+}, "JU.Lst,~S");
 Clazz.defineMethod (c$, "setFrameTitle", 
 function (name) {
 this.frameTitle = name;
@@ -112,7 +112,7 @@ if (panelNodes.get (i).source !== node.source) break;
 node = panelNodes.get (i);
 }
 return (node == null ? null : node.jsvp);
-}, "JU.List");
+}, "JU.Lst");
 Clazz.defineMethod (c$, "getInfo", 
 function (key) {
 var info = this.pd ().getInfo (false, key);

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.readers.simple");
-Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.simple.JSONReader", ["JU.P3", "$.PT", "J.adapter.smarter.Bond", "JW.Logger"], function () {
+Clazz.load (["J.adapter.smarter.AtomSetCollectionReader"], "J.adapter.readers.simple.JSONReader", ["JU.P3", "$.PT", "J.adapter.smarter.Bond", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.scale = null;
 Clazz.instantialize (this, arguments);
@@ -21,7 +21,7 @@ this.continuing = false;
 });
 Clazz.defineMethod (c$, "getScaling", 
  function (s) {
-var xyz = s[0].$plit (":");
+var xyz = JU.PT.split (s[0], ":");
 this.scale = JU.P3.new3 (1, 1, 1);
 for (var j = 0; j < xyz.length; j += 2) if (xyz[j].length == 1) switch (xyz[j].charAt (0)) {
 case 'x':
@@ -35,7 +35,7 @@ this.scale.z = this.parseFloatStr (xyz[j + 1]);
 break;
 }
 
-JW.Logger.info ("scale set to " + this.scale);
+JU.Logger.info ("scale set to " + this.scale);
 }, "~A");
 Clazz.defineMethod (c$, "getSection", 
  function (json, key, isArray) {
@@ -48,7 +48,7 @@ return JU.PT.split (data, "{");
 Clazz.defineMethod (c$, "readAtoms", 
  function (atoms) {
 for (var i = 0; i < atoms.length; ++i) {
-var lxyz = atoms[i].$plit (":");
+var lxyz = JU.PT.split (atoms[i], ":");
 var atom = this.asc.addNewAtom ();
 var x = 0;
 var y = 0;
@@ -80,7 +80,7 @@ atom.elementSymbol = l;
 Clazz.defineMethod (c$, "readBonds", 
  function (bonds) {
 for (var i = 0; i < bonds.length; ++i) {
-var beo = bonds[i].$plit (":");
+var beo = JU.PT.split (bonds[i], ":");
 var b = 0;
 var e = 0;
 var order = 1;

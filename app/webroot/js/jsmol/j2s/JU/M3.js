@@ -1,10 +1,6 @@
 Clazz.declarePackage ("JU");
 Clazz.load (["JU.M34"], "JU.M3", ["JU.T3"], function () {
 c$ = Clazz.declareType (JU, "M3", JU.M34, java.io.Serializable);
-Clazz.makeConstructor (c$, 
-function () {
-Clazz.superConstructor (this, JU.M3, []);
-});
 c$.newA9 = Clazz.defineMethod (c$, "newA9", 
 function (v) {
 var m =  new JU.M3 ();
@@ -207,57 +203,26 @@ this.invert ();
 }, "JU.M3");
 Clazz.defineMethod (c$, "invert", 
 function () {
-var s = this.determinant ();
+var s = this.determinant3 ();
 if (s == 0.0) return;
 s = 1 / s;
 this.set9 (this.m11 * this.m22 - this.m12 * this.m21, this.m02 * this.m21 - this.m01 * this.m22, this.m01 * this.m12 - this.m02 * this.m11, this.m12 * this.m20 - this.m10 * this.m22, this.m00 * this.m22 - this.m02 * this.m20, this.m02 * this.m10 - this.m00 * this.m12, this.m10 * this.m21 - this.m11 * this.m20, this.m01 * this.m20 - this.m00 * this.m21, this.m00 * this.m11 - this.m01 * this.m10);
 this.scale (s);
 });
-Clazz.defineMethod (c$, "determinant", 
-function () {
-return this.m00 * (this.m11 * this.m22 - this.m21 * this.m12) - this.m01 * (this.m10 * this.m22 - this.m20 * this.m12) + this.m02 * (this.m10 * this.m21 - this.m20 * this.m11);
-});
-Clazz.defineMethod (c$, "rotX", 
+Clazz.defineMethod (c$, "setAsXRotation", 
 function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = 1.0;
-this.m01 = 0.0;
-this.m02 = 0.0;
-this.m10 = 0.0;
-this.m11 = c;
-this.m12 = -s;
-this.m20 = 0.0;
-this.m21 = s;
-this.m22 = c;
+this.setXRot (angle);
+return this;
 }, "~N");
-Clazz.defineMethod (c$, "rotY", 
+Clazz.defineMethod (c$, "setAsYRotation", 
 function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = c;
-this.m01 = 0.0;
-this.m02 = s;
-this.m10 = 0.0;
-this.m11 = 1.0;
-this.m12 = 0.0;
-this.m20 = -s;
-this.m21 = 0.0;
-this.m22 = c;
+this.setYRot (angle);
+return this;
 }, "~N");
-Clazz.defineMethod (c$, "rotZ", 
+Clazz.defineMethod (c$, "setAsZRotation", 
 function (angle) {
-var c = Math.cos (angle);
-var s = Math.sin (angle);
-this.m00 = c;
-this.m01 = -s;
-this.m02 = 0.0;
-this.m10 = s;
-this.m11 = c;
-this.m12 = 0.0;
-this.m20 = 0.0;
-this.m21 = 0.0;
-this.m22 = 1.0;
+this.setZRot (angle);
+return this;
 }, "~N");
 Clazz.defineMethod (c$, "scale", 
 function (scalar) {
@@ -304,5 +269,30 @@ return "[\n  [" + this.m00 + "\t" + this.m01 + "\t" + this.m02 + "]" + "\n  [" +
 Clazz.defineMethod (c$, "setAA", 
 function (a) {
 this.setAA33 (a);
+return this;
 }, "JU.A4");
+Clazz.defineMethod (c$, "setAsBallRotation", 
+function (responseFactor, dx, dy) {
+var r = Math.sqrt (dx * dx + dy * dy);
+var th = r * responseFactor;
+if (th == 0) {
+this.setScale (1);
+return false;
+}var c = Math.cos (th);
+var s = Math.sin (th);
+var nx = -dy / r;
+var ny = dx / r;
+var c1 = c - 1;
+this.m00 = 1 + c1 * nx * nx;
+this.m01 = this.m10 = c1 * nx * ny;
+this.m20 = -(this.m02 = s * nx);
+this.m11 = 1 + c1 * ny * ny;
+this.m21 = -(this.m12 = s * ny);
+this.m22 = c;
+return true;
+}, "~N,~N,~N");
+Clazz.defineMethod (c$, "isRotation", 
+function () {
+return (Math.abs (this.determinant3 () - 1) < 0.001);
+});
 });

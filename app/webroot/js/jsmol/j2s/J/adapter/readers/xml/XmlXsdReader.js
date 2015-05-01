@@ -16,19 +16,17 @@ Clazz.superConstructor (this, J.adapter.readers.xml.XmlXsdReader, []);
 });
 Clazz.overrideMethod (c$, "getDOMAttributes", 
 function () {
-return ["ID", "XYZ", "Connections", "Components", "IsBackboneAtom", "Connects", "Type", "Name"];
+return  Clazz.newArray (-1, ["ID", "XYZ", "Connections", "Components", "IsBackboneAtom", "Connects", "Type", "Name"]);
 });
 Clazz.overrideMethod (c$, "processXml", 
 function (parent, saxReader) {
 parent.htParams.put ("backboneAtoms", this.bsBackbone);
 this.PX (parent, saxReader);
-this.asc.clearSymbolicMap ();
+this.asc.atomSymbolicMap.clear ();
 }, "J.adapter.readers.xml.XmlReader,~O");
 Clazz.overrideMethod (c$, "processStartElement", 
 function (localName) {
 var tokens;
-System.out.println (" " + localName + " " + this.atts);
-System.out.println ("xmlchem3d: start " + localName);
 if ("Molecule".equalsIgnoreCase (localName)) {
 this.asc.newAtomSet ();
 this.asc.setAtomSetName (this.atts.get ("Name"));
@@ -43,13 +41,13 @@ this.atom =  new J.adapter.smarter.Atom ();
 this.atom.elementSymbol = this.atts.get ("Components");
 this.atom.atomName = this.atts.get ("ID");
 this.atom.atomSerial = ++this.iAtom;
-if (this.iChain >= 0) this.parent.setChainID (this.atom, String.fromCharCode ((this.iChain - 1) % 26 + 65));
+if (this.iChain >= 0) this.parent.setChainID (this.atom, "" + String.fromCharCode ((this.iChain - 1) % 26 + 65));
 this.atom.group3 = "UNK";
 if (this.iGroup == 0) this.iGroup = 1;
 this.atom.sequenceNumber = this.iGroup;
 var xyz = this.atts.get ("XYZ");
 if (xyz != null) {
-tokens = J.adapter.smarter.AtomSetCollectionReader.getTokensStr (xyz.$replace (',', ' '));
+tokens = JU.PT.getTokens (xyz.$replace (',', ' '));
 this.atom.set (this.parseFloatStr (tokens[0]), this.parseFloatStr (tokens[1]), this.parseFloatStr (tokens[2]));
 }var isBackbone = "1".equals (this.atts.get ("IsBackboneAtom"));
 if (isBackbone) this.bsBackbone.set (this.iAtom);

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.awtjs2d");
-Clazz.load (["javajs.api.GenericMouseInterface", "javajs.awt.event.Event"], "J.awtjs2d.Mouse", ["java.lang.Character", "JU.PT", "$.V3", "JW.Logger"], function () {
+Clazz.load (["javajs.api.GenericMouseInterface", "javajs.awt.event.Event"], "J.awtjs2d.Mouse", ["java.lang.Character", "JU.PT", "$.V3", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.manager = null;
@@ -14,8 +14,8 @@ Clazz.instantialize (this, arguments);
 Clazz.makeConstructor (c$, 
 function (privateKey, vwr, display) {
 this.vwr = vwr;
-this.manager = this.vwr.getActionManager ();
-}, "~N,javajs.api.PlatformViewer,~O");
+this.manager = this.vwr.acm;
+}, "~N,JV.Viewer,~O");
 Clazz.overrideMethod (c$, "clear", 
 function () {
 });
@@ -137,7 +137,7 @@ ke.consume ();
 if (!this.vwr.menuEnabled ()) return;
 var ch = ke.getKeyChar ();
 var modifiers = ke.getModifiers ();
-if (JW.Logger.debuggingHigh) JW.Logger.debug ("MouseManager keyTyped: " + ch + " " + (0 + ch.charCodeAt (0)) + " " + modifiers);
+if (JU.Logger.debuggingHigh) JU.Logger.debug ("MouseManager keyTyped: " + ch + " " + (0 + ch.charCodeAt (0)) + " " + modifiers);
 if (modifiers != 0 && modifiers != 1) {
 switch (ch) {
 case String.fromCharCode (11):
@@ -190,7 +190,7 @@ this.addKeyBuffer (ke.getModifiers () == 1 ? Character.toUpperCase (ch) : ch);
 }, "java.awt.event.KeyEvent");
 Clazz.defineMethod (c$, "keyPressed", 
 function (ke) {
-if (this.vwr.isApplet ()) ke.consume ();
+if (this.vwr.isApplet) ke.consume ();
 this.manager.keyPressed (ke.getKeyCode (), ke.getModifiers ());
 }, "java.awt.event.KeyEvent");
 Clazz.defineMethod (c$, "keyReleased", 

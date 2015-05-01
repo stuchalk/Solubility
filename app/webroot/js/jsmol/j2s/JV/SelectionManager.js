@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JV");
-Clazz.load (["JU.BS"], "JV.SelectionManager", ["JU.AU", "J.i18n.GT", "JW.BSUtil"], function () {
+Clazz.load (["JU.BS"], "JV.SelectionManager", ["JU.AU", "J.i18n.GT", "JU.BSUtil"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.listeners = null;
@@ -8,6 +8,7 @@ this.bsSelection = null;
 this.bsFixed = null;
 this.bsSubset = null;
 this.bsDeleted = null;
+this.noneSelected = null;
 this.empty = 1;
 this.hideNotSelected = false;
 this.bsTemp = null;
@@ -24,13 +25,15 @@ Clazz.makeConstructor (c$,
 function (vwr) {
 this.vwr = vwr;
 }, "JV.Viewer");
-Clazz.defineMethod (c$, "deleteModelAtoms", 
-function (bsDeleted) {
-JW.BSUtil.deleteBits (this.bsHidden, bsDeleted);
-JW.BSUtil.deleteBits (this.bsSelection, bsDeleted);
-JW.BSUtil.deleteBits (this.bsSubset, bsDeleted);
-JW.BSUtil.deleteBits (this.bsFixed, bsDeleted);
-JW.BSUtil.deleteBits (this.bsDeleted, bsDeleted);
+Clazz.defineMethod (c$, "processDeletedModelAtoms", 
+function (bsAtoms) {
+if (this.bsDeleted != null) JU.BSUtil.deleteBits (this.bsDeleted, bsAtoms);
+if (this.bsSubset != null) JU.BSUtil.deleteBits (this.bsSubset, bsAtoms);
+JU.BSUtil.deleteBits (this.bsFixed, bsAtoms);
+JU.BSUtil.deleteBits (this.bsHidden, bsAtoms);
+var bs = JU.BSUtil.copy (this.bsSelection);
+JU.BSUtil.deleteBits (bs, bsAtoms);
+this.setSelectionSet (bs, 0);
 }, "JU.BS");
 Clazz.defineMethod (c$, "clear", 
 function () {
@@ -53,7 +56,7 @@ case 1073742119:
 if (bs != null) this.bsHidden.or (bs);
 break;
 }
-JW.BSUtil.andNot (this.bsHidden, this.bsDeleted);
+JU.BSUtil.andNot (this.bsHidden, this.bsDeleted);
 modelSet.setBsHidden (this.bsHidden);
 if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT._ ("{0} atoms hidden"), this.bsHidden.cardinality ()));
 }, "JM.ModelSet,JU.BS,~N,~B");
@@ -103,24 +106,24 @@ Clazz.defineMethod (c$, "select",
 function (bs, addRemove, isQuiet) {
 if (bs == null) {
 this.selectAll (true);
-if (!this.vwr.getBoolean (1613758476)) this.excludeSelectionSet (this.vwr.getAtomBits (1613758476, null));
-if (!this.vwr.getBoolean (1613758470)) this.excludeSelectionSet (this.vwr.getAtomBits (1613758470, null));
+if (!this.vwr.getBoolean (1613758476)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1613758476, null));
+if (!this.vwr.getBoolean (1613758470)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1613758470, null));
 this.selectionChanged (false);
 } else {
 this.setSelectionSet (bs, addRemove);
 }var reportChime = this.vwr.getBoolean (603979880);
 if (!reportChime && isQuiet) return;
 var n = this.getSelectionCount ();
-if (reportChime) this.vwr.reportSelection ((n == 0 ? "No atoms" : n == 1 ? "1 atom" : n + " atoms") + " selected!");
+if (reportChime) this.vwr.getChimeMessenger ().reportSelection (n);
  else if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT._ ("{0} atoms selected"), n));
 }, "JU.BS,~N,~B");
 Clazz.defineMethod (c$, "selectAll", 
 function (isQuiet) {
-var count = this.vwr.getAtomCount ();
+var count = this.vwr.ms.ac;
 this.empty = (count == 0) ? 1 : 0;
 for (var i = count; --i >= 0; ) this.bsSelection.set (i);
 
-JW.BSUtil.andNot (this.bsSelection, this.bsDeleted);
+JU.BSUtil.andNot (this.bsSelection, this.bsDeleted);
 this.selectionChanged (isQuiet);
 }, "~B");
 Clazz.defineMethod (c$, "clearSelection", 
@@ -154,7 +157,7 @@ return (atomIndex < 0 || this.bsSubset == null || this.bsSubset.get (atomIndex))
 }, "~N");
 Clazz.defineMethod (c$, "invertSelection", 
 function () {
-JW.BSUtil.invertInPlace (this.bsSelection, this.vwr.getAtomCount ());
+JU.BSUtil.invertInPlace (this.bsSelection, this.vwr.ms.ac);
 this.empty = (this.bsSelection.length () > 0 ? 0 : 1);
 this.selectionChanged (false);
 });
@@ -197,14 +200,14 @@ this.listeners[len] = listener;
 }, "J.api.JmolSelectionListener");
 Clazz.defineMethod (c$, "selectionChanged", 
  function (isQuiet) {
-if (this.hideNotSelected) this.hide (this.vwr.getModelSet (), JW.BSUtil.copyInvert (this.bsSelection, this.vwr.getAtomCount ()), 0, isQuiet);
+if (this.hideNotSelected) this.hide (this.vwr.ms, JU.BSUtil.copyInvert (this.bsSelection, this.vwr.ms.ac), 0, isQuiet);
 if (isQuiet || this.listeners.length == 0) return;
 for (var i = this.listeners.length; --i >= 0; ) if (this.listeners[i] != null) this.listeners[i].selectionChanged (this.bsSelection);
 
 }, "~B");
 Clazz.defineMethod (c$, "deleteAtoms", 
 function (bs) {
-var bsNew = JW.BSUtil.copy (bs);
+var bsNew = JU.BSUtil.copy (bs);
 if (this.bsDeleted == null) {
 this.bsDeleted = bsNew;
 } else {
@@ -214,40 +217,23 @@ this.bsDeleted.or (bs);
 this.bsSelection.andNot (this.bsDeleted);
 return bsNew.cardinality ();
 }, "JU.BS");
-Clazz.defineMethod (c$, "getDeletedAtoms", 
-function () {
-return this.bsDeleted;
-});
 Clazz.defineMethod (c$, "getSelectedAtoms", 
 function () {
 if (this.bsSubset == null) return this.bsSelection;
-var bs = JW.BSUtil.copy (this.bsSelection);
+var bs = JU.BSUtil.copy (this.bsSelection);
 bs.and (this.bsSubset);
 return bs;
 });
 Clazz.defineMethod (c$, "getSelectedAtomsNoSubset", 
 function () {
-return JW.BSUtil.copy (this.bsSelection);
-});
-Clazz.defineMethod (c$, "getSelectionSubset", 
-function () {
-return this.bsSubset;
+return JU.BSUtil.copy (this.bsSelection);
 });
 Clazz.defineMethod (c$, "excludeAtoms", 
 function (bs, ignoreSubset) {
 if (this.bsDeleted != null) bs.andNot (this.bsDeleted);
-if (!ignoreSubset && this.bsSubset != null) bs.and (this.bsSubset);
+if (!ignoreSubset && this.bsSubset != null) (bs = JU.BSUtil.copy (bs)).and (this.bsSubset);
+return bs;
 }, "JU.BS,~B");
-Clazz.defineMethod (c$, "processDeletedModelAtoms", 
-function (bsAtoms) {
-if (this.bsDeleted != null) JW.BSUtil.deleteBits (this.bsDeleted, bsAtoms);
-if (this.bsSubset != null) JW.BSUtil.deleteBits (this.bsSubset, bsAtoms);
-JW.BSUtil.deleteBits (this.bsFixed, bsAtoms);
-JW.BSUtil.deleteBits (this.bsHidden, bsAtoms);
-var bs = JW.BSUtil.copy (this.bsSelection);
-JW.BSUtil.deleteBits (bs, bsAtoms);
-this.setSelectionSet (bs, 0);
-}, "JU.BS");
 Clazz.defineMethod (c$, "setMotionFixedAtoms", 
 function (bs) {
 this.bsFixed.clearAll ();

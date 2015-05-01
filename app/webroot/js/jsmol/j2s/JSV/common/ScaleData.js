@@ -281,7 +281,7 @@ var xyCoords = graphsTemp.get (i).getXYCoords ();
 if (JSV.common.ScaleData.getXRange (i, xyCoords, initX, finalX, 0, xyCoords.length - 1, startIndices, endIndices) >= minPoints) nSpectraOK++;
 }
 return (nSpectraOK == nSpectra);
-}, "JU.List,~N,~N,~N,~A,~A");
+}, "JU.Lst,~N,~N,~N,~A,~A");
 c$.fixScale = Clazz.defineMethod (c$, "fixScale", 
 function (map) {
 if (map.isEmpty ()) return;
@@ -311,6 +311,6 @@ this.maxYOnScale = center - (center - this.maxYOnScale) / f;
 this.spectrumScaleFactor *= f;
 }}, "~N");
 Clazz.defineStatics (c$,
-"NTICKS", [2, 5, 10, 10]);
-c$.LOGTICKS = c$.prototype.LOGTICKS = [Math.log10 (2), Math.log10 (5), 0, 1];
+"NTICKS",  Clazz.newIntArray (-1, [2, 5, 10, 10]));
+c$.LOGTICKS = c$.prototype.LOGTICKS =  Clazz.newDoubleArray (-1, [Math.log10 (2), Math.log10 (5), 0, 1]);
 });

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.shape");
-Clazz.load (["J.api.JmolMeasurementClient", "J.shape.AtomShape", "JU.List"], "J.shape.Measures", ["java.lang.Float", "java.util.Hashtable", "JU.BS", "$.PT", "JM.Measurement", "$.MeasurementData", "JW.BSUtil", "$.C", "$.Escape", "$.Txt"], function () {
+Clazz.load (["J.api.JmolMeasurementClient", "J.shape.AtomShape", "JU.Lst"], "J.shape.Measures", ["java.lang.Float", "java.util.Hashtable", "JU.BS", "$.PT", "JM.Measurement", "$.MeasurementData", "JU.BSUtil", "$.C", "$.Escape"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.bsSelected = null;
 this.strFormat = null;
@@ -20,7 +20,7 @@ this.tokAction = 0;
 Clazz.instantialize (this, arguments);
 }, J.shape, "Measures", J.shape.AtomShape, J.api.JmolMeasurementClient);
 Clazz.prepareFields (c$, function () {
-this.measurements =  new JU.List ();
+this.measurements =  new JU.Lst ();
 });
 Clazz.overrideMethod (c$, "initModelSet", 
 function () {
@@ -32,7 +32,7 @@ this.atoms = this.ms.at;
 });
 Clazz.overrideMethod (c$, "initShape", 
 function () {
-this.font3d = this.gdata.getFont3D (15);
+this.font3d = this.vwr.gdata.getFont3D (15);
 });
 Clazz.overrideMethod (c$, "setSize", 
 function (size, bsSelected) {
@@ -46,7 +46,7 @@ for (var i = 0; i < this.measurementCount; i++) this.measurements.get (i).setMod
 
 return;
 }if ("color" === propertyName) {
-this.setColor (value == null ? 0 : JW.C.getColixO (value));
+this.setColor (JU.C.getColixO (value));
 return;
 }if ("font" === propertyName) {
 this.font3d = value;
@@ -66,7 +66,7 @@ for (var i = this.measurements.size (); --i >= 0; ) if ((mt = this.measurements.
 return;
 }if ("select" === propertyName) {
 var bs = value;
-if (bs == null || JW.BSUtil.cardinalityOf (bs) == 0) {
+if (bs == null || JU.BSUtil.cardinalityOf (bs) == 0) {
 this.bsSelected = null;
 } else {
 this.bsSelected =  new JU.BS ();
@@ -187,7 +187,7 @@ this.showHideM ( new JM.Measurement ().setPoints (this.ms, value, null, null), t
 }return;
 }if ("show" === propertyName) {
 if (Clazz.instanceOf (value, String)) {
-this.doAction (null, value, 4148);
+this.doAction (null, value, 135270926);
 } else {
 this.showHideM ( new JM.Measurement ().setPoints (this.ms, value, null, null), false);
 }return;
@@ -220,7 +220,7 @@ points[i] = value;
 indices[i + 1] = -2 - i;
 }}
 return  new JM.Measurement ().setPoints (this.ms, indices, points, this.tickInfo == null ? this.defaultTickInfo : this.tickInfo);
-}, "JU.List");
+}, "JU.Lst");
 Clazz.overrideMethod (c$, "getProperty", 
 function (property, index) {
 if ("pending".equals (property)) return this.mPending;
@@ -313,11 +313,11 @@ return;
 }if (isShow) {
 this.defineAll (iPt, m, true, false, false);
 if (isDelete) return;
-}var points =  new JU.List ();
+}var points =  new JU.Lst ();
 var nPoints = m.count;
 for (var i = 1; i <= nPoints; i++) {
 var atomIndex = m.getAtomIndex (i);
-points.addLast (atomIndex >= 0 ? this.vwr.getAtomBits (1095763969, Integer.$valueOf (this.atoms[atomIndex].getAtomNumber ())) : m.getAtom (i));
+points.addLast (atomIndex >= 0 ? this.vwr.ms.getAtoms (1095763969, Integer.$valueOf (this.atoms[atomIndex].getAtomNumber ())) : m.getAtom (i));
 }
 this.define (( new JM.MeasurementData ().init (null, this.vwr, points)).set (this.tokAction, this.htMin, this.radiusData, this.strFormat, null, this.tickInfo, this.mustBeConnected, this.mustNotBeConnected, this.intramolecular, true, 0, 0, null), (isDelete ? 12291 : 1060866));
 }, "~N,JM.Measurement,~B,~B,~B");
@@ -374,10 +374,10 @@ this.vwr.setStatusMeasuring ("measureDeleted", i, msg, 0);
 Clazz.defineMethod (c$, "doAction", 
  function (md, s, tok) {
 s = s.toUpperCase ().$replace ('?', '*');
-var isWild = JW.Txt.isWild (s);
+var isWild = JU.PT.isWild (s);
 for (var i = this.measurements.size (); --i >= 0; ) {
 var m = this.measurements.get (i);
-if (m.thisID != null && (m.thisID.equalsIgnoreCase (s) || isWild && JW.Txt.isMatch (m.thisID.toUpperCase (), s, true, true))) switch (tok) {
+if (m.thisID != null && (m.thisID.equalsIgnoreCase (s) || isWild && JU.PT.isMatch (m.thisID.toUpperCase (), s, true, true))) switch (tok) {
 case 1666189314:
 m.mad = md.mad;
 break;
@@ -387,7 +387,7 @@ this.measurements.remove (i);
 this.measurementCount--;
 this.vwr.setStatusMeasuring ("measureDeleted", i, msg, 0);
 break;
-case 4148:
+case 135270926:
 m.isHidden = false;
 break;
 case 12294:
@@ -409,7 +409,7 @@ for (var i = this.measurementCount; --i >= 0; ) this.measurements.get (i).reform
 });
 Clazz.defineMethod (c$, "getAllInfo", 
  function () {
-var info =  new JU.List ();
+var info =  new JU.Lst ();
 for (var i = 0; i < this.measurementCount; i++) {
 info.addLast (this.getInfo (i));
 }
@@ -439,12 +439,12 @@ info.put ("ticks", tickInfo.ticks);
 if (tickInfo.scale != null) info.put ("tickScale", tickInfo.scale);
 if (tickInfo.tickLabelFormats != null) info.put ("tickLabelFormats", tickInfo.tickLabelFormats);
 if (!Float.isNaN (tickInfo.first)) info.put ("tickStart", Float.$valueOf (tickInfo.first));
-}var atomsInfo =  new JU.List ();
+}var atomsInfo =  new JU.Lst ();
 for (var i = 1; i <= count; i++) {
 var atomInfo =  new java.util.Hashtable ();
 var atomIndex = m.getAtomIndex (i);
 atomInfo.put ("_ipt", Integer.$valueOf (atomIndex));
-atomInfo.put ("coord", JW.Escape.eP (m.getAtom (i)));
+atomInfo.put ("coord", JU.Escape.eP (m.getAtom (i)));
 atomInfo.put ("atomno", Integer.$valueOf (atomIndex < 0 ? -1 : this.atoms[atomIndex].getAtomNumber ()));
 atomInfo.put ("info", (atomIndex < 0 ? "<point>" : this.atoms[atomIndex].getInfo ()));
 atomsInfo.addLast (atomInfo);

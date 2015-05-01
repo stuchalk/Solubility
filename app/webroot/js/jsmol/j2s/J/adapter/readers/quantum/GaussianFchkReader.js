@@ -1,10 +1,10 @@
 Clazz.declarePackage ("J.adapter.readers.quantum");
-Clazz.load (["J.adapter.readers.quantum.MOReader"], "J.adapter.readers.quantum.GaussianFchkReader", ["java.lang.Double", "$.Float", "java.util.Hashtable", "JU.AU", "$.List", "$.PT", "$.V3", "J.adapter.smarter.Bond", "J.api.JmolAdapter", "JW.Escape", "$.Logger"], function () {
+Clazz.load (["J.adapter.readers.quantum.GaussianReader"], "J.adapter.readers.quantum.GaussianFchkReader", ["java.lang.Double", "$.Float", "java.util.Hashtable", "JU.AU", "$.Lst", "$.PT", "$.V3", "J.adapter.readers.quantum.BasisFunctionReader", "J.adapter.smarter.Bond", "JU.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.fileData = null;
 this.atomCount = 0;
 Clazz.instantialize (this, arguments);
-}, J.adapter.readers.quantum, "GaussianFchkReader", J.adapter.readers.quantum.MOReader);
+}, J.adapter.readers.quantum, "GaussianFchkReader", J.adapter.readers.quantum.GaussianReader);
 Clazz.defineMethod (c$, "initializeReader", 
 function () {
 Clazz.superCall (this, J.adapter.readers.quantum.GaussianFchkReader, "initializeReader", []);
@@ -13,25 +13,28 @@ this.fileData =  new java.util.Hashtable ();
 this.fileData.put ("title", this.rd ().trim ());
 this.calculationType = JU.PT.rep (this.rd (), "  ", " ");
 this.asc.newAtomSet ();
-this.asc.setAtomSetAuxiliaryInfo ("fileData", this.fileData);
+this.asc.setCurrentModelInfo ("fileData", this.fileData);
 this.readAllData ();
 this.readAtoms ();
 this.readBonds ();
 this.readDipoleMoment ();
 this.readPartialCharges ();
 this.readBasis ();
-this.readMOs ();
+this.readMolecularObitals ();
+this.readFrequencies ("NumFreq", false);
 this.continuing = false;
 });
 Clazz.defineMethod (c$, "readAllData", 
  function () {
 while ((this.line == null ? this.rd () : this.line) != null) {
-if (this.line.length < 40) continue;
-var name = JU.PT.rep (this.line.substring (0, 40).trim (), " ", "");
+if (this.line.length < 40) {
+if (this.line.indexOf ("NumAtom") == 0) return;
+continue;
+}var name = JU.PT.rep (this.line.substring (0, 40).trim (), " ", "");
 var type = this.line.charAt (43);
 var isArray = (this.line.indexOf ("N=") >= 0);
 var v = this.line.substring (50).trim ();
-JW.Logger.info (name + " = " + v + " " + isArray);
+JU.Logger.info (name + " = " + v + " " + isArray);
 var o = null;
 if (isArray) {
 switch (type) {
@@ -64,8 +67,8 @@ this.line = null;
 }if (o != null) this.fileData.put (name, o);
 }
 });
-Clazz.defineMethod (c$, "readAtoms", 
- function () {
+Clazz.overrideMethod (c$, "readAtoms", 
+function () {
 var atomNumbers = this.fileData.get ("Atomicnumbers");
 var data = this.fileData.get ("Currentcartesiancoordinates");
 var e = "" + this.fileData.get ("TotalEnergy");
@@ -80,7 +83,7 @@ this.setAtomCoordXYZ (atom, data[pt++] * f, data[pt++] * f, data[pt++] * f);
 }
 });
 Clazz.defineMethod (c$, "readBonds", 
- function () {
+function () {
 try {
 var nBond = this.fileData.get ("NBond");
 var iBond = this.fileData.get ("IBond");
@@ -95,24 +98,25 @@ var iorder = (order == 1.5 ? 515 : Clazz.floatToInt (order));
 this.asc.addBond ( new J.adapter.smarter.Bond (ia, ib, iorder));
 }
 
+this.addJmolScript ("connect 1.1 {_H} {*} ");
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
-JW.Logger.info ("GaussianFchkReader -- bonding ignored");
+JU.Logger.info ("GaussianFchkReader -- bonding ignored");
 } else {
 throw e;
 }
 }
 });
-Clazz.defineMethod (c$, "readDipoleMoment", 
- function () {
+Clazz.overrideMethod (c$, "readDipoleMoment", 
+function () {
 var data = this.fileData.get ("DipoleMoment");
 if (data == null) return;
 var dipole = JU.V3.new3 (data[0], data[1], data[2]);
-JW.Logger.info ("Molecular dipole for model " + this.asc.atomSetCount + " = " + dipole);
-this.asc.setAtomSetAuxiliaryInfo ("dipole", dipole);
+JU.Logger.info ("Molecular dipole for model " + this.asc.atomSetCount + " = " + dipole);
+this.asc.setCurrentModelInfo ("dipole", dipole);
 });
-Clazz.defineMethod (c$, "readPartialCharges", 
- function () {
+Clazz.overrideMethod (c$, "readPartialCharges", 
+function () {
 var data = this.fileData.get ("Mulliken Charges");
 if (data == null) return;
 var atoms = this.asc.atoms;
@@ -121,16 +125,16 @@ var c = data[i];
 atoms[i].partialCharge = c;
 if (Math.abs (c) > 0.8) atoms[i].formalCharge = Math.round (c);
 }
-JW.Logger.info ("Mulliken charges found for Model " + this.asc.atomSetCount);
+JU.Logger.info ("Mulliken charges found for Model " + this.asc.atomSetCount);
 });
-Clazz.defineMethod (c$, "readBasis", 
- function () {
+Clazz.overrideMethod (c$, "readBasis", 
+function () {
 var types = this.fileData.get ("Shelltypes");
 this.gaussianCount = 0;
 this.shellCount = 0;
 if (types == null) return;
 this.shellCount = types.length;
-this.shells =  new JU.List ();
+this.shells =  new JU.Lst ();
 var pps = this.fileData.get ("Numberofprimitivespershell");
 var atomMap = this.fileData.get ("Shelltoatommap");
 var exps = this.fileData.get ("Primitiveexponents");
@@ -143,25 +147,25 @@ var nGaussians = Clazz.floatToInt (pps[i]);
 var iatom = Clazz.floatToInt (atomMap[i]);
 var slater =  Clazz.newIntArray (4, 0);
 slater[0] = iatom - 1;
-if (oType.equals ("F7") || oType.equals ("D5")) slater[1] = J.api.JmolAdapter.getQuantumShellTagIDSpherical (oType.substring (0, 1));
- else slater[1] = J.api.JmolAdapter.getQuantumShellTagID (oType);
+if (oType.equals ("F7") || oType.equals ("D5")) slater[1] = J.adapter.readers.quantum.BasisFunctionReader.getQuantumShellTagIDSpherical (oType.substring (0, 1));
+ else slater[1] = J.adapter.readers.quantum.BasisFunctionReader.getQuantumShellTagID (oType);
 slater[2] = this.gaussianCount;
 slater[3] = nGaussians;
-if (JW.Logger.debugging) JW.Logger.debug ("Slater " + this.shells.size () + " " + JW.Escape.eAI (slater));
+if (JU.Logger.debugging) JU.Logger.debug ("Slater " + this.shells.size () + " " + JU.Escape.eAI (slater));
 this.shells.addLast (slater);
 for (var j = 0; j < nGaussians; j++) {
 var g = this.gaussians[this.gaussianCount] =  Clazz.newFloatArray (3, 0);
 g[0] = exps[this.gaussianCount];
 g[1] = coefs[this.gaussianCount];
-g[2] = spcoefs[this.gaussianCount];
+if (spcoefs != null) g[2] = spcoefs[this.gaussianCount];
 this.gaussianCount++;
 }
 }
-JW.Logger.info (this.shellCount + " slater shells read");
-JW.Logger.info (this.gaussianCount + " gaussian primitives read");
+JU.Logger.info (this.shellCount + " slater shells read");
+JU.Logger.info (this.gaussianCount + " gaussian primitives read");
 });
-Clazz.defineMethod (c$, "readMOs", 
- function () {
+Clazz.defineMethod (c$, "readMolecularObitals", 
+function () {
 if (this.shells == null) return;
 var nElec = (this.fileData.get ("Numberofelectrons")).intValue ();
 var nAlpha = (this.fileData.get ("Numberofalphaelectrons")).intValue ();
@@ -200,5 +204,5 @@ this.setMO (mo);
 }
 }, "~A,~A,~N,~N");
 Clazz.defineStatics (c$,
-"AO_TYPES", ["F7", "D5", "L", "S", "P", "D", "F", "G", "H"]);
+"AO_TYPES",  Clazz.newArray (-1, ["F7", "D5", "L", "S", "P", "D", "F", "G", "H"]));
 });

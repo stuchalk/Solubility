@@ -1,5 +1,5 @@
 Clazz.declarePackage ("java.util.zip");
-Clazz.load (["java.util.zip.DeflaterOutputStream", "$.ZipConstants", "java.util.Hashtable", "java.util.zip.CRC32", "JU.List"], "java.util.zip.ZipOutputStream", ["JZ.ZStream", "java.io.IOException", "java.lang.Boolean", "$.IllegalArgumentException", "$.IndexOutOfBoundsException", "$.Long", "java.util.zip.Deflater", "$.ZipException"], function () {
+Clazz.load (["java.util.zip.DeflaterOutputStream", "$.ZipConstants", "java.util.Hashtable", "java.util.zip.CRC32", "JU.Lst"], "java.util.zip.ZipOutputStream", ["JU.ZStream", "java.io.IOException", "java.lang.Boolean", "$.IllegalArgumentException", "$.IndexOutOfBoundsException", "$.Long", "java.util.zip.Deflater", "$.ZipException"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.current = null;
 this.xentries = null;
@@ -14,7 +14,7 @@ this.$closed = false;
 Clazz.instantialize (this, arguments);
 }, java.util.zip, "ZipOutputStream", java.util.zip.DeflaterOutputStream, java.util.zip.ZipConstants);
 Clazz.prepareFields (c$, function () {
-this.xentries =  new JU.List ();
+this.xentries =  new JU.Lst ();
 this.names =  new java.util.Hashtable ();
 this.crc =  new java.util.zip.CRC32 ();
 });
@@ -50,7 +50,7 @@ return ( new java.util.zip.Deflater (2147483647)).init (-1, 0, true);
 Clazz.defineMethod (c$, "setComment", 
 function (comment) {
 if (comment != null) {
-this.comment = JZ.ZStream.getBytes (comment);
+this.comment = JU.ZStream.getBytes (comment);
 if (this.comment.length > 0xffff) throw  new IllegalArgumentException ("ZIP file comment too long.");
 }}, "~S");
 Clazz.defineMethod (c$, "putNextEntry", 
@@ -201,7 +201,7 @@ elen += 20;
 } else {
 this.writeInt (e.csize);
 this.writeInt (e.size);
-}}var nameBytes = JZ.ZStream.getBytes (e.name);
+}}var nameBytes = JU.ZStream.getBytes (e.name);
 this.writeShort (nameBytes.length);
 this.writeShort (elen);
 this.writeBytes (nameBytes, 0, nameBytes.length);
@@ -260,7 +260,7 @@ this.writeInt (e.time);
 this.writeInt (e.crc);
 this.writeInt (csize);
 this.writeInt (size);
-var nameBytes = JZ.ZStream.getBytes (e.name);
+var nameBytes = JU.ZStream.getBytes (e.name);
 this.writeShort (nameBytes.length);
 if (hasZip64) {
 this.writeShort (e64len + 4 + (e.extra != null ? e.extra.length : 0));
@@ -268,7 +268,7 @@ this.writeShort (e64len + 4 + (e.extra != null ? e.extra.length : 0));
 this.writeShort (e.extra != null ? e.extra.length : 0);
 }var commentBytes;
 if (e.comment != null) {
-commentBytes = JZ.ZStream.getBytes (e.comment);
+commentBytes = JU.ZStream.getBytes (e.comment);
 this.writeShort (Math.min (commentBytes.length, 0xffff));
 } else {
 commentBytes = null;

@@ -27,7 +27,7 @@ var ipt = null;
 var spt = null;
 var pymolMap =  Clazz.newIntArray (3, 0);
 var bsOK =  new JU.BS ();
-while (this.readLine () != null) {
+while (this.rd () != null) {
 if (this.line.length < 2 || this.line.charAt (1) != ' ') {
 if (this.params.readAllData && this.line.startsWith ("usemtl")) color = JU.CU.getArgbFromString ("[x" + this.line.substring (8) + "]");
 continue;
@@ -46,7 +46,7 @@ i = ipt.intValue ();
 }var j = i;
 if (i == this.nVertices) {
 if (this.isAnisotropic) this.setVertexAnisotropy (pt);
-j = this.addVertexCopy (pt, 0, this.nVertices++);
+j = this.addVertexCopy (pt, 0, this.nVertices++, true);
 if (j >= 0) bsOK.set (i);
 }pymolMap[nPts % 3] = j;
 if (addHt) htPymol.put (spt, Integer.$valueOf (i));

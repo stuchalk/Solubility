@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.MapFileReader"], "J.jvxl.readers.Dsn6BinaryReader", ["java.io.DataInputStream", "JU.Rdr", "$.SB", "JW.Logger"], function () {
+Clazz.load (["J.jvxl.readers.MapFileReader"], "J.jvxl.readers.Dsn6BinaryReader", ["java.io.DataInputStream", "JU.Rdr", "$.SB", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.byteFactor = 0;
 this.xyCount = 0;
@@ -23,7 +23,7 @@ this.binarydoc = this.newBinaryDocument ();
 var o2 = sg.getReaderData ();
 var fileName = o2[0];
 var data = o2[1];
-if (data == null) this.binarydoc.setStream (sg.getAtomDataServer ().getBufferedInputStream (fileName), true);
+if (data == null) this.binarydoc.setStream ((sg.atomDataServer).getJzt (), sg.atomDataServer.getBufferedInputStream (fileName), true);
  else this.binarydoc.setStreamData ( new java.io.DataInputStream (JU.Rdr.getBIS (data.getBytes ())), true);
 if (this.params.thePlane == null) this.params.insideOut = !this.params.insideOut;
 this.nSurfaces = 1;
@@ -34,7 +34,7 @@ var header =  Clazz.newShortArray (19, 0);
 for (var i = 0; i < 19; i++) header[i] = this.binarydoc.readShort ();
 
 if (header[18] != 100) {
-this.binarydoc.setStream (null, false);
+this.binarydoc.setStream ((this.sg.atomDataServer).getJzt (), null, false);
 for (var i = 0; i < 19; i++) header[i] = this.binarydoc.swapBytesS (header[i]);
 
 }this.nxyzStart[0] = header[0];
@@ -69,7 +69,7 @@ var dmaxError1 = (255 - header17 - 0.5) * header19 / (header16 - 0.5);
 var dmaxError2 = (255 - header17 + 0.5) * header19 / (header16 + 0.5);
 var dminError = Math.round ((dminError2 - dminError1) / 0.002) * 0.001;
 var dmaxError = Math.round ((dmaxError2 - dmaxError1) / 0.002) * 0.001;
-JW.Logger.info ("DNS6 dmin,dmax = " + this.dmin + "+/-" + dminError + "," + this.dmax + "+/-" + dmaxError);
+JU.Logger.info ("DNS6 dmin,dmax = " + this.dmin + "+/-" + dminError + "," + this.dmax + "+/-" + dmaxError);
 this.a /= scalingFactor;
 this.b /= scalingFactor;
 this.c /= scalingFactor;

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.bspt");
-Clazz.load (null, "J.bspt.Bspf", ["JU.AU", "J.bspt.Bspt", "JW.Logger"], function () {
+Clazz.load (null, "J.bspt.Bspf", ["JU.AU", "J.bspt.Bspt", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.dimMax = 0;
 this.bspts = null;
@@ -8,18 +8,10 @@ this.bsptsValid = null;
 this.cubeIterators = null;
 Clazz.instantialize (this, arguments);
 }, J.bspt, "Bspf");
-Clazz.defineMethod (c$, "validate", 
-function (isValid) {
-this.isValid = isValid;
-}, "~B");
 Clazz.defineMethod (c$, "validateModel", 
 function (i, isValid) {
 this.bsptsValid[i] = isValid;
 }, "~N,~B");
-Clazz.defineMethod (c$, "isInitialized", 
-function () {
-return this.isValid;
-});
 Clazz.defineMethod (c$, "isInitializedIndex", 
 function (bsptIndex) {
 return this.bspts.length > bsptIndex && this.bspts[bsptIndex] != null && this.bsptsValid[bsptIndex];
@@ -31,10 +23,6 @@ this.bspts =  new Array (1);
 this.bsptsValid =  Clazz.newBooleanArray (1, false);
 this.cubeIterators =  new Array (0);
 }, "~N");
-Clazz.defineMethod (c$, "getBsptCount", 
-function () {
-return this.bspts.length;
-});
 Clazz.defineMethod (c$, "addTuple", 
 function (bsptIndex, tuple) {
 if (bsptIndex >= this.bspts.length) {
@@ -53,10 +41,10 @@ for (var i = 0; i < this.bspts.length; ++i) if (this.bspts[i] != null) this.bspt
 Clazz.defineMethod (c$, "dump", 
 function () {
 for (var i = 0; i < this.bspts.length; ++i) {
-JW.Logger.info (">>>>\nDumping bspt #" + i + "\n>>>>");
+JU.Logger.info (">>>>\nDumping bspt #" + i + "\n>>>>");
 this.bspts[i].dump ();
 }
-JW.Logger.info ("<<<<");
+JU.Logger.info ("<<<<");
 });
 Clazz.defineMethod (c$, "getCubeIterator", 
 function (bsptIndex) {

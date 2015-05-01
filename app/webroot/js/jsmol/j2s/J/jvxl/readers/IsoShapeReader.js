@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["J.jvxl.readers.VolumeDataReader", "JU.P3"], "J.jvxl.readers.IsoShapeReader", ["java.lang.Float", "java.util.Random", "JU.SB", "$.V3", "J.jvxl.data.JvxlCoder", "JW.Logger", "$.Measure", "$.MeshSurface"], function () {
+Clazz.load (["J.jvxl.readers.VolumeDataReader", "JU.P3"], "J.jvxl.readers.IsoShapeReader", ["java.lang.Float", "java.util.Random", "JU.Measure", "$.SB", "$.V3", "J.jvxl.data.JvxlCoder", "JU.Logger", "$.MeshSurface"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.psi_n = 2;
 this.psi_l = 1;
@@ -56,7 +56,7 @@ function (isMapData) {
 this.volumeData.sr = this;
 this.precalculateVoxelData = false;
 this.isQuiet = true;
-if (this.center.x == 3.4028235E38) this.center.set (0, 0, 0);
+if (Float.isNaN (this.center.x)) this.center.set (0, 0, 0);
 var type = "sphere";
 switch (this.dataType) {
 case 1294:
@@ -137,7 +137,7 @@ return this.sphere_radiusAngstroms - Math.sqrt (this.ptTemp.x * this.ptTemp.x + 
 }var value = this.hydrogenAtomPsi (this.ptTemp);
 if (Math.abs (value) < 1.0E-7) value = 0;
 return (this.allowNegative || value >= 0 ? value : 0);
-}, "JU.P3,~B");
+}, "JU.T3,~B");
 Clazz.defineMethod (c$, "setHeader", 
  function (line1) {
 this.jvxlFileHeaderBuffer =  new JU.SB ();
@@ -170,7 +170,7 @@ if (this.params.distance == 0) {
 for (var ir = 0; ir < 1000; ir++) {
 var r = ir / 10;
 d = Math.abs (this.radialPart (r));
-if (JW.Logger.debugging) JW.Logger.debug ("R\t" + r + "\t" + d);
+if (JU.Logger.debugging) JU.Logger.debug ("R\t" + r + "\t" + d);
 if (d >= this.aoMax) {
 rmax = r;
 this.aoMax = d;
@@ -183,21 +183,21 @@ this.aoMax2 = d;
 this.aoMax = Math.abs (this.radialPart (this.params.distance));
 this.aoMax2 = this.aoMax * this.aoMax * this.params.distance * this.params.distance;
 rmax = rmax2 = this.params.distance;
-}JW.Logger.info ("Atomic Orbital radial max = " + this.aoMax + " at " + rmax);
-JW.Logger.info ("Atomic Orbital r2R2 max = " + this.aoMax2 + " at " + rmax2);
+}JU.Logger.info ("Atomic Orbital radial max = " + this.aoMax + " at " + rmax);
+JU.Logger.info ("Atomic Orbital r2R2 max = " + this.aoMax2 + " at " + rmax2);
 if (this.monteCarloCount >= 0) {
 this.angMax2 = 0;
 for (var ang = 0; ang < 180; ang += 1) {
 var th = ang / (6.283185307179586);
 d = Math.abs (this.angularPart (th, 0, 0));
-if (JW.Logger.debugging) JW.Logger.debug ("A\t" + ang + "\t" + d);
+if (JU.Logger.debugging) JU.Logger.debug ("A\t" + ang + "\t" + d);
 if (d > this.angMax2) {
 this.angMax2 = d;
 }}
 this.angMax2 *= this.angMax2;
 if (this.psi_m != 0) {
 this.angMax2 *= 2;
-}JW.Logger.info ("Atomic Orbital phi^2theta^2 max = " + this.angMax2);
+}JU.Logger.info ("Atomic Orbital phi^2theta^2 max = " + this.angMax2);
 }var min;
 if (this.params.cutoff == 0) {
 min = (this.monteCarloCount > 0 ? this.aoMax * 0.01 : 0.01);
@@ -221,11 +221,11 @@ var aMax = 0;
 for (var i = 3; --i >= 0; ) if (this.anisotropy[i] > aMax) aMax = this.anisotropy[i];
 
 this.radius *= aMax;
-}JW.Logger.info ("Atomic Orbital radial extent set to " + this.radius + " for cutoff " + this.params.cutoff);
+}JU.Logger.info ("Atomic Orbital radial extent set to " + this.radius + " for cutoff " + this.params.cutoff);
 if (this.params.thePlane != null && this.monteCarloCount > 0) {
 this.planeCenter =  new JU.P3 ();
 this.planeU =  new JU.V3 ();
-JW.Measure.getPlaneProjection (this.center, this.params.thePlane, this.planeCenter, this.planeU);
+JU.Measure.getPlaneProjection (this.center, this.params.thePlane, this.planeCenter, this.planeU);
 this.planeU.set (this.params.thePlane.x, this.params.thePlane.y, this.params.thePlane.z);
 this.planeU.normalize ();
 this.planeV = JU.V3.new3 (1, 0, 0);
@@ -323,10 +323,10 @@ this.ptPsi.add (this.planeCenter);
 value = this.getValueAtPoint (this.ptPsi, false);
 if (value * value <= this.aoMax2 * this.random.nextFloat ()) continue;
 }rave += this.ptPsi.distance (this.center);
-this.addVC (this.ptPsi, value, 0);
+this.addVC (this.ptPsi, value, 0, true);
 i++;
 }
-if (this.params.distance == 0) JW.Logger.info ("Atomic Orbital mean radius = " + rave / this.monteCarloCount + " for " + this.monteCarloCount + " points (" + this.nTries + " tries)");
+if (this.params.distance == 0) JU.Logger.info ("Atomic Orbital mean radius = " + rave / this.monteCarloCount + " for " + this.monteCarloCount + " points (" + this.nTries + " tries)");
 });
 Clazz.overrideMethod (c$, "readSurfaceData", 
 function (isMapData) {
@@ -340,8 +340,8 @@ case 71:
 this.ptPsi.set (0, 0, this.eccentricityScale / 2);
 this.eccentricityMatrixInverse.rotate (this.ptPsi);
 this.ptPsi.add (this.center);
-this.addVC (this.center, 0, 0);
-this.addVC (this.ptPsi, 0, 0);
+this.addVC (this.center, 0, 0, true);
+this.addVC (this.ptPsi, 0, 0, true);
 this.addTriangleCheck (0, 0, 0, 0, 0, false, 0);
 return;
 case 74:
@@ -353,13 +353,13 @@ this.readSurfaceDataVDR (isMapData);
 }, "~B");
 Clazz.defineMethod (c$, "createGeodesic", 
  function () {
-var ms = JW.MeshSurface.getSphereData (4);
+var ms = JU.MeshSurface.getSphereData (4);
 var pts = ms.altVertices;
 for (var i = 0; i < pts.length; i++) {
 var pt = JU.P3.newP (pts[i]);
 pt.scale (this.params.distance);
 pt.add (this.center);
-this.addVC (pt, 0, i);
+this.addVC (pt, 0, i, false);
 }
 var faces = ms.pis;
 for (var i = 0; i < faces.length; i++) {

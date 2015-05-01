@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JSV.export");
-Clazz.load (["JSV.export.FormExporter", "JU.List"], "JSV.export.XMLExporter", ["java.lang.Boolean", "$.Double"], function () {
+Clazz.load (["JSV.export.FormExporter", "JU.Lst"], "JSV.export.XMLExporter", ["java.lang.Boolean", "$.Double"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.continuous = false;
 this.title = null;
@@ -42,7 +42,7 @@ this.newXYCoords = null;
 Clazz.instantialize (this, arguments);
 }, JSV["export"], "XMLExporter", JSV["export"].FormExporter);
 Clazz.prepareFields (c$, function () {
-this.newXYCoords =  new JU.List ();
+this.newXYCoords =  new JU.Lst ();
 });
 Clazz.defineMethod (c$, "setup", 
 function (viewer, spec, out, startIndex, endIndex) {
@@ -149,7 +149,7 @@ this.solvRef = val;
 break;
 }
 }
-}, "JU.List");
+}, "JU.Lst");
 Clazz.defineMethod (c$, "setContext", 
 function () {
 this.context.put ("continuous", Boolean.$valueOf (this.continuous));
@@ -195,7 +195,7 @@ function (type) {
 return this.writeForm (type + (this.datatype.contains ("NMR") ? "_nmr" : "_tmp") + ".vm");
 }, "~S");
 Clazz.defineStatics (c$,
-"params", ["##STATE", "##RESOLUTION", "##SPECTROMETER", "##$MANUFACTURER", "##MOLFORM", "##CASREGISTRYNO", "##CASNAME", "##MP", "##BP", "##.OBSERVENUCLEUS", "##.SOLVENTNAME", "##.SOLVENTREFERENCE"],
+"params",  Clazz.newArray (-1, ["##STATE", "##RESOLUTION", "##SPECTROMETER", "##$MANUFACTURER", "##MOLFORM", "##CASREGISTRYNO", "##CASNAME", "##MP", "##BP", "##.OBSERVENUCLEUS", "##.SOLVENTNAME", "##.SOLVENTREFERENCE"]),
 "PARAM_STATE", 0,
 "PARAM_RESOLUTION", 1,
 "PARAM_SPECTROMETER", 2,
