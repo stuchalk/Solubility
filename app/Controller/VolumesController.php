@@ -1,4 +1,5 @@
 <?php
+App::uses('Xml','Utility');
 
 /**
  * Class VolumesController
@@ -22,8 +23,20 @@ class VolumesController extends AppController
      */
     public function view($vol,$format="")
 	{
-		$data=$this->Volume->find('first', ['conditions'=>['Volume.vol'=>$vol]]);
-		if($format=="json") { echo json_encode($data);exit; }
+		$data=$this->Volume->find('first',['conditions'=>['Volume.vol'=>$vol]]);
+
+        //unset($data['System'][0]['method']);
+        //echo "<pre>".print_r($data['System'][$i])."</pre>";
+        if($format=="json") {
+            header('Content-Type: application/json');
+            echo json_encode($data);exit;
+        }
+        if($format=="xml") {
+            $xmlArray = ['sds' => $data];
+            $xmlObject = Xml::fromArray($xmlArray,['format'=>'tags']);
+            header('Content-Type: application/xml');
+            echo $xmlObject->asXML();exit;
+        }
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
 	}
@@ -58,5 +71,3 @@ class VolumesController extends AppController
         $this->set('data',$data);
     }
 }
-?>
-

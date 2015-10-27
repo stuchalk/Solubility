@@ -467,4 +467,5 @@ class ScrapingsController extends AppController
         $array = Xml::toArray(Xml::build($response));
         return $array;
     }
+
 }
