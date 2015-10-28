@@ -163,8 +163,7 @@ return JU.PT.parseFloatChecked (str, ichMax, next, false);
 c$.parseFloatNext = Clazz.defineMethod (c$, "parseFloatNext", 
 function (str, next) {
 var cch = (str == null ? -1 : str.length);
-if (next[0] < 0 || next[0] >= cch) return NaN;
-return JU.PT.parseFloatChecked (str, cch, next, false);
+return (next[0] < 0 || next[0] >= cch ? NaN : JU.PT.parseFloatChecked (str, cch, next, false));
 }, "~S,~A");
 c$.parseFloatStrict = Clazz.defineMethod (c$, "parseFloatStrict", 
 function (str) {
@@ -217,6 +216,13 @@ for (var i = 0; i < tokenCount; ++i) tokens[i] = JU.PT.parseTokenChecked (line, 
 
 return tokens;
 }, "~S,~N");
+c$.countChar = Clazz.defineMethod (c$, "countChar", 
+function (line, c) {
+var n = 0;
+for (var i = line.lastIndexOf (c) + 1; --i >= 0; ) if (line.charAt (i) == c) n++;
+
+return n;
+}, "~S,~S");
 c$.countTokens = Clazz.defineMethod (c$, "countTokens", 
 function (line, ich) {
 var tokenCount = 0;
@@ -424,6 +430,7 @@ return str;
 }, "~S,~S,~S");
 c$.trim = Clazz.defineMethod (c$, "trim", 
 function (str, chars) {
+if (str == null || str.length == 0) return str;
 if (chars.length == 0) return str.trim ();
 var len = str.length;
 var k = 0;
@@ -533,66 +540,6 @@ c$.packageJSON = Clazz.defineMethod (c$, "packageJSON",
 function (infoType, info) {
 return (infoType == null ? info : "\"" + infoType + "\": " + info);
 }, "~S,~S");
-c$.isAS = Clazz.defineMethod (c$, "isAS", 
-function (x) {
-{
-return Clazz.isAS(x);
-}}, "~O");
-c$.isASS = Clazz.defineMethod (c$, "isASS", 
-function (x) {
-{
-return Clazz.isASS(x);
-}}, "~O");
-c$.isAP = Clazz.defineMethod (c$, "isAP", 
-function (x) {
-{
-return Clazz.isAP(x);
-}}, "~O");
-c$.isAF = Clazz.defineMethod (c$, "isAF", 
-function (x) {
-{
-return Clazz.isAF(x);
-}}, "~O");
-c$.isAFloat = Clazz.defineMethod (c$, "isAFloat", 
-function (x) {
-{
-return Clazz.isAFloat(x);
-}}, "~O");
-c$.isAD = Clazz.defineMethod (c$, "isAD", 
-function (x) {
-{
-return Clazz.isAF(x);
-}}, "~O");
-c$.isADD = Clazz.defineMethod (c$, "isADD", 
-function (x) {
-{
-return Clazz.isAFF(x);
-}}, "~O");
-c$.isAB = Clazz.defineMethod (c$, "isAB", 
-function (x) {
-{
-return Clazz.isAI(x);
-}}, "~O");
-c$.isAI = Clazz.defineMethod (c$, "isAI", 
-function (x) {
-{
-return Clazz.isAI(x);
-}}, "~O");
-c$.isAII = Clazz.defineMethod (c$, "isAII", 
-function (x) {
-{
-return Clazz.isAII(x);
-}}, "~O");
-c$.isAFF = Clazz.defineMethod (c$, "isAFF", 
-function (x) {
-{
-return Clazz.isAFF(x);
-}}, "~O");
-c$.isAFFF = Clazz.defineMethod (c$, "isAFFF", 
-function (x) {
-{
-return Clazz.isAFFF(x);
-}}, "~O");
 c$.escapeUrl = Clazz.defineMethod (c$, "escapeUrl", 
 function (url) {
 url = JU.PT.rep (url, "\n", "");
@@ -668,17 +615,6 @@ if (val == null) for (var e, $e = h.entrySet ().iterator (); $e.hasNext () && ((
 
 return val;
 }, "java.util.Map,~S");
-c$.getMapSubset = Clazz.defineMethod (c$, "getMapSubset", 
-function (h, key, h2) {
-var val = h.get (key);
-if (val != null) {
-h2.put (key, val);
-return;
-}for (var e, $e = h.entrySet ().iterator (); $e.hasNext () && ((e = $e.next ()) || true);) {
-var k = e.getKey ();
-if (JU.PT.isLike (k, key)) h2.put (k, e.getValue ());
-}
-}, "java.util.Map,~S,java.util.Map");
 c$.clean = Clazz.defineMethod (c$, "clean", 
 function (s) {
 return JU.PT.rep (JU.PT.replaceAllCharacters (s, " \t\n\r", " "), "  ", " ").trim ();
@@ -708,7 +644,7 @@ sb.append (f.substring (pt + 1));
 return sb.toString ();
 }, "~S,~N,~N");
 c$.formatString = Clazz.defineMethod (c$, "formatString", 
-function (strFormat, key, strT, floatT, doubleT, doOne) {
+ function (strFormat, key, strT, floatT, doubleT, doOne) {
 if (strFormat == null) return null;
 if ("".equals (strFormat)) return "";
 var len = key.length;
@@ -743,12 +679,12 @@ var isExponential = false;
 if (strFormat.charAt (ich) == '.') {
 ++ich;
 if ((ch = strFormat.charAt (ich)) == '-') {
-isExponential = true;
+isExponential = (strT == null);
 ++ich;
 }if ((ch = strFormat.charAt (ich)) >= '0' && ch <= '9') {
 precision = ch.charCodeAt (0) - 48;
 ++ich;
-}if (isExponential) precision = -precision - (strT == null ? 1 : 0);
+}if (isExponential) precision = -precision;
 }var st = strFormat.substring (ich, ich + len);
 if (!st.equals (key)) {
 ich = ichPercent + 1;
@@ -757,7 +693,7 @@ continue;
 }ich += len;
 if (!Float.isNaN (floatT)) strLabel += JU.PT.formatF (floatT, width, precision, alignLeft, zeroPad);
  else if (strT != null) strLabel += JU.PT.formatS (strT, width, precision, alignLeft, zeroPad);
- else if (!Double.isNaN (doubleT)) strLabel += JU.PT.formatD (doubleT, width, precision, alignLeft, zeroPad, true);
+ else if (!Double.isNaN (doubleT)) strLabel += JU.PT.formatD (doubleT, width, precision - 1, alignLeft, zeroPad, true);
 if (doOne) break;
 } catch (ioobe) {
 if (Clazz.exceptionOf (ioobe, IndexOutOfBoundsException)) {

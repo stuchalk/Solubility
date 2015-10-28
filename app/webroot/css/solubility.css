@@ -27,3 +27,11 @@ div.chemical {
 div.floatreset {
 	clear: both;
 }
+
+p#note {
+	color:#bbb;
+	padding:5px;
+	margin:5px 0 10px;
+	font-size:10px;
+	width: 900px;
+}

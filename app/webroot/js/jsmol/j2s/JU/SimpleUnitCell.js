@@ -60,10 +60,17 @@ this.c = params[2];
 this.alpha = params[3];
 this.beta = params[4];
 this.gamma = params[5];
-this.na = Math.max (1, params.length >= 25 && !Float.isNaN (params[22]) ? Clazz.floatToInt (params[22]) : 1);
-this.nb = Math.max (1, params.length >= 25 && !Float.isNaN (params[23]) ? Clazz.floatToInt (params[23]) : 1);
-this.nc = Math.max (1, params.length >= 25 && !Float.isNaN (params[24]) ? Clazz.floatToInt (params[24]) : 1);
-if (this.a <= 0) {
+var fa = this.na = Math.max (1, params.length >= 25 && !Float.isNaN (params[22]) ? Clazz.floatToInt (params[22]) : 1);
+var fb = this.nb = Math.max (1, params.length >= 25 && !Float.isNaN (params[23]) ? Clazz.floatToInt (params[23]) : 1);
+var fc = this.nc = Math.max (1, params.length >= 25 && !Float.isNaN (params[24]) ? Clazz.floatToInt (params[24]) : 1);
+if (params.length > 25 && !Float.isNaN (params[25])) {
+var fScale = params[25];
+fa *= fScale;
+fb *= fScale;
+fc *= fScale;
+} else {
+fa = fb = fc = 1;
+}if (this.a <= 0) {
 var va = JU.V3.new3 (params[6], params[7], params[8]);
 var vb = JU.V3.new3 (params[9], params[10], params[11]);
 var vc = JU.V3.new3 (params[12], params[13], params[14]);
@@ -85,17 +92,17 @@ n[12] = vc.x;
 n[13] = vc.y;
 n[14] = vc.z;
 }params = n;
-}}this.a *= this.na;
+}}this.a *= fa;
 if (this.b <= 0) {
 this.b = this.c = 1;
 this.dimension = 1;
 } else if (this.c <= 0) {
 this.c = 1;
-this.b *= this.nb;
+this.b *= fb;
 this.dimension = 2;
 } else {
-this.b *= this.nb;
-this.c *= this.nc;
+this.b *= fb;
+this.c *= fc;
 this.dimension = 3;
 }this.setCellParams ();
 if (params.length > 21 && !Float.isNaN (params[21])) {
@@ -104,13 +111,13 @@ for (var i = 0; i < 16; i++) {
 var f;
 switch (i % 4) {
 case 0:
-f = this.na;
+f = fa;
 break;
 case 1:
-f = this.nb;
+f = fb;
 break;
 case 2:
-f = this.nc;
+f = fc;
 break;
 default:
 f = 1;
@@ -124,9 +131,9 @@ this.matrixFractionalToCartesian = JU.M4.newM4 (this.matrixCartesianToFractional
 if (params[0] == 1) this.setParamsFromMatrix ();
 } else if (params.length > 14 && !Float.isNaN (params[14])) {
 var m = this.matrixFractionalToCartesian =  new JU.M4 ();
-m.setColumn4 (0, params[6] * this.na, params[7] * this.na, params[8] * this.na, 0);
-m.setColumn4 (1, params[9] * this.nb, params[10] * this.nb, params[11] * this.nb, 0);
-m.setColumn4 (2, params[12] * this.nc, params[13] * this.nc, params[14] * this.nc, 0);
+m.setColumn4 (0, params[6] * fa, params[7] * fa, params[8] * fa, 0);
+m.setColumn4 (1, params[9] * fb, params[10] * fb, params[11] * fb, 0);
+m.setColumn4 (2, params[12] * fc, params[13] * fc, params[14] * fc, 0);
 m.setColumn4 (3, 0, 0, 0, 1);
 this.matrixCartesianToFractional = JU.M4.newM4 (this.matrixFractionalToCartesian).invert ();
 } else {
@@ -252,6 +259,33 @@ if (pt.y == 0) f /= 2;
 if (pt.z == 0) f /= 2;
 return f;
 }, "JU.P3");
+c$.getReciprocal = Clazz.defineMethod (c$, "getReciprocal", 
+function (abc) {
+var rabc =  new Array (4);
+var off = (abc.length == 4 ? 1 : 0);
+rabc[0] = (off == 1 ? JU.P3.newP (abc[0]) :  new JU.P3 ());
+for (var i = 0; i < 3; i++) {
+rabc[i + 1] =  new JU.P3 ();
+rabc[i + 1].cross (abc[((i + off) % 3) + off], abc[((i + off + 1) % 3) + off]);
+rabc[i + 1].scale (1 / abc[i + off].dot (rabc[i + 1]));
+}
+return rabc;
+}, "~A");
+c$.transformCubic = Clazz.defineMethod (c$, "transformCubic", 
+function (isPrimitive, type, uc) {
+var offset = uc.length - 3;
+var f = (type.equalsIgnoreCase ("BCC") ? (isPrimitive ?  Clazz.newFloatArray (-1, [.5, .5, -0.5, -0.5, .5, .5, .5, -0.5, .5]) :  Clazz.newFloatArray (-1, [1, 0, 1, 1, 1, 0, 0, 1, 1])) : type.equalsIgnoreCase ("FCC") ? (isPrimitive ?  Clazz.newFloatArray (-1, [.5, .5, 0, 0, .5, .5, .5, 0, .5]) :  Clazz.newFloatArray (-1, [1, -1, 1, 1, 1, -1, -1, 1, 1])) : null);
+if (f == null) return false;
+var b =  new Array (3);
+for (var i = 0, p = 0; i < 3; i++) {
+b[i] =  new JU.P3 ();
+for (var j = offset; j < 3 + offset; j++) b[i].scaleAdd2 (f[p++], uc[j], b[i]);
+
+}
+for (var i = 0; i < 3; i++) uc[i + offset] = b[i];
+
+return true;
+}, "~B,~S,~A");
 Clazz.defineStatics (c$,
 "toRadians", 0.017453292,
 "INFO_DIMENSIONS", 6,

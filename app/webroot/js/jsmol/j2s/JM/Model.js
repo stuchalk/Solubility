@@ -42,6 +42,7 @@ this.frameDelay = 0;
 this.selectedTrajectory = -1;
 this.jmolData = null;
 this.jmolFrameType = null;
+this.pdbID = null;
 Clazz.instantialize (this, arguments);
 }, JM, "Model");
 Clazz.prepareFields (c$, function () {

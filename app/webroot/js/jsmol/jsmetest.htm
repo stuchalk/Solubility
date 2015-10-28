@@ -13,7 +13,7 @@ var jmol="jmol";
 var jme = "jme";
 
 var JmolInfo = {
-	width: 300,
+	width: 350,
 	height: 300,
 	debug: false,
 	color: "black",
@@ -36,7 +36,8 @@ var JMEInfo = {
 	//,jarPath: "jme",
 	//,jarFile: "JME.jar"
   //optional parameters
-  //,"options" : "query,hydrogens"
+  // turns out the JSME has "nocanonize" as default, not "canonize"
+  ,"options" : "nocanonize"//"query,hydrogens"
   //,"jme" : startingStructure   
 }
 

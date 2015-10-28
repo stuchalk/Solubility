@@ -4,7 +4,7 @@ c$ = Clazz.declareType (J.jvxl.readers, "PeriodicVolumeFileReader", J.jvxl.reade
 Clazz.overrideMethod (c$, "readSurfaceData", 
 function (isMapData) {
 this.initializeSurfaceData ();
-this.voxelData =  Clazz.newFloatArray (this.nPointsX, this.nPointsY, this.nPointsZ, 0);
+this.newVoxelDataCube ();
 this.getPeriodicVoxels ();
 if (this.params.extendGrid != 0) {
 var n =  Clazz.newIntArray (3, 0);

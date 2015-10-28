@@ -24,9 +24,10 @@ class CitationsController extends AppController
      */
     function view($id,$format="")
 	{
-		$data=$this->Citation->find('first', ['conditions'=>['Citation.id'=>$id],'recursive'=>1]);
+        $data=$this->Citation->find('first', ['conditions'=>['Citation.id'=>$id],'recursive'=>1]);
         if($format!="") { $this->export($data,$format); }
         $this->set('data',$data);
+        $this->set('nist',Configure::read('url.base'));
 	}
 
     /**
@@ -42,21 +43,15 @@ class CitationsController extends AppController
         $output['url']=$path."citations/view/".$output['id'];unset($output['id']);
         // Add system data
         $output['systems']=[];
-        foreach($data['System'] as $s)
-        {
+        foreach($data['System'] as $s) {
             $output['systems'][]=['sysID'=>$s['sysID'],'title'=>$s['title'],'url'=>$path.'systems/view/'.$s['sysID']];
         }
         // Output data
-        if($format=="xml")
-        {
+        if($format=="xml") {
             $this->Export->xml("","citation",$output);
-        }
-        elseif($format=="json")
-        {
+        } elseif($format=="json") {
             $this->Export->json("","citation",$output);
-        }
-        elseif($format=="jsonld")
-        {
+        } elseif($format=="jsonld") {
             $context=[
                 "title" => [
                     "@id" => "http://purl.org/dc/terms/title",
@@ -119,10 +114,9 @@ class CitationsController extends AppController
 
             ];
             $this->Export->jsonld("","citation",$output,$context);
-        }
-        else
-        {
+        } else {
             return;
         }
     }
+
 }

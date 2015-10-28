@@ -26,13 +26,16 @@ if (r > 0 && c > 0) this.comSSMat.setElement (r - 1, c - 1, cr.parseFloatStr (cr
 Clazz.defineMethod (c$, "processLoopBlock", 
 function () {
 var cr = this.cr;
-if (cr.key.equals ("_cell_subsystem_code")) return this.processSubsystemLoopBlock ();
-if (!cr.key.startsWith ("_cell_wave") && !cr.key.contains ("fourier") && !cr.key.contains ("legendre") && !cr.key.contains ("_special_func")) return 0;
-if (cr.asc.iSet < 0) cr.asc.newAtomSet ();
+var key = cr.key;
+if (key.equals ("_cell_subsystem_code")) return this.processSubsystemLoopBlock ();
+if (!key.startsWith ("_cell_wave") && !key.contains ("fourier") && !key.contains ("legendre") && !key.contains ("_special_func")) {
+if (key.contains ("crenel_ortho")) cr.appendLoadNote ("WARNING: Orthogonalized non-Legendre functions not supported.\nThe following block has been ignored. Use Legendre functions instead.\n\n" + cr.parser.skipLoop (true) + "=================================\n");
+return 0;
+}if (cr.asc.iSet < 0) cr.asc.newAtomSet ();
 cr.parseLoopParametersFor ("_atom_site", J.adapter.readers.cif.MSCifRdr.modulationFields);
 var tok;
-if (cr.fieldOf[8] != -1) {
-cr.fieldOf[5] = cr.fieldOf[6] = cr.fieldOf[7] = -1;
+if (cr.key2col[8] != -1) {
+cr.key2col[5] = cr.key2col[6] = cr.key2col[7] = -1;
 }while (cr.parser.getData ()) {
 var ignore = false;
 var type_id = null;
@@ -42,7 +45,7 @@ var pt =  Clazz.newDoubleArray (-1, [NaN, NaN, NaN]);
 var c = NaN;
 var w = NaN;
 var fid = null;
-var n = cr.parser.getFieldCount ();
+var n = cr.parser.getColumnCount ();
 for (var i = 0; i < n; ++i) {
 switch (tok = this.fieldProperty (cr, i)) {
 case 1:
@@ -86,21 +89,38 @@ break;
 type_id += this.field;
 break;
 case 46:
-if (type_id == null) type_id = "J_O";
+type_id = "J_O";
 pt[0] = pt[2] = 1;
-case 30:
-if (type_id == null) type_id = "O_0";
 axis = "0";
+atomLabel = this.field;
+break;
+case 30:
+type_id = "O_0";
+axis = "0";
+atomLabel = this.field;
+break;
 case 18:
-if (type_id == null) type_id = "D_S";
-case 61:
-if (type_id == null) type_id = "D_L";
-case 65:
-if (type_id == null) type_id = "U_L";
-case 69:
-if (type_id == null) type_id = "O_L";
+type_id = "D_S";
+axis = "0";
+atomLabel = this.field;
+break;
 case 55:
-if (type_id == null) type_id = "M_T";
+type_id = "M_T";
+axis = "0";
+atomLabel = this.field;
+break;
+case 61:
+type_id = "D_L";
+atomLabel = this.field;
+break;
+case 65:
+type_id = "U_L";
+atomLabel = this.field;
+break;
+case 69:
+type_id = "O_L";
+atomLabel = this.field;
+break;
 case 11:
 case 24:
 case 48:
@@ -204,6 +224,7 @@ break;
 }
 if (!ok) continue;
 switch (type_id.charAt (0)) {
+case 'C':
 case 'D':
 case 'O':
 case 'M':
@@ -248,9 +269,9 @@ var m =  new JU.Matrix (null, dim, dim);
 var a = m.getArray ();
 var key;
 var p;
-var n = cr.parser.getFieldCount ();
+var n = cr.parser.getColumnCount ();
 for (; i < n; ++i) {
-if ((p = this.fieldProperty (cr, i)) < 0 || !(key = cr.parser.getField (p)).contains (term)) continue;
+if ((p = this.fieldProperty (cr, i)) < 0 || !(key = cr.parser.getColumnName (p)).contains (term)) continue;
 var tokens = JU.PT.split (key, "_");
 var r = cr.parseIntStr (tokens[tokens.length - 2]);
 var c = cr.parseIntStr (tokens[tokens.length - 1]);
@@ -260,7 +281,7 @@ return m;
 }, "J.adapter.readers.cif.CifReader,~S,~N,~N");
 Clazz.defineMethod (c$, "fieldProperty", 
  function (cr, i) {
-return ((this.field = cr.parser.getLoopData (i)).length > 0 && this.field.charAt (0) != '\0' ? cr.propertyOf[i] : -1);
+return ((this.field = cr.parser.getColumnData (i)).length > 0 && this.field.charAt (0) != '\0' ? cr.col2key[i] : -1);
 }, "J.adapter.readers.cif.CifReader,~N");
 Clazz.defineStatics (c$,
 "FWV_ID", 0,

@@ -100,7 +100,7 @@ return null;
 });
 Clazz.defineMethod (c$, "getNHPoint", 
 function (aminoHydrogenPoint, vNH, jmolHPoint, dsspIgnoreHydrogens) {
-if (this.monomerIndex == 0 || this.groupID == 15) return false;
+if (this.monomerIndex <= 0 || this.groupID == 15) return false;
 var nitrogenPoint = this.getNitrogenAtom ();
 var nhPoint = this.getNitrogenHydrogenPoint ();
 if (nhPoint != null && !dsspIgnoreHydrogens) {
@@ -126,6 +126,7 @@ return true;
 }, "JU.P3,JU.V3,~B,~B");
 Clazz.overrideMethod (c$, "getQuaternionFrameCenter", 
 function (qType) {
+if (this.monomerIndex < 0) return null;
 switch (qType) {
 default:
 case 'a':
@@ -148,6 +149,7 @@ return pt;
 }, "~S");
 Clazz.overrideMethod (c$, "getQuaternion", 
 function (qType) {
+if (this.monomerIndex < 0) return null;
 var ptC = this.getCarbonylCarbonAtom ();
 var ptCa = this.getLeadAtom ();
 var vA =  new JU.V3 ();

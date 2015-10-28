@@ -57,16 +57,18 @@ if (target === "none" || target === "all") {
 this.isAll = false;
 var text = this.objects.get (target);
 if (text == null) {
-var valign = 0;
-var halign = 1;
+var valign = 3;
+var halign = 4;
 if ("top" === target) {
-valign = 1;
-halign = 2;
+valign = 0;
+halign = 8;
 } else if ("middle" === target) {
-valign = 3;
-halign = 2;
-} else if ("bottom" === target) {
 valign = 2;
+halign = 8;
+} else if ("bottom" === target) {
+valign = 1;
+} else if ("error" === target) {
+valign = 0;
 }text = JM.Text.newEcho (this.vwr, this.vwr.gdata.getFont3DFS ("Serif", 20), target, 10, valign, halign, 0);
 text.adjustForWindow = true;
 this.objects.put (target, text);

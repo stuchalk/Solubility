@@ -1,6 +1,7 @@
 Clazz.declarePackage ("J.shape");
 Clazz.load (null, "J.shape.Shape", ["J.c.PAL", "JU.C", "$.Logger", "JV.JC"], function () {
 c$ = Clazz.decorateAsClass (function () {
+this.myType = null;
 this.vwr = null;
 this.ms = null;
 this.shapeID = 0;

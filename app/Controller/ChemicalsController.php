@@ -6,6 +6,7 @@
  */
 class ChemicalsController extends AppController
 {
+
     /**
      * Return all chemicals in the database
      */
@@ -23,35 +24,61 @@ class ChemicalsController extends AppController
      */
     public function view($id,$format="")
 	{
-        $type="";
+        $type="";$data=[];
+
         // Use id to find an InChI to search on
-        $inchi=get_headers("http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi",true);
-        //echo "<pre>";print_r($inchi);echo "</pre>";exit;
-        if(stristr($inchi[0],"OK")) {
+        if(stristr($id,'InChI')) {
+            $chk=['OK'];
+            $inchi=$id;
+        } else {
+            // Can we get a valid inchi from the CIR site
+            $url="http://cactus.nci.nih.gov/chemical/structure/".$id."/stdinchi";
+            $chk=get_headers($url,true);
+            if(stristr($chk[0],"OK")) {
+                $inchi = file_get_contents($url);
+            }
+        }
+
+        // Find the id/inchi in the database
+        if(stristr($chk[0],"OK")) {
             $type="viainchi";
             $data=$this->Chemical->find('first', ['conditions'=>['Chemical.inchi'=>$inchi],'recursive'=>2]);
-        } else {
+        }
+        if(empty($data)) {
             if(preg_match('/([A-Z]{14})-([AZ]{9})-[AZ]/',$id)) {
                 $type="inchikey";
                 $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
-            } elseif(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
-                $type="casrn";
-                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
-            } elseif(preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/',$id)) {
-                $type="formula";
-                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.formula'=>$id],'order'=>['name','formula'],'recursive'=>1]);
-            } elseif(is_numeric($id)) {
-                $type="id";
-                $data=$this->Chemical->find('first', ['conditions'=>['Chemical.id'=>$id],'recursive'=>2]);
-            } elseif(is_string($id)) {
-                $type="name";
-                $data=$this->Chemical->find('first', ['conditions'=>['Chemical.name'=>$id],'recursive'=>2]);
-            } else {
-                $data="No chemical found using '".$id."'";
             }
         }
+        if(empty($data)) {
+            if(preg_match('/([0-9]{2,7})-([0-9]{2})-[0-9]/',$id)) {
+                $type="casrn";
+                $data=$this->Chemical->find('all', ['conditions'=>['Chemical.casrn'=>$id],'order'=>['name','formula'],'recursive'=>1]);
+            }
+        }
+        if(empty($data)) {
+            if (preg_match('/[A-Z][a-z]?\d*|\((?:[^()]*(?:\(.*\))?[^()]*)+\)\d+/', $id)) {
+                $type = "formula";
+                $data = $this->Chemical->find('all', ['conditions' => ['Chemical.formula' => $id], 'order' => ['name', 'formula'], 'recursive' => 1]);
+            }
+        }
+        if(empty($data)) {
+            if(is_numeric($id)) {
+                $type="id";
+                $data=$this->Chemical->find('first', ['conditions'=>['Chemical.id'=>$id],'recursive'=>2]);
+            }
+        }
+        if(empty($data)) {
+            $type = "name";
+            $data = $this->Chemical->find('all', ['conditions' => ['Chemical.name' => $id], 'recursive' => 2]);
+        }
+        if(empty($data)) {
+            $type = "inname";
+            $data=$this->Chemical->find('all', ['conditions'=>['Chemical.name like'=>'%'.$id.'%'],'recursive'=>2]);
+        }
+
         // Check name
-        if(isset($data['Chemical']['inchi'])&&$data['Chemical']['inchi']=="") {
+        if(!empty($data)&&isset($data['Chemical']['inchi'])&&$data['Chemical']['inchi']=="") {
             $strpath="http://cactus.nci.nih.gov/chemical/structure/".rawurlencode($data['Chemical']['name'])."/stdinchi";
             $keypath="http://cactus.nci.nih.gov/chemical/structure/".rawurlencode($data['Chemical']['name'])."/stdinchikey";
             $test=get_headers($strpath,true);
@@ -61,10 +88,15 @@ class ChemicalsController extends AppController
                 $this->Chemical->save($data);
             }
         }
+
         // Work out how to present data in view based on # hits on chemical 'id'
-        // This is needed as formula, casrn, and inchikey can potential return multiple hits
+        // This is needed as name, formula, casrn, and inchikey can potentially return multiple hits
         if(!isset($data['Chemical'])&&count($data)>1) {
-            $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>[$type=>$id],'order'=>['first','name']]);
+            if($type=="inname") {
+                $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>['name like'=>'%'.$id.'%'],'order'=>['first','name']]);
+            } else {
+                $data=$this->Chemical->find('list', ['fields'=>['id','name','first'],'conditions'=>[$type=>$id],'order'=>['first','name']]);
+            }
             $this->set('data',$data);
             $this->set('nist',Configure::read('url.base'));
             $this->render('index');
@@ -91,21 +123,15 @@ class ChemicalsController extends AppController
         $output['url']=$path."chemicals/view/".$output['id'];unset($output['id']);
         // Add system data
         $output['systems']=[];
-		foreach($data['System'] as $s)
-		{
+		foreach($data['System'] as $s) {
             $output['systems'][]=['sysID'=>$s['sysID'],'title'=>$s['title'],'url'=>$path.'systems/view/'.$s['sysID']];
 		}
         // Output data
-		if($format=="xml")
-		{
+		if($format=="xml") {
             $this->Export->xml($output['name'],"chemical",$output);
-		}
-		elseif($format=="json")
-		{
+		} elseif($format=="json") {
             $this->Export->json($output['name'],"chemical",$output);
-		}
-		elseif($format=="jsonld")
-		{
+		} elseif($format=="jsonld") {
 			$context=[
 				"name"=>[
 					"@id"=>"http://semanticscience.org/resource/CHEMINF_000043",
@@ -147,9 +173,7 @@ class ChemicalsController extends AppController
 				]
 			];
             $this->Export->jsonld($output['name'],"chemical",$output,$context);
-		}
-		else
-		{
+		} else {
 			return;
 		}
 	}

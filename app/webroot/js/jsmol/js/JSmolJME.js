@@ -2,7 +2,9 @@
 
 // see http://peter-ertl.com/jsme/JSME_2013-10-13/api_javadoc/index.html
 
-
+// BH 15/09/2015 18:10:25 jmolAtoms no var
+// BH 6/19/2015 5:36:23 PM fix for Jmol mouse hook t.x.baseVal not implemented fully on iOS
+// BH 3/26/2015 6:13:01 PM  SMILES fix for stereochem in rings losing H atoms
 // BH 9/13/2014 2:24:29 PM SMILES fix again
 // BH 9/2/2014 6:56:42 PM  SMILES fix for quaternary carbon with stereochemistry
 // BH 3/1/2014 4:31:18 PM fix for evaluate returning atom sets as arrays
@@ -245,8 +247,9 @@
 
 	proto._updateView = function(_jme_updateView) {
 		// called from model change without chemical identifier, possibly by user action and call to Jmol.updateView(applet)
-		if (this._viewSet != null)
+		if (this._viewSet != null) {
 			this._search("$" + this._getSmiles())
+    }
 		var me = this;
 	}
 
@@ -295,8 +298,13 @@
 			// cancel only these specific events
 			return a;
 		}	
-		var x = (t.textContent ? t.x.baseVal[0].value : t.points ? t.animatedPoints[0].x : isKey || !t.x && !t.x1 ? 200 : (t.x || t.x1).baseVal.value);
-		var y = (t.textContent ? t.y.baseVal[0].value : t.points ? t.animatedPoints[0].y : isKey || !t.x && !t.x1 ? 200 : (t.y || t.y1).baseVal.value);
+    var x = 200;
+    var y = 200;
+    try {
+		x = parseInt(t.getAttribute("x"));//(t.textContent ? t.x.baseVal[0].value : t.points ? t.animatedPoints[0].x : isKey || !t.x && !t.x1 ? 200 : (t.x || t.x1).baseVal.value);
+		y = parseInt(t.getAttribute("y"));//(t.textContent ? t.y.baseVal[0].value : t.points ? t.animatedPoints[0].y : isKey || !t.x && !t.x1 ? 200 : (t.y || t.y1).baseVal.value);
+    } catch(e) {
+    }
 		// when editing is disabled, only the star key and main-panel clicking will be allowed
 		var isStar = (x >= 100 && x < 124 && y < 24); // fifth icon from the left on top row
 		var isMain = (x > 25 && y > 50 || x == 0 && y == 0 && t.width.baseVal.value > 100 && t.height.baseVal.value > 100);
@@ -408,13 +416,14 @@
 			if (jme == null && this._isJava)
 				jme = this._applet = Jmol._getElement(this, "object");
 			var isOK = true;
+      var jmeSMILES = null;
 			if (this._viewSet != null) {
 			  isOK = false;
 			} else if (jme != null) {
 				jmeSMILES = this._getSmiles();
 				// testing here to see that we have the same structure as in the JMOL applet
 				// feature change here --- evaluation of an atom set returns an array now, not an uninterpretable string
-				jmolAtoms = (jmeSMILES ? jmol._evaluate("{*}.find('SMILES', '" + jmeSMILES.replace(/\\/g,"\\\\")+ "')") : []);
+				var jmolAtoms = (jmeSMILES ? jmol._evaluate("{*}.find('SMILES', '/noncanonical/" + jmeSMILES.replace(/\\/g,"\\\\")+ "')") : []);
 				var isOK = (jmolAtoms.length > 0);
 			}
 			if (!isOK) {
@@ -497,8 +506,16 @@
 	}
 
   proto._getSmiles = function(withStereoChemistry) {
-  	var s = (arguments.length == 0 || withStereoChemistry ? jme._applet.smiles() : jme._applet.nonisomericSmiles()).replace(/\:1/g,"");
-		s = s.replace(/@H/g,"@~").replace(/H/g,"").replace(/\[\]/g,"").replace(/\(\)/g,"").replace(/@~/g,"@H");
+  	var s = (arguments.length == 0 || withStereoChemistry ? jme._applet.smiles() : jme._applet.nonisomericSmiles());
+    s = s.replace(/\:1/g,"");
+		s = s.replace(/@H/g,"@~").replace(/H/g,"")
+    s = s.replace(/\[\]/g,"")
+    // but change [C@][H] to [C@H] and [C@]1[H] to [C@@H]1 
+    s = s.replace(/\@\]\(\)/g,"@H]")
+    s = s.replace(/\@\](\d+)\(\)/g,"@@H]$1")
+    s = s.replace(/\@\@\@/g,"@")
+    s = s.replace(/\(\)/g,"");
+    s = s.replace(/@~/g,"@H");
 		if (s.indexOf("\\") == 0 || s.indexOf("/") == 0)
 		  s= "[H]" + s;
 		return s;

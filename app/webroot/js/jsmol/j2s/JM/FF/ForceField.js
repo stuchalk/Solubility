@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM.FF");
-Clazz.load (null, "JM.FF.ForceField", ["java.lang.Float", "JU.PT", "J.io.JmolBinary", "JM.Util", "JU.Logger", "JV.Viewer"], function () {
+Clazz.load (null, "JM.FF.ForceField", ["java.lang.Float", "JU.PT", "JM.Util", "JU.Logger", "JV.FileManager", "$.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.name = null;
 this.calc = null;
@@ -259,7 +259,7 @@ this.calc.appendLogData (s);
 }, "~S");
 Clazz.defineMethod (c$, "getBufferedReader", 
 function (resourceName) {
-return J.io.JmolBinary.getBufferedReaderForResource (this.minimizer.vwr, this, "JM/FF/", "data/" + resourceName);
+return JV.FileManager.getBufferedReaderForResource (this.minimizer.vwr, this, "JM/FF/", "data/" + resourceName);
 }, "~S");
 Clazz.defineStatics (c$,
 "ENERGY", (1),

@@ -94,6 +94,9 @@
 				break;
 			case "WEBGL":
 			case "HTML5":
+      	Info._isLayered = true;
+  			Info._isJSV = true;
+			  Info._platform = "JSV.awtjs2d.Platform";
 				Jmol._Canvas2D.prototype = Jmol._jsSetPrototype(new Applet(id,Info, true));
 			 	applet = new Jmol._Canvas2D(id, Info, "JSV", checkOnly);
 				break;
@@ -123,6 +126,16 @@
 				: new JSV.appletjs.JSVApplet(viewerOptions));
 	}
 
+	proto._addCoreFiles = function() {
+		Jmol._addCoreFile("jsv", this._j2sPath, this.__Info.preloadCore);
+		if (Jmol._debugCode) {
+		// no min package for that
+			Jmol._addExec([this, null, "JSV.appletjs.JSVApplet", "load JSV"]);
+			if (this._isPro)
+				Jmol._addExec([this, null, "JSV.appletjs.JSVAppletPro", "load JSV(signed)"]);
+		}
+  }
+
 	proto._create = function(id, Info){
 
 		Jmol._setObject(this, id, Info);
@@ -146,11 +159,10 @@
 		this._init();
 	};
 
-	proto._readyCallback = function(id, fullid, isReady, applet) {
+	proto._readyCallback = function(id, fullid, isReady) {
 	 if (!isReady)
 			return; // ignore -- page is closing
 		this._ready = true;
-		this._applet = applet;
 		this._readyScript && setTimeout(id + "._script(" + id + "._readyScript)",50);
 		this._showInfo(true);
 		this._showInfo(false);
@@ -584,7 +596,7 @@ Jmol._newGrayScaleImage = function(context, image, width, height, grayBuffer) {
 		c.width = width;
 		c.height = height;
 		var appId = context.canvas.applet._id;
-		var layer = document.getElementById(appId + "_imagelayer");
+		var layer = document.getElementById(appId + "_contentLayer");
 		image = new Image();
 		image.canvas = c;
 		image.appId = appId;

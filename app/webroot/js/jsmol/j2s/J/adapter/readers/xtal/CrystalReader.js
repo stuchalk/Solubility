@@ -95,8 +95,11 @@ return this.readAtoms ();
 this.discardLinesUntilContains ("GENERATED");
 return true;
 }if (!this.doProcessLines) return true;
-if (this.line.startsWith (" TOTAL ENERGY")) {
-this.readEnergy ();
+if (this.line.startsWith (" TOTAL ENERGY(")) {
+this.line = JU.PT.rep (this.line, "( ", "(");
+var tokens = this.getTokens ();
+this.energy = Double.$valueOf (Double.parseDouble (tokens[2]));
+this.setEnergy ();
 this.rd ();
 if (this.line.startsWith (" ********")) this.discardLinesUntilContains ("SYMMETRY ALLOWED");
  else if (this.line.startsWith (" TTTTTTTT")) this.discardLinesUntilContains2 ("PREDICTED ENERGY CHANGE", "HHHHHHH");
@@ -355,13 +358,6 @@ this.asc.newAtomSet ();
 }if (this.spaceGroupName != null) this.setSpaceGroupName (this.spaceGroupName);
 this.ac = 0;
 });
-Clazz.defineMethod (c$, "readEnergy", 
- function () {
-this.line = JU.PT.rep (this.line, "( ", "(");
-var tokens = this.getTokens ();
-this.energy = Double.$valueOf (Double.parseDouble (tokens[2]));
-this.setEnergy ();
-});
 Clazz.defineMethod (c$, "setEnergy", 
  function () {
 this.asc.setAtomSetEnergy ("" + this.energy, this.energy.floatValue ());
@@ -451,7 +447,7 @@ var frequencies =  Clazz.newFloatArray (tokens.length, 0);
 var frequencyCount = frequencies.length;
 for (var i = 0; i < frequencyCount; i++) {
 frequencies[i] = this.parseFloatStr (tokens[i]);
-if (JU.Logger.debugging) JU.Logger.debug ((this.vibrationNumber + i) + " frequency=" + frequencies[i]);
+if (this.debugging) JU.Logger.debug ((this.vibrationNumber + i) + " frequency=" + frequencies[i]);
 }
 var ignore =  Clazz.newBooleanArray (frequencyCount, false);
 var iAtom0 = 0;

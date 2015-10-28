@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (["JU.P3", "$.V3"], "J.jvxl.readers.SurfaceGenerator", ["java.lang.Float", "java.util.Map", "JU.AU", "$.BS", "$.Measure", "$.P4", "$.PT", "$.Rdr", "J.jvxl.data.JvxlCoder", "$.JvxlData", "$.MeshData", "$.VolumeData", "J.jvxl.readers.Parameters", "$.SurfaceReader", "JU.Logger"], function () {
+Clazz.load (["JU.P3", "$.V3"], "J.jvxl.readers.SurfaceGenerator", ["java.lang.Float", "java.util.Map", "JU.AU", "$.BS", "$.Measure", "$.P4", "$.PT", "$.Rdr", "J.jvxl.data.JvxlCoder", "$.JvxlData", "$.MeshData", "$.VolumeData", "J.jvxl.readers.Parameters", "$.SurfaceReader", "JU.Logger", "JV.FileManager"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.params = null;
 this.jvxlData = null;
@@ -118,7 +118,7 @@ return true;
 if (value == null) {
 this.params.title = null;
 return true;
-} else if (JU.PT.isAS (value)) {
+} else if (JU.AU.isAS (value)) {
 this.params.title = value;
 for (var i = 0; i < this.params.title.length; i++) if (this.params.title[i].length > 0) JU.Logger.info (this.params.title[i]);
 
@@ -297,7 +297,7 @@ return true;
 }if ("contour" === propertyName) {
 this.params.isContoured = true;
 var n;
-if (JU.PT.isAF (value)) {
+if (JU.AU.isAF (value)) {
 this.params.contoursDiscrete = value;
 this.params.nContours = this.params.contoursDiscrete.length;
 } else if (Clazz.instanceOf (value, JU.P3)) {
@@ -357,7 +357,7 @@ this.generateSurface ();
 return true;
 }if ("ellipsoid" === propertyName) {
 if (Clazz.instanceOf (value, JU.P4)) this.params.setEllipsoidP4 (value);
- else if (JU.PT.isAF (value)) this.params.setEllipsoidAF (value);
+ else if (JU.AU.isAF (value)) this.params.setEllipsoidAF (value);
  else return true;
 this.readerData = Float.$valueOf (this.params.distance);
 this.surfaceReader = this.newReader ("IsoShapeReader");
@@ -672,7 +672,7 @@ if (Clazz.instanceOf (value, String)) {
 data = value;
 value = JU.Rdr.getBR (value);
 }var br = value;
-if (fileType == null) fileType = vwr.fm.jmb.determineSurfaceFileType (br);
+if (fileType == null) fileType = JV.FileManager.determineSurfaceFileType (br);
 if (fileType != null && fileType.startsWith ("UPPSALA")) {
 var fname = this.params.fileName;
 fname = fname.substring (0, fname.indexOf ("/", 10));
@@ -690,7 +690,7 @@ if (Clazz.exceptionOf (e, Exception)) {
 throw e;
 }
 }
-fileType = vwr.fm.jmb.determineSurfaceFileType (br);
+fileType = JV.FileManager.determineSurfaceFileType (br);
 }if (fileType == null) fileType = "UNKNOWN";
 JU.Logger.info ("data file type was determined to be " + fileType);
 if (fileType.equals ("Jvxl+")) return this.newReaderBr ("JvxlReader", br);

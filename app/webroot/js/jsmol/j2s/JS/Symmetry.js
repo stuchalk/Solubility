@@ -17,10 +17,10 @@ Clazz.makeConstructor (c$,
 function () {
 });
 Clazz.overrideMethod (c$, "setPointGroup", 
-function (siLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance) {
-this.pointGroup = JS.PointGroup.getPointGroup (siLast == null ? null : (siLast).pointGroup, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance);
+function (siLast, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance, localEnvOnly) {
+this.pointGroup = JS.PointGroup.getPointGroup (siLast == null ? null : (siLast).pointGroup, atomset, bsAtoms, haveVibration, distanceTolerance, linearTolerance, localEnvOnly);
 return this;
-}, "J.api.SymmetryInterface,~A,JU.BS,~B,~N,~N");
+}, "J.api.SymmetryInterface,~A,JU.BS,~B,~N,~N,~B");
 Clazz.overrideMethod (c$, "getPointGroupName", 
 function () {
 return this.pointGroup.getName ();
@@ -34,7 +34,7 @@ return this.pointGroup.getInfo (modelIndex, asDraw, asInfo, type, index, scale);
 }, "~N,~B,~B,~S,~N,~N");
 Clazz.overrideMethod (c$, "setSpaceGroup", 
 function (doNormalize) {
-if (this.spaceGroup == null) this.spaceGroup = (JS.SpaceGroup.getNull (true)).set (doNormalize);
+if (this.spaceGroup == null) this.spaceGroup = JS.SpaceGroup.getNull (true, doNormalize, false);
 }, "~B");
 Clazz.overrideMethod (c$, "addSpaceGroupOperation", 
 function (xyz, opId) {
@@ -58,8 +58,8 @@ function (symmetry) {
 this.spaceGroup = symmetry.getSpaceGroup ();
 }, "J.api.SymmetryInterface");
 Clazz.overrideMethod (c$, "createSpaceGroup", 
-function (desiredSpaceGroupIndex, name, object) {
-this.spaceGroup = JS.SpaceGroup.createSpaceGroup (desiredSpaceGroupIndex, name, object);
+function (desiredSpaceGroupIndex, name, data) {
+this.spaceGroup = JS.SpaceGroup.createSpaceGroup (desiredSpaceGroupIndex, name, data);
 if (this.spaceGroup != null && JU.Logger.debugging) JU.Logger.debug ("using generated space group " + this.spaceGroup.dumpInfo (null));
 return this.spaceGroup != null;
 }, "~N,~S,~O");
@@ -156,15 +156,17 @@ return this.symmetryInfo == null || this.symmetryInfo.coordinatesAreFractional;
 });
 Clazz.overrideMethod (c$, "getCellRange", 
 function () {
-return this.symmetryInfo.cellRange;
+return this.symmetryInfo == null ? null : this.symmetryInfo.cellRange;
 });
 Clazz.overrideMethod (c$, "getSymmetryInfoStr", 
 function () {
-return this.symmetryInfo.infoStr;
+return this.symmetryInfo == null ? "" : this.symmetryInfo.infoStr;
 });
 Clazz.overrideMethod (c$, "getSymmetryOperations", 
 function () {
-return this.symmetryInfo == null ? this.spaceGroup.finalOperations : this.symmetryInfo.symmetryOperations;
+if (this.symmetryInfo != null) return this.symmetryInfo.symmetryOperations;
+if (this.spaceGroup == null) this.spaceGroup = JS.SpaceGroup.getNull (true, false, true);
+return this.spaceGroup.finalOperations;
 });
 Clazz.overrideMethod (c$, "isPeriodic", 
 function () {
@@ -225,10 +227,6 @@ Clazz.overrideMethod (c$, "toUnitCell",
 function (pt, offset) {
 this.unitCell.toUnitCell (pt, offset);
 }, "JU.P3,JU.P3");
-Clazz.overrideMethod (c$, "toCartesian", 
-function (fpt, ignoreOffset) {
-if (!this.$isBio) this.unitCell.toCartesian (fpt, ignoreOffset);
-}, "JU.T3,~B");
 Clazz.overrideMethod (c$, "toSupercell", 
 function (fpt) {
 return this.unitCell.toSupercell (fpt);
@@ -236,6 +234,10 @@ return this.unitCell.toSupercell (fpt);
 Clazz.defineMethod (c$, "toFractional", 
 function (pt, isAbsolute) {
 if (!this.$isBio) this.unitCell.toFractional (pt, isAbsolute);
+}, "JU.T3,~B");
+Clazz.overrideMethod (c$, "toCartesian", 
+function (fpt, ignoreOffset) {
+if (!this.$isBio) this.unitCell.toCartesian (fpt, ignoreOffset);
 }, "JU.T3,~B");
 Clazz.overrideMethod (c$, "getUnitCellParams", 
 function () {
@@ -251,7 +253,7 @@ if (parBorU == null) return null;
 if (this.unitCell == null) this.unitCell = JS.UnitCell.newA ( Clazz.newFloatArray (-1, [1, 1, 1, 90, 90, 90]), true);
 return this.unitCell.getTensor (vwr, parBorU);
 }, "JV.Viewer,~A");
-Clazz.overrideMethod (c$, "getUnitCellVertices", 
+Clazz.overrideMethod (c$, "getUnitCellVerticesNoOffset", 
 function () {
 return this.unitCell.getVertices ();
 });
@@ -438,7 +440,7 @@ return this.unitCell.getFractionalOrigin ();
 });
 Clazz.overrideMethod (c$, "setAxes", 
 function (scale, axisPoints, fixedOrigin, originPoint) {
-var vertices = this.getUnitCellVertices ();
+var vertices = this.getUnitCellVerticesNoOffset ();
 var offset = this.getCartesianOffset ();
 if (fixedOrigin == null) originPoint.add2 (offset, vertices[0]);
  else offset = fixedOrigin;
@@ -459,4 +461,8 @@ commands.append ("; set unitcell ").append (JU.Escape.eP (pt));
 loadUC = true;
 }return loadUC;
 }, "JU.SB");
+Clazz.overrideMethod (c$, "getIterator", 
+function (vwr, atom, atoms, bsAtoms, radius) {
+return (J.api.Interface.getInterface ("JS.UnitCellIterator", vwr, "script")).set (this, atom, atoms, bsAtoms, radius);
+}, "JV.Viewer,JM.Atom,~A,JU.BS,~N");
 });

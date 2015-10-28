@@ -7,17 +7,15 @@ App::uses('AppModel', 'Model');
  */
 class Chemical extends AppModel
 {
-    // Link to tables via a many-to-many relationship
+    // Link to systems via a many-to-many relationship
 	public $hasAndBelongsToMany = [
-		'System' =>
-			[
+		'System' => [
 				'className' => 'System',
 				'joinTable' => 'chemicals_systems',
 				'foreignKey' => 'chemical_id',
 				'associationForeignKey' => 'system_id',
 				'unique' => true,
-                'order' => 'title'
-				]
+                'order' => 'title']
 		];
 
     // Create virtual fields to return to views

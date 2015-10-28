@@ -33,7 +33,7 @@ function () {
 this.imageFontScaling = this.vwr.imageFontScaling;
 this.font3d = this.vwr.gdata.getFont3DScaled ((this.shape).font3d, this.imageFontScaling);
 var mad = this.vwr.getObjectMad (5);
-if (mad == 0 || this.vwr.isJmolDataFrame () || this.tm.isNavigating () && this.vwr.getBoolean (603979888)) return false;
+if (mad == 0 || this.vwr.isJmolDataFrame () || this.tm.isNavigating () && this.vwr.getBoolean (603979890)) return false;
 this.colix = this.vwr.getObjectColix (5);
 var needTranslucent = JU.C.renderPass2 (this.colix);
 if (!this.isExport && needTranslucent != this.vwr.gdata.isPass2) return needTranslucent;
@@ -47,7 +47,7 @@ this.unitcell = this.vwr.getCurrentUnitCell ();
 if (this.unitcell == null) return;
 this.isPolymer = this.unitcell.isPolymer ();
 this.isSlab = this.unitcell.isSlab ();
-var vertices = this.unitcell.getUnitCellVertices ();
+var vertices = this.unitcell.getUnitCellVerticesNoOffset ();
 this.offset.setT (this.unitcell.getCartesianOffset ());
 this.offsetT.setT (this.unitcell.getFractionalOrigin ());
 this.unitcell.toCartesian (this.offsetT, true);

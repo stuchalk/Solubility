@@ -42,23 +42,17 @@ class AuthorsController extends AppController
         $output['url']=$path."authors/view/".$output['id'];unset($output['id']);
         // Add citations
         $output['citations']=[];
-        foreach($data['Citation'] as $c)
-        {
+        foreach($data['Citation'] as $c) {
             unset($c['AuthorsCitation']);unset($c['first']);
             $c['url']=$path."citations/view/".$c['id'];unset($c['id']);
             $output['citations'][]=$c;
         }
         // Output data
-        if($format=="xml")
-        {
+        if($format=="xml") {
             $this->Export->xml($output['lastname'],"author",$output);
-        }
-        elseif($format=="json")
-        {
+        } elseif($format=="json") {
             $this->Export->json($output['lastname'],"author",$output);
-        }
-        elseif($format=="jsonld")
-        {
+        } elseif($format=="jsonld") {
             $context=[
                 "firstname"=>[
                     "@id"=>"http://xmlns.com/foaf/0.1/givenName",
@@ -129,8 +123,7 @@ class AuthorsController extends AppController
             ];
             $this->Export->jsonld($output['lastname'],"system",$output,$context);
         }
-        else
-        {
+        else {
             return;
         }
     }

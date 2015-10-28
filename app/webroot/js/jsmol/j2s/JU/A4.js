@@ -64,6 +64,7 @@ var sin = 0.5 * Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
 if (sin == 0 && cos == 1) {
 this.x = this.y = 0;
 this.z = 1;
+this.angle = 0;
 } else {
 this.angle = Math.atan2 (sin, cos);
 }}, "~N,~N,~N,~N,~N,~N,~N,~N,~N");

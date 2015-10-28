@@ -84,14 +84,14 @@ if (this.g3d.setC (this.colix)) {
 this.tm.transformPt3f (pointStart, this.screenA);
 this.tm.transformPt3f ((renderArrowHead ? pointBeforeEnd : pointEnd), this.screenB);
 var zMid = Clazz.doubleToInt (Math.floor ((this.screenA.z + this.screenB.z) / 2));
-var diameter = Clazz.floatToInt (this.vwr.tm.scaleToScreen (zMid, this.mad));
+var diameter = (Clazz.floatToInt (this.vwr.tm.scaleToScreen (zMid, this.mad)));
 if (!renderArrowHead || pointStart !== pointBeforeEnd) this.g3d.fillCylinderBits (2, diameter, this.screenA, this.screenB);
 if (renderArrowHead) {
 this.screenA.sub2 (pointEnd, pointBeforeEnd);
 this.tm.transformPt3f (pointEnd, this.screenC);
 var coneDiameter = (this.mad << 1) - (this.mad >> 1);
 coneDiameter = Clazz.floatToInt (this.vwr.tm.scaleToScreen (Clazz.doubleToInt (Math.floor (this.screenB.z)), coneDiameter));
-this.g3d.fillConeSceen3f (2, coneDiameter, this.screenB, this.screenC);
+this.g3d.fillConeScreen3f (2, coneDiameter, this.screenB, this.screenC, false);
 } else {
 }if (this.startIndexPending == this.endIndexPending) return;
 var t = this.screenB;

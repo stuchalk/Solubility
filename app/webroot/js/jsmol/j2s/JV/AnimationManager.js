@@ -58,7 +58,7 @@ stopped = true;
 }this.animationPaused = isPaused;
 if (stopped && !this.vwr.tm.spinOn) this.vwr.refresh (3, "Viewer:setAnimationOff");
 this.animation (false);
-this.vwr.setStatusFrameChanged (false, true);
+this.vwr.setStatusFrameChanged (false, false);
 }, "~B");
 Clazz.defineMethod (c$, "setAnimationNext", 
 function () {
@@ -90,6 +90,7 @@ Clazz.defineMethod (c$, "getModelSpecial",
 function (i) {
 switch (i) {
 case -1:
+if (this.animationFrames != null) return "1";
 i = this.firstFrameIndex;
 break;
 case 0:
@@ -97,6 +98,7 @@ if (this.morphCount > 0) return "-" + (1 + this.currentMorphModel);
 i = this.cmi;
 break;
 case 1:
+if (this.animationFrames != null) return "" + this.animationFrames.length;
 i = this.lastFrameIndex;
 break;
 }
@@ -273,6 +275,7 @@ this.animationFrames = null;
 }this.vwr.setBooleanProperty ("_ismovie", this.isMovie);
 this.bsDisplay = null;
 this.currentMorphModel = this.morphCount = 0;
+this.vwr.setFrameVariables ();
 }, "java.util.Map");
 Clazz.defineMethod (c$, "modelIndexForFrame", 
 function (i) {
@@ -306,7 +309,7 @@ this.vwr.tm.setFrameOffset (this.cmi);
 if (this.cmi == -1 && clearBackgroundModel) this.setBackgroundModelIndex (-1);
 this.vwr.setTainted (true);
 this.setFrameRangeVisible ();
-this.vwr.setStatusFrameChanged (false, true);
+this.vwr.setStatusFrameChanged (false, false);
 if (this.vwr.ms != null && !this.vwr.g.selectAllModels) this.vwr.slm.setSelectionSubset (this.vwr.getModelUndeletedAtomsBitSet (this.cmi));
 }, "~B");
 Clazz.defineMethod (c$, "setFrameRangeVisible", 

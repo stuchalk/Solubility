@@ -2,6 +2,7 @@
 
 /**
  * Class SystemtypesController
+ * Methods to access system types
  */
 class SystemtypesController extends AppController
 {
@@ -24,8 +25,8 @@ class SystemtypesController extends AppController
 	{
 		$data=$this->Systemtype->find('first',['conditions'=>['Systemtype.id'=>$id],'recursive'=>2]);
         $this->set('base',Configure::read('host.base'));
+        if($this->request->is('requested')) { return $data; }
         $this->set('data',$data);
-		if($this->request->is('requested')) { return $data; }
 	}
 
     /** Get the volume data */
@@ -51,11 +52,12 @@ class SystemtypesController extends AppController
             list($systype,$title)=explode("\">",$systypetitle);
             $data[$systype]=$title;
             // Save to database
-            //$this->Systemtype->create();
-            //$this->Systemtype->save(['Systemtype'=>['sysID'=>$systype,'title'=>$title]]);
-            //$this->Systemtype->clear();
+            $this->Systemtype->create();
+            $this->Systemtype->save(['Systemtype'=>['sysID'=>$systype,'title'=>$title]]);
+            $this->Systemtype->clear();
         }
         $this->set('base',Configure::read('host.base'));
         $this->set('data',$data);
     }
+
 }

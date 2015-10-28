@@ -12,6 +12,15 @@ function toggle(e)
 	})
 }
 
+function multitoggle(e,c)
+{
+    $(document).ready(function()
+    {
+        $("."+c).slideUp();
+        $("#"+e).slideToggle();
+    })
+}
+
 function load(e,url)
 {
 	$(document).ready(function()

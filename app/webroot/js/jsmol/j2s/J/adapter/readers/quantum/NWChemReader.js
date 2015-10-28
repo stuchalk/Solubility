@@ -92,8 +92,8 @@ Clazz.defineMethod (c$, "setEnergies",
  function (key, value, nAtomSets) {
 this.energyKey = key;
 this.energyValue = value;
-this.asc.setAtomSetPropertyForSets (this.energyKey, this.energyValue, this.equivalentAtomSets);
-this.asc.setAtomSetNames (this.energyKey + " = " + this.energyValue, this.equivalentAtomSets, null);
+this.setProps (this.energyKey, this.energyValue, this.equivalentAtomSets);
+this.setNames (this.energyKey + " = " + this.energyValue, null, this.equivalentAtomSets);
 this.asc.setAtomSetEnergy (value, this.parseFloatStr (value));
 this.haveEnergy = true;
 }, "~S,~S,~N");
@@ -108,7 +108,7 @@ this.haveEnergy = true;
 Clazz.defineMethod (c$, "readSymmetry", 
  function () {
 var tokens = JU.PT.getTokens (this.readLines (3));
-this.asc.setAtomSetPropertyForSets ("Symmetry group name", tokens[tokens.length - 1], this.equivalentAtomSets);
+this.setProps ("Symmetry group name", tokens[tokens.length - 1], this.equivalentAtomSets);
 });
 Clazz.defineMethod (c$, "readTotal", 
  function () {
@@ -132,9 +132,19 @@ if (!this.haveEnergy) {
 this.setEnergies ("E", tokens[2], this.equivalentAtomSets);
 } else {
 this.setEnergies (this.energyKey, this.energyValue, this.equivalentAtomSets);
-}this.asc.setAtomSetPropertyForSets ("Step", tokens[1], this.equivalentAtomSets);
+}this.setProps ("Step", tokens[1], this.equivalentAtomSets);
 this.haveAt = true;
 });
+Clazz.defineMethod (c$, "setProps", 
+ function (key, value, n) {
+for (var i = this.asc.iSet; --n >= 0 && i >= 0; --i) this.asc.setAtomSetModelPropertyForSet (key, value, i);
+
+}, "~S,~S,~N");
+Clazz.defineMethod (c$, "setNames", 
+ function (atomSetName, namedSets, n) {
+for (var i = this.asc.iSet; --n >= 0 && i >= 0; --i) if (namedSets == null || !namedSets.get (i)) this.asc.setModelInfoForSet ("name", atomSetName, i);
+
+}, "~S,JU.BS,~N");
 Clazz.defineMethod (c$, "readAtoms", 
  function () {
 var scale = (this.line.indexOf ("angstroms") < 0 ? 0.5291772 : 1);

@@ -1,5 +1,4 @@
 <?php
-//pr($data);exit;
 $citation=$data['Citation'];
 if(isset($data['System']))		{ $systems=$data['System']; }
 if(isset($data['Author']))		{ $authors=$data['Author']; }
@@ -7,12 +6,10 @@ if(isset($data['Author']))		{ $authors=$data['Author']; }
 <h2><?php echo ($citation['title']!="") ? $citation['title'] : "No Title"; ?></h2>
 <?php
 // Citation
-if(isset($citation))
-{
+if(isset($citation)) {
 	echo "<div id='citation' style='margin-bottom: 10px;'>\n";
 	$bib="";
-	if(isset($authors))
-	{
+	if(isset($authors)) {
 		foreach($authors as $au) { $bib.=$au['lastname'].", ".$au['firstname']."; "; }
 		$bib.=$citation['journal']." ".$citation['year'].", ".$citation['volume'];
 		($citation['issue']!="") ? $bib.="(".$citation['issue']."), " : $bib.=", ";
@@ -24,17 +21,17 @@ if(isset($citation))
 	}
 	echo "</div>";
 }
+
 // Systems
-if(isset($systems))
-{
+if(isset($systems)) {
 	echo "<h3>Solubility Data</h3>\n";
 	echo '<ul>';
-	foreach($systems as $system)
-	{
+	foreach($systems as $system) {
 		echo "<li>".$this->Html->link($system['title'],'/systems/view/'.$system['sysID'])."</li>";
 	}
 	echo "</ul>";
 }
 ?>
 <p>&nbsp;<br />
-<?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$base.'citation.aspx',['target'=>'_blank']);?></p>
+<?php echo "Information obtained from ".$this->Html->link('The NIST Solubility Database',$nist.'citation.aspx',['target'=>'_blank']);?>
+</p>

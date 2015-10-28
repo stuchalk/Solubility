@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JM");
-Clazz.load (null, "JM.Object2d", ["java.lang.Float", "JU.C", "JV.JC"], function () {
+Clazz.load (null, "JM.Object2d", ["java.lang.Float", "JU.C"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.isLabelOrHover = false;
 this.xyz = null;
@@ -20,8 +20,6 @@ this.movableZ = 0;
 this.movableXPercent = 2147483647;
 this.movableYPercent = 2147483647;
 this.movableZPercent = 2147483647;
-this.offsetX = 0;
-this.offsetY = 0;
 this.z = 1;
 this.zSlab = -2147483648;
 this.pymolOffset = null;
@@ -49,7 +47,7 @@ function (xyz, doAdjust) {
 this.xyz = xyz;
 if (xyz == null) this.zSlab = -2147483648;
 if (doAdjust) {
-this.valign = (xyz == null ? 0 : 4);
+this.valign = (xyz == null ? 3 : 4);
 this.adjustForWindow = (xyz == null);
 }}, "JU.P3,~B");
 Clazz.defineMethod (c$, "setTranslucent", 
@@ -61,31 +59,31 @@ this.colix = JU.C.getColixTranslucent3 (this.colix, !Float.isNaN (level), level)
 }}, "~N,~B");
 Clazz.defineMethod (c$, "setMovableX", 
  function (x) {
-this.valign = (this.valign == 4 ? 4 : 0);
+this.valign = (this.valign == 4 ? 4 : 3);
 this.movableX = x;
 this.movableXPercent = 2147483647;
 }, "~N");
 Clazz.defineMethod (c$, "setMovableY", 
  function (y) {
-this.valign = (this.valign == 4 ? 4 : 0);
+this.valign = (this.valign == 4 ? 4 : 3);
 this.movableY = y;
 this.movableYPercent = 2147483647;
 }, "~N");
 Clazz.defineMethod (c$, "setMovableXPercent", 
 function (x) {
-this.valign = (this.valign == 4 ? 4 : 0);
+this.valign = (this.valign == 4 ? 4 : 3);
 this.movableX = 2147483647;
 this.movableXPercent = x;
 }, "~N");
 Clazz.defineMethod (c$, "setMovableYPercent", 
 function (y) {
-this.valign = (this.valign == 4 ? 4 : 0);
+this.valign = (this.valign == 4 ? 4 : 3);
 this.movableY = 2147483647;
 this.movableYPercent = y;
 }, "~N");
 Clazz.defineMethod (c$, "setMovableZPercent", 
 function (z) {
-if (this.valign != 4) this.valign = 0;
+if (this.valign != 4) this.valign = 3;
 this.movableZ = 2147483647;
 this.movableZPercent = z;
 }, "~N");
@@ -104,18 +102,11 @@ Clazz.defineMethod (c$, "setScript",
 function (script) {
 this.script = (script == null || script.length == 0 ? null : script);
 }, "~S");
-Clazz.defineMethod (c$, "setOffset", 
-function (offset) {
-this.offsetX = JV.JC.getXOffset (offset);
-this.offsetY = JV.JC.getYOffset (offset);
-this.pymolOffset = null;
-this.valign = 0;
-}, "~N");
 Clazz.defineMethod (c$, "setAlignmentLCR", 
 function (align) {
-if ("left".equals (align)) return this.setAlignment (1);
-if ("center".equals (align)) return this.setAlignment (2);
-if ("right".equals (align)) return this.setAlignment (3);
+if ("left".equals (align)) return this.setAlignment (4);
+if ("center".equals (align)) return this.setAlignment (8);
+if ("right".equals (align)) return this.setAlignment (12);
 return false;
 }, "~S");
 Clazz.defineMethod (c$, "setAlignment", 

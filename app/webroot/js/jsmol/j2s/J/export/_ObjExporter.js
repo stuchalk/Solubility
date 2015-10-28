@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.export");
-Clazz.load (["J.export.__CartesianExporter", "java.util.HashSet", "JU.P3"], "J.export._ObjExporter", ["java.lang.Short", "java.util.Hashtable", "JU.AU", "$.BS", "$.CU", "$.Lst", "$.M4", "$.PT", "$.Quat", "$.SB", "$.V3", "J.export.MeshData", "JM.Atom", "JU.C", "$.Escape", "$.Logger", "$.MeshSurface", "JV.Viewer"], function () {
+Clazz.load (["J.export.__CartesianExporter", "java.util.HashSet", "JU.P3"], "J.export._ObjExporter", ["java.lang.Short", "java.util.Hashtable", "JU.AU", "$.BS", "$.CU", "$.Lst", "$.M4", "$.PT", "$.Quat", "$.SB", "$.V3", "J.export.MeshData", "JM.Atom", "JU.Escape", "$.Logger", "$.MeshSurface", "JV.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.surfacesOnly = false;
 this.normalizeUV = true;
@@ -118,21 +118,13 @@ this.debugPrint ("  radius=" + radius);
 this.debugPrint ("  Not done owing to surfacesOnly");
 return;
 }this.outputEllipsoid1 (center, radius, radius, radius, null, colix);
-}, "JU.P3,~N,~N,~B");
+}, "JU.T3,~N,~N,~B");
 Clazz.overrideMethod (c$, "outputTextPixel", 
 function (pt, argb) {
-this.debugPrint ("outputTextPixel");
-if (this.surfacesOnly) {
-this.debugPrint ("  Not done owing to surfacesOnly");
-return;
-}var colix = JU.C.getColix (argb);
-this.outputSphere (pt, this.pixelSize, colix, true);
 }, "JU.P3,~N");
 Clazz.overrideMethod (c$, "outputTriangle", 
 function (pt1, pt2, pt3, colix) {
-this.debugPrint ("outputTriangle");
 if (this.surfacesOnly) {
-this.debugPrint ("  Not done owing to surfacesOnly");
 return;
 }this.outputTriangle1 (pt1, pt2, pt3, colix);
 }, "JU.T3,JU.T3,JU.T3,~N");
@@ -320,7 +312,7 @@ name = "Sphere" + this.sphereNum++;
 name = "Ellipsoid" + this.ellipsoidNum++;
 }this.setSphereMatrix (center, rx, ry, rz, a, this.sphereMatrix);
 this.addMesh (name, data, this.sphereMatrix, this.sphereMatrix, colix, null, null);
-}, "JU.P3,~N,~N,~N,JU.A4,~N");
+}, "JU.T3,~N,~N,~N,JU.A4,~N");
 Clazz.defineMethod (c$, "outputCylinder1", 
  function (ptCenter, pt1, pt2, colix, endcaps, radius, ptX, ptY) {
 var data = J["export"].MeshData.getCylinderData (false);

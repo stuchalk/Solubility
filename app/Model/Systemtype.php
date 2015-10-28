@@ -7,7 +7,7 @@ App::uses('AppModel', 'Model');
  */
 class Systemtype extends AppModel
 {
-    // Link to tables via a one-to-many relationship
+    // Link to systems via a one-to-many relationship
     public $hasMany = 'System';
 
     // Create virtual fields to return to views

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JV.binding");
-Clazz.load (["java.util.Hashtable"], "JV.binding.Binding", ["java.lang.Boolean", "java.util.Arrays", "JU.Lst", "$.PT", "$.SB", "J.api.Interface", "JU.Escape", "$.Logger"], function () {
+Clazz.load (["java.util.Hashtable"], "JV.binding.Binding", ["java.lang.Boolean", "java.util.Arrays", "JU.AU", "$.Lst", "$.PT", "$.SB", "J.api.Interface", "JU.Escape", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.name = null;
 this.bindings = null;
@@ -189,7 +189,8 @@ var qlow = (qualifiers == null || qualifiers.equalsIgnoreCase ("all") ? null : q
 var names =  new Array (actionInfo.length);
 var user =  new JU.Lst ();
 for (var obj, $obj = this.bindings.values ().iterator (); $obj.hasNext () && ((obj = $obj.next ()) || true);) {
-if (JU.PT.isAS (obj)) {
+if (Clazz.instanceOf (obj, Boolean)) {
+} else if (JU.AU.isAS (obj)) {
 var action = (obj)[0];
 var script = (obj)[1];
 if (qlow == null || qlow.indexOf ("user") >= 0 || action.indexOf (qlow) >= 0 || script.indexOf (qlow) >= 0) user.addLast (obj);

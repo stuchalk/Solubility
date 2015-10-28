@@ -7,16 +7,14 @@ App::uses('AppModel', 'Model');
  */
 class Author extends AppModel
 {
-    // Link to tables via a many-to-many relationship
+    // Link to citations via a many-to-many relationship
     public $hasAndBelongsToMany = [
-		'Citation' =>
-			[
+		'Citation' => [
 				'className' => 'Citation',
 				'joinTable' => 'authors_citations',
 				'foreignKey' => 'author_id',
 				'associationForeignKey' => 'citation_id',
-				'unique' => true
-				]
+				'unique' => true]
 		];
 
     // Create virtual fields to return to views
@@ -24,4 +22,5 @@ class Author extends AppModel
         'first'=>'UPPER(SUBSTR(Author.lastname,1,1))',
         'name'=>'CONCAT(Author.firstname," ",Author.lastname)'
     ];
+
 }

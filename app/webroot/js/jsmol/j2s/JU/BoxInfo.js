@@ -69,13 +69,7 @@ var vAB =  new JU.V3 ();
 var va =  new JU.P3 ();
 var vb =  new JU.P3 ();
 var vc =  new JU.P3 ();
-var vertices =  new Array (8);
-for (var i = 0; i < 8; i++) {
-vertices[i] = JU.P3.newP (points[0]);
-if ((i & 1) == 1) vertices[i].add (points[1]);
-if ((i & 2) == 2) vertices[i].add (points[2]);
-if ((i & 4) == 4) vertices[i].add (points[3]);
-}
+var vertices = JU.BoxInfo.getVerticesFromCriticalPoints (points);
 for (var i = 0; i < 6; i++) {
 va.setT (vertices[JU.BoxInfo.facePoints[i].x]);
 vb.setT (vertices[JU.BoxInfo.facePoints[i].y]);
@@ -84,7 +78,18 @@ faces[i] = JU.Measure.getPlaneThroughPoints (va, vb, vc, vNorm, vAB,  new JU.P4 
 }
 return faces;
 }, "~A");
-c$.getCriticalPoints = Clazz.defineMethod (c$, "getCriticalPoints", 
+c$.getVerticesFromCriticalPoints = Clazz.defineMethod (c$, "getVerticesFromCriticalPoints", 
+function (points) {
+var vertices =  new Array (8);
+for (var i = 0; i < 8; i++) {
+vertices[i] = JU.P3.newP (points[0]);
+if ((i & 1) == 1) vertices[i].add (points[1]);
+if ((i & 2) == 2) vertices[i].add (points[2]);
+if ((i & 4) == 4) vertices[i].add (points[3]);
+}
+return vertices;
+}, "~A");
+c$.getUnitCellPoints = Clazz.defineMethod (c$, "getUnitCellPoints", 
 function (bbVertices, offset) {
 var center = JU.P3.newP (bbVertices[0]);
 var a = JU.P3.newP (bbVertices[1]);
@@ -116,6 +121,14 @@ function () {
 if (!this.isScaleSet) this.setBbcage (1);
 return this.bbVertices;
 });
+Clazz.defineMethod (c$, "setBoundBoxFromCriticalPoints", 
+function (points) {
+var origin = JU.P3.newP (points[0]);
+var pt111 =  new JU.P3 ();
+for (var i = 0; i < 4; i++) pt111.add (points[i]);
+
+this.setBoundBox (origin, pt111, true, 1);
+}, "~A");
 Clazz.defineMethod (c$, "setBoundBox", 
 function (pt1, pt2, byCorner, scale) {
 if (pt1 != null) {
@@ -129,7 +142,7 @@ if (pt2.x == 0 || pt2.y == 0 && pt2.z == 0) return;
 this.bbCorner0.set (pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
 this.bbCorner1.set (pt1.x + pt2.x, pt1.y + pt2.y, pt1.z + pt2.z);
 }}this.setBbcage (scale);
-}, "JU.P3,JU.P3,~B,~N");
+}, "JU.T3,JU.T3,~B,~N");
 Clazz.defineMethod (c$, "reset", 
 function () {
 this.isScaleSet = false;
@@ -191,6 +204,10 @@ function (pt) {
 if (!this.isScaleSet) this.setBbcage (1);
 return (pt.x >= this.bbCorner0.x && pt.x <= this.bbCorner1.x && pt.y >= this.bbCorner0.y && pt.y <= this.bbCorner1.y && pt.z >= this.bbCorner0.z && pt.z <= this.bbCorner1.z);
 }, "JU.P3");
+Clazz.defineMethod (c$, "getMaxDim", 
+function () {
+return this.bbVector.length () * 2;
+});
 Clazz.defineStatics (c$,
 "bbcageTickEdges",  Clazz.newCharArray (-1, ['z', '\0', '\0', 'y', 'x', '\0', '\0', '\0', '\0', '\0', '\0', '\0']),
 "uccageTickEdges",  Clazz.newCharArray (-1, ['z', 'y', 'x', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0']),

@@ -164,11 +164,15 @@ this.$isBase64 = false;
 return this.closeChannel ();
 }return (this.sb == null ? null : this.sb.toString ());
 }this.closed = true;
+var jmol = null;
+var _function = null;
 {
-var data = (this.sb == null ? this.toByteArray() :
-this.sb.toString()); if (typeof this.fileName == "function") {
-this.fileName(data); } else { Jmol._doAjax(this.fileName,
-null, data); }
+jmol = Jmol; _function = (typeof this.fileName == "function" ?
+this.fileName : null);
+}if (jmol != null) {
+var data = (this.sb == null ? this.toByteArray () : this.sb.toString ());
+if (_function == null) jmol._doAjax (this.fileName, null, data);
+ else jmol._apply (this.fileName, data);
 }return null;
 });
 Clazz.defineMethod (c$, "isBase64", 

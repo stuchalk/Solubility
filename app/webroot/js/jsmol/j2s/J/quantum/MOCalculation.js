@@ -29,6 +29,7 @@ this.sum = -1;
 this.c = 1;
 this.nGaussians = 0;
 this.doShowShellType = false;
+this.warned = null;
 this.coeffs = null;
 this.map = null;
 this.integration = 0;
@@ -37,7 +38,6 @@ Clazz.instantialize (this, arguments);
 }, J.quantum, "MOCalculation", J.quantum.QuantumCalculation, J.api.MOCalculationInterface);
 Clazz.prepareFields (c$, function () {
 this.dfCoefMaps =  Clazz.newArray (-1, [ Clazz.newIntArray (1, 0),  Clazz.newIntArray (3, 0),  Clazz.newIntArray (4, 0),  Clazz.newIntArray (5, 0),  Clazz.newIntArray (6, 0),  Clazz.newIntArray (7, 0),  Clazz.newIntArray (10, 0)]);
-this.coeffs =  Clazz.newDoubleArray (10, 0);
 });
 Clazz.makeConstructor (c$, 
 function () {
@@ -51,6 +51,7 @@ this.firstAtomOffset = firstAtomOffset;
 this.shells = shells;
 this.gaussians = gaussians;
 if (dfCoefMaps != null) this.dfCoefMaps = dfCoefMaps;
+this.coeffs =  Clazz.newDoubleArray (this.dfCoefMaps[this.dfCoefMaps.length - 1].length, 0);
 this.slaters = slaters;
 this.moCoefficients = moCoefficients;
 this.linearCombination = linearCombination;
@@ -187,8 +188,12 @@ case 6:
 this.addData10F ();
 break;
 default:
-JU.Logger.warn (" Unsupported basis type for atomno=" + (this.atomIndex + 1) + ": " + J.quantum.QS.getQuantumShellTag (basisType));
-break;
+if (this.warned == null) this.warned = "";
+var key = "=" + (this.atomIndex + 1) + ": " + J.quantum.QS.getQuantumShellTag (basisType);
+if (this.warned.indexOf (key) < 0) {
+this.warned += key;
+JU.Logger.warn (" Unsupported basis type for atomno" + key);
+}break;
 }
 }, "~N");
 Clazz.defineMethod (c$, "addValuesSquared", 
@@ -882,8 +887,9 @@ JU.Logger.debug ("\t\t\tGaussian " + (ig + 1) + " alpha=" + alpha + " c=" + c1);
 }
 var so = J.quantum.MOCalculation.getShellOrder (shell);
 for (var i = 0; i < this.map.length; i++) {
+var n = this.map[i] + this.moCoeff - this.map.length + i + 1;
 var c = this.coeffs[i];
-JU.Logger.debug ("MO coeff " + (so == null ? "?" : so[i]) + " " + (this.map[i] + this.moCoeff - this.map.length + i + 1) + "\t" + c + "\t" + this.thisAtom.atom);
+JU.Logger.debug ("MO coeff " + (so == null ? "?" : so[i]) + " " + n + "\t" + c + "\t" + this.thisAtom.atom);
 }
 }, "~N");
 c$.getShellOrder = Clazz.defineMethod (c$, "getShellOrder", 

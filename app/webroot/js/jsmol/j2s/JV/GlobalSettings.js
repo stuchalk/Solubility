@@ -52,6 +52,7 @@ this.zeroBasedXyzRasmol = false;
 this.legacyAutoBonding = false;
 this.legacyHAddition = false;
 this.legacyJavaFloat = false;
+this.modulateOccupancy = true;
 this.allowRotateSelected = false;
 this.allowMoveAtoms = false;
 this.solventOn = false;
@@ -100,6 +101,7 @@ this.showMultipleBonds = true;
 this.ssbondsBackbone = false;
 this.multipleBondSpacing = -1;
 this.multipleBondRadiusFactor = 0;
+this.multipleBondBananas = false;
 this.cartoonBaseEdges = false;
 this.cartoonRockets = false;
 this.backboneSteps = false;
@@ -275,11 +277,12 @@ this.nihResolverFormat = this.databases.get ("nci");
 this.pubChemFormat = this.databases.get ("pubchem");
 for (var item, $item = 0, $$item = J.c.CBK.values (); $item < $$item.length && ((item = $$item[$item]) || true); $item++) this.resetValue (item.name () + "Callback", g);
 
-this.setI ("historyLevel", 0);
 this.setF ("cameraDepth", 3.0);
+this.setI ("contextDepthMax", 100);
 this.setI ("depth", 0);
 this.setF ("gestureSwipeFactor", 1.0);
 this.setB ("hideNotSelected", false);
+this.setI ("historyLevel", 0);
 this.setO ("hoverLabel", "");
 this.setB ("isKiosk", vwr.isKiosk ());
 this.setO ("logFile", vwr.getLogFileName ());
@@ -315,7 +318,6 @@ this.setI ("spinZ", 0);
 this.setI ("spinFps", 30);
 this.setF ("visualRange", 5.0);
 this.setI ("stereoDegrees", -5);
-this.setI ("stateversion", 0);
 this.setB ("syncScript", vwr.sm.syncingScripts);
 this.setB ("syncMouse", vwr.sm.syncingMouse);
 this.setB ("syncStereo", vwr.sm.stereoSync);
@@ -460,6 +462,7 @@ this.setB ("modelKitMode", this.modelKitMode);
 this.setF ("modulationScale", this.modulationScale);
 this.setB ("monitorEnergy", this.monitorEnergy);
 this.setF ("multipleBondRadiusFactor", this.multipleBondRadiusFactor);
+this.setB ("multipleBondBananas", this.multipleBondBananas);
 this.setF ("multipleBondSpacing", this.multipleBondSpacing);
 this.setB ("multiProcessor", this.multiProcessor && (JV.Viewer.nProcessors > 1));
 this.setB ("navigationMode", this.navigationMode);
@@ -653,7 +656,7 @@ function (name, nullAsString) {
 var v = this.getParam (name, false);
 return (v == null && nullAsString ? "" : v);
 }, "~S,~B");
-Clazz.defineMethod (c$, "getOrSetNewVariable", 
+Clazz.defineMethod (c$, "getAndSetNewVariable", 
 function (name, doSet) {
 if (name == null || name.length == 0) name = "x";
 var v = this.getParam (name, true);
@@ -696,16 +699,15 @@ if (format == null) return null;
 if (id.indexOf ("/") < 0) {
 if (database.equals ("pubchem")) id = "name/" + id;
  else if (database.equals ("nci")) id += "/file?format=sdf&get3d=True";
-}while (format.indexOf ("%c") >= 0) {
-try {
-for (var i = 1; i < 10; i++) {
+}try {
+while (format.indexOf ("%c") >= 0) for (var i = 1; i < 10; i++) {
 format = JU.PT.rep (format, "%c" + i, id.substring (i - 1, i));
 }
+
 } catch (e) {
 if (Clazz.exceptionOf (e, Exception)) {
 } else {
 throw e;
-}
 }
 }
 return (format.indexOf ("%FILE") < 0 ? format + id : JU.PT.formatStringS (format, "FILE", id));
@@ -766,6 +768,7 @@ this.app (str, "set legacyJavaFloat " + this.legacyJavaFloat);
 this.app (str, "set minBondDistance " + this.minBondDistance);
 this.app (str, "set minimizationCriterion  " + this.minimizationCriterion);
 this.app (str, "set minimizationSteps  " + this.minimizationSteps);
+this.app (str, "set multipleBondBananas false");
 this.app (str, "set pdbAddHydrogens " + (htParams != null && htParams.get ("pdbNoHydrogens") !== Boolean.TRUE ? this.pdbAddHydrogens : false));
 this.app (str, "set pdbGetHeader " + this.pdbGetHeader);
 this.app (str, "set pdbSequential " + this.pdbSequential);
@@ -780,5 +783,5 @@ Clazz.defineMethod (c$, "app",
 if (cmd.length == 0) return;
 s.append ("  ").append (cmd).append (";\n");
 }, "JU.SB,~S");
-c$.unreportedProperties = c$.prototype.unreportedProperties = (";ambientpercent;animationfps;antialiasdisplay;antialiasimages;antialiastranslucent;appendnew;axescolor;axesposition;axesmolecular;axesorientationrasmol;axesunitcell;axeswindow;axis1color;axis2color;axis3color;backgroundcolor;backgroundmodel;bondsymmetryatoms;boundboxcolor;cameradepth;bondingversion;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;;exportdrivers;exportscale;_filecaching;_filecache;fontcaching;fontscaling;forcefield;language;legacyautobonding;legacyhaddition;legacyjavafloat;loglevel;logfile;loggestures;logcommands;measurestylechime;loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;;pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed;preservestate;refreshing;repaintwaitms;rotationradius;showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell;slabenabled;slab;slabrange;depth;zshade;zshadepower;specular;specularexponent;specularpercent;celshading;celshadingpower;specularpower;stateversion;statusreporting;stereo;stereostate;vibrationperiod;unitcellcolor;visualrange;windowcentered;zerobasedxyzrasmol;zoomenabled;mousedragfactor;mousewheelfactor;scriptqueue;scriptreportinglevel;syncscript;syncmouse;syncstereo;;defaultdirectory;currentlocalpath;defaultdirectorylocal;ambient;bonds;colorrasmol;diffuse;fractionalrelative;frank;hetero;hidenotselected;hoverlabel;hydrogen;languagetranslation;measurementunits;navigationdepth;navigationslab;picking;pickingstyle;propertycolorschemeoverload;radius;rgbblue;rgbgreen;rgbred;scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount;spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + J.c.CBK.getNameList () + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel" + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit" + ";dodrop;hovered" + ";").toLowerCase ();
+c$.unreportedProperties = c$.prototype.unreportedProperties = (";ambientpercent;animationfps;antialiasdisplay;antialiasimages;antialiastranslucent;appendnew;axescolor;axesposition;axesmolecular;axesorientationrasmol;axesunitcell;axeswindow;axis1color;axis2color;axis3color;backgroundcolor;backgroundmodel;bondsymmetryatoms;boundboxcolor;cameradepth;bondingversion;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;;exportdrivers;exportscale;_filecaching;_filecache;fontcaching;fontscaling;forcefield;language;legacyautobonding;legacyhaddition;legacyjavafloat;loglevel;logfile;loggestures;logcommands;measurestylechime;loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;;pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed;preservestate;refreshing;repaintwaitms;rotationradius;showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell;slabenabled;slab;slabrange;depth;zshade;zshadepower;specular;specularexponent;specularpercent;celshading;celshadingpower;specularpower;stateversion;statusreporting;stereo;stereostate;vibrationperiod;unitcellcolor;visualrange;windowcentered;zerobasedxyzrasmol;zoomenabled;mousedragfactor;mousewheelfactor;scriptqueue;scriptreportinglevel;syncscript;syncmouse;syncstereo;defaultdirectory;currentlocalpath;defaultdirectorylocal;ambient;bonds;colorrasmol;diffuse;fractionalrelative;frank;hetero;hidenotselected;hoverlabel;hydrogen;languagetranslation;measurementunits;navigationdepth;navigationslab;picking;pickingstyle;propertycolorschemeoverload;radius;rgbblue;rgbgreen;rgbred;scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount;spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + J.c.CBK.getNameList () + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel" + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit" + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread" + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4" + ";").toLowerCase ();
 });

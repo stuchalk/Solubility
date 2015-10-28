@@ -136,7 +136,9 @@
 	}
 
 	Applet._getCanvas = function(id, Info, checkOnly, webGL) {
-		webGL = false;
+    Info._isLayered = false;
+  	Info._isAstex = true;
+  	Info._platform = "astex.awtjs2d.Platform";
 		Jmol._Canvas2D.prototype = Jmol._jsSetPrototype(new Applet(id, Info, true));
 		return new Jmol._Canvas2D(id, Info, "Astex", checkOnly);
 	};
@@ -220,6 +222,14 @@
 		return new astex.MoleculeViewerAppletJS(viewerOptions);
 	}
 
+	proto._addCoreFiles = function() {
+		Jmol._addCoreFile("astex", this._j2sPath, this.__Info.preloadCore);
+		if (Jmol._debugCode) {
+		// no min package for that
+			Jmol._addExec([this, null, "astex.MoleculeViewerAppletJS", "load Astex"]);
+		}
+  }
+  
 	proto._create = function(id, Info){
 		Jmol._setObject(this, id, Info);
 		var params = {
@@ -252,13 +262,12 @@
 		Applet._createApplet(this, Info, params);
 	}
 
-	proto._readyCallback = function(id, fullid, isReady, applet) {
+	proto._readyCallback = function(id, fullid, isReady) {
 		if (!isReady)
 			return; // ignore -- page is closing
 		Jmol._setDestroy(this);
 		this._ready = true;
 		var script = this._readyScript;
-		this._applet = applet;
 		if (this._defaultModel)
 			Jmol._search(this, this._defaultModel, (script ? ";" + script : ""));
 		else if (script)

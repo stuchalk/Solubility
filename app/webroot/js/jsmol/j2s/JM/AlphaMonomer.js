@@ -127,6 +127,7 @@ return this.getQuaternionAlpha (qType);
 }, "~S");
 Clazz.defineMethod (c$, "getQuaternionAlpha", 
 function (qType) {
+if (this.monomerIndex < 0) return null;
 var vA =  new JU.V3 ();
 var vB =  new JU.V3 ();
 var vC = null;

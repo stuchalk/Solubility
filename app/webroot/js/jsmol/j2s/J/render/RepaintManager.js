@@ -90,6 +90,7 @@ this.bsTranslucent.clearAll ();
 if (navMinMax != null) g3d.renderCrossHairs (navMinMax, this.vwr.getScreenWidth (), this.vwr.getScreenHeight (), this.vwr.tm.getNavigationOffset (), this.vwr.tm.navigationDepthPercent);
 var band = this.vwr.getRubberBandSelection ();
 if (band != null && g3d.setC (this.vwr.cm.colixRubberband)) g3d.drawRect (band.x, band.y, 0, 0, band.width, band.height);
+this.vwr.noFrankEcho = true;
 }var msg = null;
 for (var i = 0; i < 37 && gdata.currentlyRendering; ++i) {
 var shape = this.shapeManager.getShape (i);

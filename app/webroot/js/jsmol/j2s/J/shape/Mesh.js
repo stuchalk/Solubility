@@ -123,6 +123,7 @@ this.setLighting (lighting);
 }, "~N,~A,JU.P4");
 Clazz.defineMethod (c$, "setNormixes", 
 function (normals) {
+if (normals == null) return (this.normixes = null);
 this.normixes =  Clazz.newShortArray (this.normixCount, 0);
 if (this.bsTemp == null) this.bsTemp = JU.Normix.newVertexBitSet ();
 if (this.haveXyPoints) for (var i = this.normixCount; --i >= 0; ) this.normixes[i] = 9999;
@@ -134,6 +135,7 @@ return this.normixes;
 Clazz.defineMethod (c$, "getNormals", 
 function (vertices, plane) {
 this.normixCount = (this.isTriangleSet ? this.pc : this.vc);
+if (this.normixCount < 0) return null;
 var normals =  new Array (this.normixCount);
 for (var i = this.normixCount; --i >= 0; ) normals[i] =  new JU.V3 ();
 
@@ -313,8 +315,8 @@ case 1073741964:
 this.setLighting (tokProp);
 return;
 case 1073742042:
-case 1113198595:
-this.showPoints = (tokProp == 1113198595 ? bProp : !bProp);
+case 1112150019:
+this.showPoints = (tokProp == 1112150019 ? bProp : !bProp);
 return;
 case 1073742052:
 case 1073742018:

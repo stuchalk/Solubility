@@ -23,10 +23,8 @@ class VolumesController extends AppController
      */
     public function view($vol,$format="")
 	{
-		$data=$this->Volume->find('first',['conditions'=>['Volume.vol'=>$vol]]);
+		$data=$this->Volume->find('first',['conditions'=>['Volume.vol'=>$vol],'recursive'=>2]);
 
-        //unset($data['System'][0]['method']);
-        //echo "<pre>".print_r($data['System'][$i])."</pre>";
         if($format=="json") {
             header('Content-Type: application/json');
             echo json_encode($data);exit;

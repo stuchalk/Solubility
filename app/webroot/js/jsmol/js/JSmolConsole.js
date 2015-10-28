@@ -2,6 +2,9 @@
 
 // Note that this was written before I had Swing working. But this works fine. -- BH
 
+// BH 6/29/2015 9:50:21 AM adds option for user to set console as a div on a page.
+//    as "jmolApplet0_console" where jmolApplet0 is the id of the applet.
+//   for example: <div id="jmolApplet0_console" style="width:600px;height:362px"></div>
 // BH 3/7/2015 1:16:00 PM adds Jmol.Console.Image user-settable divs 
 //   jmolApplet0_Image_holder, jmolApplet0_Image_app_holder, jmolApplet0_Image_xxxx_holder
 // BH 2/24/2015 4:07:57 PM 14.3.12 adds Jmol.Console.Image (for show IMAGE)
@@ -16,6 +19,11 @@ Jmol.Console = {
 	click:function(id) {
 		Jmol.Console.buttons[id].console.appletConsole.doAction(Jmol.Console.buttons[id]);
 	}	
+}
+
+Jmol._consoleGetImageDialog = function(vwr, title, imageMap) {
+  // JmolObjectInterface
+  return new Jmol.Console.Image(vwr, title, imageMap);
 }
 
 Jmol.Console.Image = function(vwr, title, imageMap) {
@@ -105,14 +113,18 @@ Jmol.Console.Image.prototype.closeMe = function() {
 
 Jmol.Swing.setDraggable(Jmol.Console.Image);
 
-Jmol.Console.createDOM = function(obj, s) {
+Jmol.Console.createDOM = function(obj, s, userConsole) {
   var id = obj.id;
   Jmol.Console.buttons[id] = obj;
 	s = s.replace(/\$ID/g,id);
-	Jmol.$after("body", s);
-	obj.setContainer(Jmol._$(id));
-	obj.setPosition();
-	obj.dragBind(true);
+  if (userConsole && userConsole[0]) {
+    Jmol.$html(userConsole,s);
+  } else {
+  	Jmol.$after("body", s);
+  	obj.setContainer(Jmol._$(id));
+  	obj.setPosition();
+  	obj.dragBind(true);
+  }
 }
 
 Jmol.Console.JSConsole = function(appletConsole) {
@@ -122,21 +134,26 @@ Jmol.Console.JSConsole = function(appletConsole) {
 	console.appletConsole = appletConsole;
 	console.input = appletConsole.input = new Jmol.Console.Input(console);
 	console.output = appletConsole.output = new Jmol.Console.Output(console);
-
+  // check to see if the user already has a div on the page with id such as "jmolApplet0_console" 
+  var userConsole = Jmol.$("#" + id); 
 	// set up this.appletConsole.input, this.appletconsole.output
 	// set up buttons, which are already made by this time: 	
 	// I would prefer NOT to use jQueryUI for this - just simple buttons with simple actions
 
 	// create and insert HTML code
-	var s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:600px;height:362px;position:absolute;z-index:'
-		+ Jmol._z.console +'"><div id=$ID_title></div><div id=$ID_label1></div><div id=$ID_outputdiv style="position:relative;left:2px"></div><div id=$ID_inputdiv style="position:relative;left:2px"></div><div id=$ID_buttondiv></div></div>'
-  Jmol.Console.createDOM(this, s);    
-	s = "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Jmol.Console.buttons['"+id+"'].setVisible(false)\">close</a>";
-	s += "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Jmol.script("+console.applet._id+",'help')\">help</a>";
-	Jmol.$html(id + "_label1", s);
-	Jmol.$html(id + "_inputdiv", '<textarea id="' + id + '_input" style="width:590px;height:100px"></textarea>');
-	Jmol.$html(id + "_outputdiv", '<textarea id="' + id + '_output" style="width:590px;height:200px"></textarea>');
-
+	var s = '<div id=$ID_title></div><div id=$ID_label1></div><div id=$ID_outputdiv style="position:relative;left:2px"></div><div id=$ID_inputdiv style="position:relative;left:2px"></div><div id=$ID_buttondiv></div>'  
+  var w = 600, h = 362;
+  if (userConsole[0]) {
+      var dims = Jmol.$getSize(userConsole);
+      if (dims[0] == 0)
+        Jmol.$setSize(userConsole, w, h);
+      w = dims[0] || w;
+      h = dims[1] || h;
+  } else {
+    s = '<div id="$ID" class="jmolConsole" style="display:block;background-color:yellow;width:'+w+'px;height:'+h+'px;position:absolute;z-index:'
+	   	+ Jmol._z.console +'">' + s + '</div>';
+  }
+  Jmol.Console.createDOM(this, s, userConsole);
 	var setBtn = function(console, btn) {
 		btn.console = console;
 		btn.id = id + "_" + btn.label.replace(/\s/g,"_");
@@ -150,6 +167,22 @@ Jmol.Console.JSConsole = function(appletConsole) {
 		+ setBtn(console, appletConsole.historyButton)
 		+ setBtn(console, appletConsole.stateButton);
 	Jmol.$html(id + "_buttondiv", s);
+  s = "";
+  if (!userConsole[0])
+	 s += "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Jmol.Console.buttons['"+id+"'].setVisible(false)\">close</a>";
+	s += "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"javascript:Jmol.script("+console.applet._id+",'help')\">help</a>";
+	Jmol.$html(id + "_label1", s);
+  if (userConsole[0]) {
+    // leaves a little slop for margins
+    w = w - 10;
+    h = (h - Jmol.$getSize(id + "_label1")[1] - Jmol.$getSize(id + "_buttondiv")[1] - 20)/3;
+  } else {
+    w = w - 10;
+    h = (h - 62)/3;
+  }
+	Jmol.$html(id + "_inputdiv", '<textarea id="' + id + '_input" style="width:'+w+'px;height:'+h+'px"></textarea>');
+	Jmol.$html(id + "_outputdiv", '<textarea id="' + id + '_output" style="width:'+w+'px;height:'+(h*2)+'px"></textarea>');
+
 	Jmol.$bind("#" + id + "_input", "keydown keypress keyup", function(event) { console.input.keyEvent(event) });
 	Jmol.$bind("#" + id + "_input", "mousedown touchstart", function(event) { console.ignoreMouse=true });
 	Jmol.$bind("#" + id + "_output", "mousedown touchstart", function(event) { console.ignoreMouse=true });

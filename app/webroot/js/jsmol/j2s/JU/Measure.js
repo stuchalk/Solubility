@@ -91,15 +91,21 @@ plane.set4 (normal.x, normal.y, normal.z, -normal.dot (pt));
 }, "JU.T3,JU.V3,JU.P4");
 c$.distanceToPlane = Clazz.defineMethod (c$, "distanceToPlane", 
 function (plane, pt) {
-return (plane == null ? NaN : (plane.x * pt.x + plane.y * pt.y + plane.z * pt.z + plane.w) / Math.sqrt (plane.x * plane.x + plane.y * plane.y + plane.z * plane.z));
+return (plane == null ? NaN : (plane.dot (pt) + plane.w) / Math.sqrt (plane.dot (plane)));
 }, "JU.P4,JU.T3");
+c$.directedDistanceToPlane = Clazz.defineMethod (c$, "directedDistanceToPlane", 
+function (pt, plane, ptref) {
+var f = plane.dot (pt) + plane.w;
+var f1 = plane.dot (ptref) + plane.w;
+return Math.signum (f1) * f / Math.sqrt (plane.dot (plane));
+}, "JU.P3,JU.P4,JU.P3");
 c$.distanceToPlaneD = Clazz.defineMethod (c$, "distanceToPlaneD", 
 function (plane, d, pt) {
-return (plane == null ? NaN : (plane.x * pt.x + plane.y * pt.y + plane.z * pt.z + plane.w) / d);
+return (plane == null ? NaN : (plane.dot (pt) + plane.w) / d);
 }, "JU.P4,~N,JU.P3");
 c$.distanceToPlaneV = Clazz.defineMethod (c$, "distanceToPlaneV", 
 function (norm, w, pt) {
-return (norm == null ? NaN : (norm.x * pt.x + norm.y * pt.y + norm.z * pt.z + w) / Math.sqrt (norm.x * norm.x + norm.y * norm.y + norm.z * norm.z));
+return (norm == null ? NaN : (norm.dot (pt) + w) / Math.sqrt (norm.dot (norm)));
 }, "JU.V3,~N,JU.P3");
 c$.calcNormalizedNormal = Clazz.defineMethod (c$, "calcNormalizedNormal", 
 function (pointA, pointB, pointC, vNormNorm, vAB) {
@@ -136,13 +142,12 @@ vNorm.scale (-dist);
 ptProj.add2 (pt, vNorm);
 }, "JU.P3,JU.P4,JU.P3,JU.V3");
 c$.getNormalFromCenter = Clazz.defineMethod (c$, "getNormalFromCenter", 
-function (ptCenter, ptA, ptB, ptC, isOutward, normal) {
-var vAB =  new JU.V3 ();
-var d = JU.Measure.getNormalThroughPoints (ptA, ptB, ptC, normal, vAB);
+function (ptCenter, ptA, ptB, ptC, isOutward, normal, vTemp) {
+var d = JU.Measure.getNormalThroughPoints (ptA, ptB, ptC, normal, vTemp);
 var isReversed = (JU.Measure.distanceToPlaneV (normal, d, ptCenter) > 0);
 if (isReversed == isOutward) normal.scale (-1.0);
 return !isReversed;
-}, "JU.P3,JU.P3,JU.P3,JU.P3,~B,JU.V3");
+}, "JU.P3,JU.P3,JU.P3,JU.P3,~B,JU.V3,JU.V3");
 c$.getNormalToLine = Clazz.defineMethod (c$, "getNormalToLine", 
 function (pointA, pointB, vNormNorm) {
 vNormNorm.sub2 (pointA, pointB);

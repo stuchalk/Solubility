@@ -2,6 +2,7 @@
 
 /**
  * Class ScrapingsController
+ * Scripts to scrape the NIST SDS website
  */
 class ScrapingsController extends AppController
 {

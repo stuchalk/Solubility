@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.quantum");
-Clazz.load (["J.api.JmolNMRInterface", "java.util.Hashtable"], "J.quantum.NMRCalculation", ["java.lang.Double", "$.Float", "$.NullPointerException", "JU.BS", "$.Lst", "$.PT", "$.V3", "J.io.JmolBinary", "JU.Escape", "$.Logger", "$.Tensor"], function () {
+Clazz.load (["J.api.JmolNMRInterface", "java.util.Hashtable"], "J.quantum.NMRCalculation", ["java.lang.Double", "$.Float", "$.NullPointerException", "JU.BS", "$.Lst", "$.PT", "$.V3", "JU.Escape", "$.Logger", "$.Tensor", "JV.FileManager"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.isotopeData = null;
@@ -142,7 +142,7 @@ Clazz.defineMethod (c$, "getData",
 var br = null;
 try {
 var debugging = JU.Logger.debugging;
-br = J.io.JmolBinary.getBufferedReaderForResource (this.vwr, this, "J/quantum/", "nmr_data.txt");
+br = JV.FileManager.getBufferedReaderForResource (this.vwr, this, "J/quantum/", "nmr_data.txt");
 this.isotopeData =  new java.util.Hashtable ();
 var line;
 while ((line = br.readLine ()) != null) {

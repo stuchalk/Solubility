@@ -17530,7 +17530,10 @@ gp.create = function() {
 	this.CAMERA_Z = -150;
 
 	this.applet.aaScale = 2;
-	this.renderer = new THREE.WebGLRenderer({antialias: true});
+	this.renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    preserveDrawingBuffer: true 
+  });
 	var canvas = this.renderer.domElement;
 	canvas.width = this.container.width();
 	canvas.height = this.container.height();

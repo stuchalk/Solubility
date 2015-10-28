@@ -41,7 +41,7 @@ return false;
 });
 Clazz.defineMethod (c$, "readAtoms", 
  function () {
-this.asc.discardPreviousAtoms ();
+this.discardPreviousAtoms ();
 this.readLines (2);
 while (this.rd () != null && this.line.length >= 60 && this.line.charAt (2) != ' ') {
 var tokens = this.getTokens ();
@@ -107,7 +107,7 @@ sarray.addLast (sdata[i]);
 }
 this.moData.put ("shells", sarray);
 this.moData.put ("gaussians", garray);
-if (JU.Logger.debugging) {
+if (this.debugging) {
 JU.Logger.debug (sarray.size () + " slater shells read");
 JU.Logger.debug (this.gaussianCount + " gaussian primitives read");
 }});
@@ -150,7 +150,7 @@ for (var i = gdata.size (); --i >= 0; ) garray[i] = gdata.get (i);
 
 this.moData.put ("shells", sarray);
 this.moData.put ("gaussians", garray);
-if (JU.Logger.debugging) {
+if (this.debugging) {
 JU.Logger.debug (sarray.size () + " slater shells read");
 JU.Logger.debug (this.gaussianCount + " gaussian primitives read");
 }this.moData.put ("isNormalized", Boolean.TRUE);
@@ -180,7 +180,8 @@ if (Math.abs (energy - this.lumoEnergy) < 0.0001) {
 this.moData.put ("HOMO", Integer.$valueOf (nMo));
 this.lumoEnergy = 3.4028235E38;
 occ = 0;
-}nMo++;
+}mo.put ("occupancy", Float.$valueOf (occ));
+nMo++;
 for (var i = 0, pt = 0; i < this.moCount; i++) {
 coefs[pt++] = this.parseFloatStr (dataBlock[i][iOrb + 3]);
 }

@@ -22,7 +22,11 @@ function () {
 if (!this.g3d.checkTranslucent (false)) return false;
 if (this.atomPt == null) this.atomPt =  new JU.Point3fi ();
 var measures = this.shape;
-this.doJustify = this.vwr.getBoolean (603979871);
+if (measures.ms !== this.ms) {
+System.out.println ("!measure wrong modelset!");
+measures.clear ();
+return false;
+}this.doJustify = this.vwr.getBoolean (603979871);
 this.modulating = this.ms.bsModulated != null;
 this.imageFontScaling = this.vwr.imageFontScaling;
 this.mad0 = measures.mad;
@@ -115,7 +119,14 @@ Clazz.defineMethod (c$, "renderDistance",
 function (s, a, b) {
 if ((this.tickInfo = this.m.tickInfo) != null) {
 this.drawLine (a.sX, a.sY, a.sZ, b.sX, b.sY, b.sZ, this.mad);
-this.drawTicks (a, b, this.mad, s != null);
+this.tickA = a;
+this.tickB = b;
+if (this.tickAs == null) {
+this.tickAs =  new JU.P3 ();
+this.tickBs =  new JU.P3 ();
+}this.tickAs.set (a.sX, a.sY, a.sZ);
+this.tickBs.set (b.sX, b.sY, b.sZ);
+this.drawTicks (this.mad, s != null);
 return;
 }var zA = a.sZ - a.sD - 10;
 var zB = b.sZ - b.sD - 10;
@@ -216,7 +227,16 @@ this.renderLabelOrMeasure (this.m.text, s);
 }}, "~S,JU.Point3fi,JU.Point3fi,JU.Point3fi,JU.Point3fi");
 Clazz.defineMethod (c$, "renderPendingMeasurement", 
  function () {
+try {
 this.getPoints ();
+} catch (e) {
+if (Clazz.exceptionOf (e, Exception)) {
+(this.shape).mPending = null;
+return;
+} else {
+throw e;
+}
+}
 var renderLabel = (this.m.traceX == -2147483648);
 this.g3d.setC (this.labelColix = (renderLabel ? this.vwr.cm.colixRubberband : this.count == 2 ? 20 : 23));
 if ((this.m).haveTarget) {
@@ -230,7 +250,7 @@ var y = this.vwr.getCursorY ();
 if (this.g3d.isAntialiased ()) {
 x <<= 1;
 y <<= 1;
-}this.drawLine (atomLast.sX, atomLast.sY, lastZ, x, y, 0, this.mad);
+}this.drawLine (atomLast.sX, atomLast.sY, lastZ, x, y, lastZ, this.mad);
 });
 Clazz.overrideMethod (c$, "drawLine", 
 function (x1, y1, z1, x2, y2, z2, mad) {

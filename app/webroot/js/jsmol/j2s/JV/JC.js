@@ -1,6 +1,19 @@
 Clazz.declarePackage ("JV");
 Clazz.load (["JU.SB", "$.V3", "JU.Elements"], "JV.JC", ["JU.PT"], function () {
 c$ = Clazz.declareType (JV, "JC");
+c$.getMacroList = Clazz.defineMethod (c$, "getMacroList", 
+function () {
+var s =  new JU.SB ();
+for (var i = 0; i < JV.JC.macros.length; i += 2) s.append (JV.JC.macros[i]).append ("\t").append (JV.JC.macros[i + 1]).append ("\n");
+
+return s.toString ();
+});
+c$.getMacro = Clazz.defineMethod (c$, "getMacro", 
+function (key) {
+for (var i = 0; i < JV.JC.macros.length; i += 2) if (JV.JC.macros[i].equals (key)) return JV.JC.macros[i + 1];
+
+return null;
+}, "~S");
 c$.embedScript = Clazz.defineMethod (c$, "embedScript", 
 function (s) {
 return "\n/**" + "**** Jmol Embedded Script ****" + " \n" + s + "\n**/";
@@ -12,52 +25,52 @@ return 16 << Math.min (shapeID, 26);
 c$.shapeTokenIndex = Clazz.defineMethod (c$, "shapeTokenIndex", 
 function (tok) {
 switch (tok) {
-case 1141899265:
+case 1140850689:
 case 1073741860:
 return 0;
-case 1678770178:
+case 1677721602:
 case 659488:
 return 1;
-case 1612189718:
+case 1613238294:
 return 2;
 case 1611141176:
 return 3;
-case 1708058:
+case 659482:
 return 4;
-case 1826248716:
+case 1825200146:
 return 5;
-case 1746538509:
+case 1745489939:
 case 537006096:
 return 6;
-case 1113200652:
+case 1112152076:
 return 7;
-case 1113200646:
+case 1112152070:
 return 8;
-case 1115297793:
+case 1114249217:
 return 9;
-case 1113200654:
+case 1112152078:
 return 10;
-case 1113200642:
+case 1112152066:
 return 11;
-case 1650071565:
+case 1649022989:
 return 12;
-case 1113200647:
+case 1112152071:
 return 13;
-case 1113200649:
+case 1112152073:
 return 14;
-case 1113200650:
+case 1112152074:
 return 15;
-case 1113198595:
+case 1112150019:
 return 16;
 case 135175:
 return 17;
 case 135198:
 return 18;
-case 1113198597:
+case 1112150021:
 return 19;
-case 1113198596:
+case 1112150020:
 return 20;
-case 135192:
+case 1275203608:
 return 21;
 case 135174:
 return 23;
@@ -65,7 +78,7 @@ case 135176:
 return 22;
 case 135180:
 return 24;
-case 135402505:
+case 134353926:
 return 25;
 case 135182:
 return 26;
@@ -81,9 +94,9 @@ case 537022465:
 return 31;
 case 1611272194:
 return 34;
-case 1679429641:
+case 1678381065:
 return 32;
-case 1614417948:
+case 1747587102:
 return 33;
 case 544771:
 return 35;
@@ -101,50 +114,86 @@ c$.isScriptType = Clazz.defineMethod (c$, "isScriptType",
 function (fname) {
 return JU.PT.isOneOf (fname.substring (fname.lastIndexOf (".") + 1), ";pse;spt;png;pngj;jmol;zip;");
 }, "~S");
-c$.getOffset = Clazz.defineMethod (c$, "getOffset", 
-function (xOffset, yOffset) {
-xOffset = Math.min (Math.max (xOffset, -127), 127);
-yOffset = Math.min (Math.max (yOffset, -127), 127);
-return ((xOffset & 0xFF) << 8) | (yOffset & 0xFF);
+c$.getEchoName = Clazz.defineMethod (c$, "getEchoName", 
+function (type) {
+return JV.JC.echoNames[type];
+}, "~N");
+c$.setZPosition = Clazz.defineMethod (c$, "setZPosition", 
+function (offset, pos) {
+return (offset & -49) | pos;
 }, "~N,~N");
-c$.getXOffset = Clazz.defineMethod (c$, "getXOffset", 
-function (offset) {
-switch (offset) {
-case 0:
-return 4;
-case 32767:
-return 0;
-default:
-return ((offset << 48) >> 56);
-}
-}, "~N");
-c$.getYOffset = Clazz.defineMethod (c$, "getYOffset", 
-function (offset) {
-switch (offset) {
-case 0:
-return -4;
-case 32767:
-return 0;
-default:
-return -((offset << 56) >> 56);
-}
-}, "~N");
-c$.getAlignmentName = Clazz.defineMethod (c$, "getAlignmentName", 
-function (align) {
-return JV.JC.hAlignNames[align & 3];
-}, "~N");
+c$.setPointer = Clazz.defineMethod (c$, "setPointer", 
+function (offset, pointer) {
+return (offset & -4) | pointer;
+}, "~N,~N");
 c$.getPointer = Clazz.defineMethod (c$, "getPointer", 
+function (offset) {
+return offset & 3;
+}, "~N");
+c$.getPointerName = Clazz.defineMethod (c$, "getPointerName", 
 function (pointer) {
 return ((pointer & 1) == 0 ? "" : (pointer & 2) > 0 ? "background" : "on");
 }, "~N");
-c$.getJSVSyncSignal = Clazz.defineMethod (c$, "getJSVSyncSignal", 
+c$.isOffsetAbsolute = Clazz.defineMethod (c$, "isOffsetAbsolute", 
+function (offset) {
+return ((offset & 64) != 0);
+}, "~N");
+c$.getOffset = Clazz.defineMethod (c$, "getOffset", 
+function (xOffset, yOffset, isAbsolute) {
+xOffset = Math.min (Math.max (xOffset, -500), 500);
+yOffset = (Math.min (Math.max (yOffset, -500), 500));
+var offset = ((xOffset & 1023) << 21) | ((yOffset & 1023) << 11) | (isAbsolute ? 64 : 0);
+if (offset == JV.JC.LABEL_DEFAULT_OFFSET) offset = 0;
+ else if (!isAbsolute && (xOffset == 0 || yOffset == 0)) offset |= 256;
+return offset;
+}, "~N,~N,~B");
+c$.getXOffset = Clazz.defineMethod (c$, "getXOffset", 
+function (offset) {
+if (offset == 0) return 4;
+var x = (offset >> 21) & 1023;
+x = (x > 500 ? x - 1023 - 1 : x);
+return x;
+}, "~N");
+c$.getYOffset = Clazz.defineMethod (c$, "getYOffset", 
+function (offset) {
+if (offset == 0) return 4;
+var y = (offset >> 11) & 1023;
+return (y > 500 ? y - 1023 - 1 : y);
+}, "~N");
+c$.getAlignment = Clazz.defineMethod (c$, "getAlignment", 
+function (offset) {
+return (offset & 12);
+}, "~N");
+c$.setHorizAlignment = Clazz.defineMethod (c$, "setHorizAlignment", 
+function (offset, hAlign) {
+return (offset & -13) | hAlign;
+}, "~N,~N");
+c$.getHorizAlignmentName = Clazz.defineMethod (c$, "getHorizAlignmentName", 
+function (align) {
+return JV.JC.hAlignNames[(align >> 2) & 3];
+}, "~N");
+c$.getServiceCommand = Clazz.defineMethod (c$, "getServiceCommand", 
 function (script) {
-return (script.length < 7 ? -1 : ("JSPECVIPEAKS: SELECT:JSVSTR:H1SIMUL").indexOf (script.substring (0, 7).toUpperCase ()));
+return (script.length < 7 ? -1 : ("JSPECVIPEAKS: SELECT:JSVSTR:H1SIMULNBO:MODNBO:RUNNBO:VIENBO:SEANBO:CON").indexOf (script.substring (0, 7).toUpperCase ()));
+}, "~S");
+c$.checkFlag = Clazz.defineMethod (c$, "checkFlag", 
+function (flags, flag) {
+return (flags & flag) == flag;
+}, "~N,~N");
+c$.getUnitIDFlags = Clazz.defineMethod (c$, "getUnitIDFlags", 
+function (type) {
+var i = 14;
+if (type.indexOf ("-") == 0) {
+if (type.indexOf ("m") > 0) i |= 1;
+if (type.indexOf ("a") < 0) i ^= 4;
+if (type.indexOf ("t") > 0) i |= 16;
+}return i;
 }, "~S");
 Clazz.defineStatics (c$,
 "PDB_ANNOTATIONS", ";dssr;rna3d;dom;val;",
-"databases",  Clazz.newArray (-1, ["dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more", "dssrModel", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--jmol --more&model=", "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif", "mp", "http://www.materialsproject.org/materials/%FILE/cif", "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE", "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif", "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=", "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=", "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz", "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif", "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d", "map", "http://wwwdev.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE"]),
-"copyright", "(C) 2012 Jmol Development",
+"databases",  Clazz.newArray (-1, ["dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--json=ebi-no-str-id", "dssrModel", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--json=ebi-no-str-id&model=", "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif", "mp", "http://www.materialsproject.org/materials/%FILE/cif", "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE", "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif", "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=", "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=", "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz", "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif", "pdbe2", "http://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif", "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d", "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE", "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary"]),
+"macros",  Clazz.newArray (-1, ["aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt"]),
+"copyright", "(C) 2015 Jmol Development",
 "version", null,
 "date", null,
 "versionInt", 0);
@@ -220,15 +269,6 @@ Clazz.defineStatics (c$,
 "MINIMIZE_FIXED_RANGE", 5.0,
 "ENC_CALC_MAX_DIST", 3,
 "ENV_CALC_MAX_LEVEL", 3,
-"LABEL_FRONT_FLAG", 0x20,
-"LABEL_GROUP_FLAG", 0x10,
-"LABEL_POINTER_FLAGS", 0x03,
-"LABEL_ALIGN_FLAGS", 0x0C,
-"LABEL_ZPOS_FLAGS", 0x30,
-"LABEL_SCALE_FLAG", 0x40,
-"LABEL_EXACT_OFFSET_FLAG", 0x80,
-"LABEL_FLAGS", 0xFF,
-"LABEL_FLAG_OFFSET", 8,
 "MOUSE_NONE", -1,
 "MULTIBOND_NEVER", 0,
 "MULTIBOND_WIREFRAME", 1,
@@ -299,6 +339,10 @@ Clazz.defineStatics (c$,
 "ATOMID_H3T_TERMINUS", 88,
 "ATOMID_HO3_PRIME", 89,
 "ATOMID_HO5_PRIME", 90,
+"PURINE_MASK", 153957,
+"PYRIMIDINE_MASK", 108186,
+"DNA_MASK", 0x0FFC8,
+"RNA_MASK", 0x30037,
 "GROUPID_ARGININE", 2,
 "GROUPID_ASPARAGINE", 3,
 "GROUPID_ASPARTATE", 4,
@@ -315,19 +359,14 @@ Clazz.defineStatics (c$,
 "GROUPID_SOLVENT_MIN", 45,
 "GROUPID_ION_MIN", 46,
 "GROUPID_ION_MAX", 48,
-"predefinedVariable",  Clazz.newArray (-1, ["@_1H _H & !(_2H,_3H)", "@_12C _C & !(_13C,_14C)", "@_14N _N & !(_15N)", "@solvent water, (_g>=45 & _g<48)", "@ligand _g=0|!(_g<46,protein,nucleic,water)", "@turn structure=1", "@sheet structure=2", "@helix structure=3", "@helix310 substructure=7", "@helixalpha substructure=8", "@helixpi substructure=9"]),
-"predefinedStatic",  Clazz.newArray (-1, ["@amino _g>0 & _g<=23", "@acidic asp,glu", "@basic arg,his,lys", "@charged acidic,basic", "@negative acidic", "@positive basic", "@neutral amino&!(acidic,basic)", "@polar amino&!hydrophobic", "@cyclic his,phe,pro,trp,tyr", "@acyclic amino&!cyclic", "@aliphatic ala,gly,ile,leu,val", "@aromatic his,phe,trp,tyr", "@cystine within(group, (cys.sg or cyx.sg) and connected(cys.sg or cyx.sg))", "@buried ala,cys,ile,leu,met,phe,trp,val", "@surface amino&!buried", "@hydrophobic ala,gly,ile,leu,met,phe,pro,trp,tyr,val", "@mainchain backbone", "@small ala,gly,ser", "@medium asn,asp,cys,pro,thr,val", "@large arg,glu,gln,his,ile,leu,lys,met,phe,trp,tyr", "@c nucleic & ([C] or [DC] or within(group,_a=42))", "@g nucleic & ([G] or [DG] or within(group,_a=43))", "@cg c,g", "@a nucleic & ([A] or [DA] or within(group,_a=44))", "@t nucleic & ([T] or [DT] or within(group,_a=45 | _a=49))", "@at a,t", "@i nucleic & ([I] or [DI] or within(group,_a=46) & !g)", "@u nucleic & ([U] or [DU] or within(group,_a=47) & !t)", "@tu nucleic & within(group,_a=48)", "@ions _g>=46&_g<48", "@alpha _a=2", "@backbone protein&(_a>=1&_a<6|_a>=64&_a<72)|nucleic&(_a>=6&_a<14|_a>=72)", "@spine protein&_a>=1&_a<4|nucleic&_a>=6&_a<14&_a!=12", "@sidechain (protein,nucleic) & !backbone", "@base nucleic & !backbone", "@dynamic_flatring search('[a]')"]),
+"predefinedVariable",  Clazz.newArray (-1, ["@_1H _H & !(_2H,_3H)", "@_12C _C & !(_13C,_14C)", "@_14N _N & !(_15N)", "@solvent water, (_g>=45 & _g<48)", "@ligand _g=0|!(_g<46,protein,nucleic,water)", "@turn structure=1", "@sheet structure=2", "@helix structure=3", "@helix310 substructure=7", "@helixalpha substructure=8", "@helixpi substructure=9", "@bulges within(dssr,'bulges')", "@coaxStacks within(dssr,'coaxStacks')", "@hairpins within(dssr,'hairpins')", "@hbonds within(dssr,'hbonds')", "@helices within(dssr,'helices')", "@iloops within(dssr,'iloops')", "@isoCanonPairs within(dssr,'isoCanonPairs')", "@junctions within(dssr,'junctions')", "@kissingLoops within(dssr,'kissingLoops')", "@multiplets within(dssr,'multiplets')", "@nonStack within(dssr,'nonStack')", "@nts within(dssr,'nts')", "@naChains within(dssr,'naChains')", "@pairs within(dssr,'pairs')", "@ssSegments within(dssr,'ssSegments')", "@stacks within(dssr,'stacks')", "@stems within(dssr,'stems')"]),
+"predefinedStatic",  Clazz.newArray (-1, ["@amino _g>0 & _g<=23", "@acidic asp,glu", "@basic arg,his,lys", "@charged acidic,basic", "@negative acidic", "@positive basic", "@neutral amino&!(acidic,basic)", "@polar amino&!hydrophobic", "@cyclic his,phe,pro,trp,tyr", "@acyclic amino&!cyclic", "@aliphatic ala,gly,ile,leu,val", "@aromatic his,phe,trp,tyr", "@cystine within(group, (cys.sg or cyx.sg) and connected(cys.sg or cyx.sg))", "@buried ala,cys,ile,leu,met,phe,trp,val", "@surface amino&!buried", "@hydrophobic ala,gly,ile,leu,met,phe,pro,trp,tyr,val", "@mainchain backbone", "@small ala,gly,ser", "@medium asn,asp,cys,pro,thr,val", "@large arg,glu,gln,his,ile,leu,lys,met,phe,trp,tyr", "@c nucleic & ([C] or [DC] or within(group,_a=42))", "@g nucleic & ([G] or [DG] or within(group,_a=43))", "@cg c,g", "@a nucleic & ([A] or [DA] or within(group,_a=44))", "@t nucleic & ([T] or [DT] or within(group,_a=45 | _a=49))", "@at a,t", "@i nucleic & ([I] or [DI] or within(group,_a=46) & !g)", "@u nucleic & ([U] or [DU] or within(group,_a=47) & !t)", "@tu nucleic & within(group,_a=48)", "@ions _g>=46&_g<48", "@alpha _a=2", "@_bb protein&_a>=1&_a<6 | nucleic&(_a>=6&_a<14|_a>=73&&_a<=79||_a==99||_a=100)", "@backbone _bb | _H && connected(single, _bb)", "@spine protein&_a>=1&_a<4|nucleic&(_a>=6&_a<11|_a=13)", "@sidechain (protein,nucleic) & !backbone", "@base nucleic & !backbone", "@dynamic_flatring search('[a]')"]),
 "MODELKIT_ZAP_STRING", "5\n\nC 0 0 0\nH .63 .63 .63\nH -.63 -.63 .63\nH -.63 .63 -.63\nH .63 -.63 -.63",
 "MODELKIT_ZAP_TITLE", "Jmol Model Kit",
 "ZAP_TITLE", "zapped",
 "ADD_HYDROGEN_TITLE", "Viewer.AddHydrogens",
 "DEFAULT_FONTFACE", "SansSerif",
 "DEFAULT_FONTSTYLE", "Plain",
-"LABEL_MINIMUM_FONTSIZE", 6,
-"LABEL_MAXIMUM_FONTSIZE", 63,
-"LABEL_DEFAULT_FONTSIZE", 13,
-"LABEL_DEFAULT_X_OFFSET", 4,
-"LABEL_DEFAULT_Y_OFFSET", 4,
 "MEASURE_DEFAULT_FONTSIZE", 15,
 "AXES_DEFAULT_FONTSIZE", 14,
 "SHAPE_BALLS", 0,
@@ -382,13 +421,6 @@ Clazz.defineStatics (c$,
 "SHAPE_HOVER", 35,
 "SHAPE_FRANK", 36,
 "SHAPE_MAX", 37,
-"ATOM_INFRAME", 1,
-"ATOM_VISSET", 2,
-"ATOM_VISIBLE", 4,
-"ATOM_NOTHIDDEN", 8,
-"ATOM_NOFLAGS", -64,
-"ATOM_INFRAME_NOTHIDDEN", 9,
-"ATOM_SHAPE_VIS_MASK", -10,
 "VIS_BOND_FLAG", 32,
 "VIS_BALLS_FLAG", 16,
 "VIS_LABEL_FLAG", 512,
@@ -403,25 +435,71 @@ c$.IMAGE_OR_SCENE = c$.prototype.IMAGE_OR_SCENE = ";jpg;jpeg;jpg64;jpeg64;gif;gi
 {
 {
 }}Clazz.defineStatics (c$,
-"hAlignNames",  Clazz.newArray (-1, ["", "left", "center", "right", ""]),
-"vAlignNames",  Clazz.newArray (-1, ["xy", "top", "bottom", "middle"]),
-"POINTER_NONE", 0,
-"POINTER_ON", 1,
-"POINTER_BACKGROUND", 2,
-"VALIGN_XY", 0,
-"VALIGN_TOP", 1,
-"VALIGN_BOTTOM", 2,
-"VALIGN_MIDDLE", 3,
-"VALIGN_XYZ", 4,
-"ALIGN_NONE", 0,
-"ALIGN_LEFT", 1,
-"ALIGN_CENTER", 2,
-"ALIGN_RIGHT", 3,
+"LABEL_MINIMUM_FONTSIZE", 6,
+"LABEL_MAXIMUM_FONTSIZE", 63,
+"LABEL_DEFAULT_FONTSIZE", 13,
+"LABEL_DEFAULT_X_OFFSET", 4,
+"LABEL_DEFAULT_Y_OFFSET", 4,
+"LABEL_OFFSET_MAX", 500,
+"LABEL_OFFSET_MASK", 0x3FF,
+"LABEL_FLAGY_OFFSET_SHIFT", 11,
+"LABEL_FLAGX_OFFSET_SHIFT", 21,
+"LABEL_FLAGS", 0x03F,
+"LABEL_POINTER_FLAGS", 0x003,
+"LABEL_POINTER_NONE", 0x000,
+"LABEL_POINTER_ON", 0x001,
+"LABEL_POINTER_BACKGROUND", 0x002,
+"TEXT_ALIGN_SHIFT", 0x002,
+"TEXT_ALIGN_FLAGS", 0x00C,
+"TEXT_ALIGN_NONE", 0x000,
+"TEXT_ALIGN_LEFT", 0x004,
+"TEXT_ALIGN_CENTER", 0x008,
+"TEXT_ALIGN_RIGHT", 0x00C,
+"LABEL_ZPOS_FLAGS", 0x030,
+"LABEL_ZPOS_GROUP", 0x010,
+"LABEL_ZPOS_FRONT", 0x020,
+"LABEL_EXPLICIT", 0x040,
+"LABEL_CENTERED", 0x100,
+"LABEL_DEFAULT_OFFSET", 8396800,
+"ECHO_TOP", 0,
+"ECHO_BOTTOM", 1,
+"ECHO_MIDDLE", 2,
+"ECHO_XY", 3,
+"ECHO_XYZ", 4,
+"echoNames",  Clazz.newArray (-1, ["top", "bottom", "middle", "xy", "xyz"]),
+"hAlignNames",  Clazz.newArray (-1, ["", "left", "center", "right"]),
+"SMILES_TYPE_SMILES", 0x1,
+"SMILES_TYPE_SMARTS", 0x2,
+"SMILES_MATCH_ALL", 0x10,
+"SMILES_MATCH_ONE", 0x20,
+"SMILES_RETURN_FIRST", 0x40,
+"SMILES_EXPLICIT_H", 0x00100,
+"SMILES_TOPOLOGY", 0x00200,
+"SMILES_NOAROMATIC", 0x00400,
+"SMILES_NOSTEREO", 0x00800,
+"SMILES_POLYHEDRAL", 0x01000,
+"SMILES_BIO", 0x10000,
+"SMILES_BIO_ALLOW_UNMATCHED_RINGS", 0x11000,
+"SMILES_BIO_COV_CROSSLINK", 0x12000,
+"SMILES_BIO_HH_CROSSLINK", 0x16000,
+"SMILES_BIO_COMMENT", 0x30000,
+"SMILES_BIO_NOCOMMENTS", 0x50000,
+"SMILES_ATOM_COMMENT", 0x80000,
 "JSV_NOT", -1,
 "JSV_SEND_JDXMOL", 0,
 "JSV_SETPEAKS", 7,
 "JSV_SELECT", 14,
 "JSV_STRUCTURE", 21,
 "JSV_SEND_H1SIMULATE", 28,
-"READER_NOT_FOUND", "File reader was not found:");
+"NBO_MODEL", 35,
+"NBO_RUN", 42,
+"NBO_VIEW", 49,
+"NBO_SEARCH", 56,
+"NBO_CONFIG", 63,
+"READER_NOT_FOUND", "File reader was not found:",
+"UNITID_MODEL", 1,
+"UNITID_RESIDUE", 2,
+"UNITID_ATOM", 4,
+"UNITID_INSCODE", 8,
+"UNITID_TRIM", 16);
 });

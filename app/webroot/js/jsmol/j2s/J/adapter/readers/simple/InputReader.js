@@ -118,7 +118,7 @@ var nBonds = Clazz.floatToInt (this.getValue (1));
 var map =  new java.util.Hashtable ();
 for (var i = 0; i < nAtoms; i++) {
 this.tokens = JU.PT.getTokens (this.rd ());
-if (this.tokens[1].equals ("0")) continue;
+if (this.tokens[1].equals ("0") || this.tokens[1].equals ("2")) continue;
 var a = this.addAtomXYZSymName (this.tokens, 2, null, null);
 a.elementNumber = Clazz.floatToShort (this.getValue (1));
 map.put (this.tokens[0], a);

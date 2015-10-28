@@ -1,10 +1,19 @@
-	// BH 4/25 -- added text option. setAppletCss(null, "style=\"xxxx\"")
-	// note that since you must add the style keyword, this can be used to add any attribute to these tags, not just css. 
-
 // JSmolCore.js -- Jmol core capability 
+
+// allows Jmol applets to be created on a page with more flexibility and extendability
+// provides an object-oriented interface for JSpecView and syncing of Jmol/JSpecView
 
 // see JSmolApi.js for public user-interface. All these are private functions
 
+// BH 10/13/2015 9:32:08 PM adding Jmol.__$ as jquery object used 
+// BH 15/09/2015 18:06:39 fixing mouse check for swingjs-ui since SVG element className is not a string 
+// BH 8/12/2015 11:43:52 PM adding isHttps2Http forcing call to server proxy
+// BH 8/9/2015 6:33:33 PM correcting bug in load ASYNC for x-domain access
+// BH 7/7/2015 1:42:31 PM Jmol._persistentMenu
+// BH 6/29/2015 10:14:47 AM adds Jmol.$getSize(obj)
+// BH 5/30/2015 9:33:12 AM adds class swingjs-ui to ignore 
+// BH 5/9/2015 3:38:52 PM adds data-ignoreMouse attribute for JTextField
+// BH 3/30/2015 9:46:53 PM adds JSAppletPanel for ready callback
 // BH 12/6/2014 3:32:54 PM Jmol.setAppletCss() broken
 // BH 9/13/2014 2:15:51 PM embedded JSME loads from SEARCH when Jmol should 
 // BH 8/14/2014 2:52:38 PM drag-drop cache should not be cleared if SPT file is dropped
@@ -65,9 +74,8 @@
 // 5/14/2012 BH: added AJAX queue for ChemDoodle option with multiple canvases 
 // 8/12/2012 BH: adds support for MSIE xdr cross-domain request (jQuery.iecors.js)
 
-// allows Jmol applets to be created on a page with more flexibility and extendability
-// provides an object-oriented interface for JSpecView and syncing of Jmol/JSpecView
-
+	// BH 4/25 -- added text option. setAppletCss(null, "style=\"xxxx\"")
+	// note that since you must add the style keyword, this can be used to add any attribute to these tags, not just css. 
 
 // required/optional libraries (preferably in the following order):
 
@@ -117,8 +125,8 @@ Jmol = (function(document) {
 	var z=Jmol.z || 9000;
 	var getZOrders = function(z) {
 		return {
-			header:z++,
 			rear:z++,
+			header:z++,
 			main:z++,
 			image:z++,
 			front:z++,
@@ -132,7 +140,7 @@ Jmol = (function(document) {
 		}
 	};
 	var j = {
-		_version: "$Date: 2015-03-01 07:13:29 -0600 (Sun, 01 Mar 2015) $", // svn.keywords:lastUpdated
+		_version: "$Date: 2015-10-17 18:21:06 -0500 (Sat, 17 Oct 2015) $", // svn.keywords:lastUpdated
 		_alertNoBinary: true,
 		// this url is used to Google Analytics tracking of Jmol use. You may remove it or modify it if you wish. 
 		_allowedJmolSize: [25, 2048, 300],   // min, max, default (pixels)
@@ -150,6 +158,7 @@ Jmol = (function(document) {
 		_applets: {},
 		_asynchronous: true,
 		_ajaxQueue: [],
+    _persistentMenu: false,
 		_getZOrders: getZOrders,
 		_z:getZOrders(z),
 		_debugCode: true,  // set false in process of minimization
@@ -209,6 +218,8 @@ Jmol = (function(document) {
 
 
 (function (Jmol, $) {
+
+  Jmol.__$ = $; // local jQuery object -- important if any other module needs to access it (JSmolMenu, for example)
 
 // this library is organized into the following sections:
 
@@ -357,6 +368,11 @@ Jmol = (function(document) {
 		return Jmol._$(id).attr("disabled", b ? null : "disabled");  
 	}
 
+  Jmol.$getSize = function(id) {
+		var o = Jmol._$(id);
+    return [ o.width(), o.height() ]
+  }
+  
 	Jmol.$setSize = function(id, w, h) {
 		return Jmol._$(id).width(w).height(h);
 	}
@@ -871,12 +887,13 @@ Jmol = (function(document) {
 		if (fileName.indexOf("file:/") == 0 && fileName.indexOf("file:///") != 0)
 			fileName = "file://" + fileName.substring(5);      /// fixes IE problem
 		var isMyHost = (fileName.indexOf("://") < 0 || fileName.indexOf(document.location.protocol) == 0 && fileName.indexOf(document.location.host) >= 0);
+    var isHttps2Http = (Jmol._httpProto == "https://" && fileName.indexOf("http://") == 0);
 		var isDirectCall = Jmol._isDirectCall(fileName);
 		//if (fileName.indexOf("http://pubchem.ncbi.nlm.nih.gov/") == 0)isDirectCall = false;
 
 		var cantDoSynchronousLoad = (!isMyHost && Jmol.$supportsIECrossDomainScripting());
 		var data = null;
-		if ((!fSuccess || asBase64) && (cantDoSynchronousLoad || asBase64 || !isMyHost && !isDirectCall)) {
+		if (isHttps2Http || asBase64 || !isMyHost && !isDirectCall || !fSuccess && cantDoSynchronousLoad ) {
 				data = Jmol._getRawDataFromServer("_",fileName, fSuccess, fSuccess, asBase64, true);
 		} else {
 			fileName = fileName.replace(/file:\/\/\/\//, "file://"); // opera
@@ -891,7 +908,7 @@ Jmol = (function(document) {
 			}
 			if (fSuccess) {
 				info.success = function(data) { fSuccess(Jmol._xhrReturn(info.xhr))};
-				info.error = function() { info;fSuccess(info.xhr.statusText)};
+				info.error = function() { fSuccess(info.xhr.statusText)};
 			}
 			info.xhr = Jmol.$ajax(info);
 			if (!fSuccess) {
@@ -1095,13 +1112,16 @@ Jmol = (function(document) {
 		return window[id] = Jmol._applets[id] = Jmol._applets[applet] = Jmol._applets[id + "__" + Jmol._syncId + "__"] = applet;
 	} 
 
-	Jmol._readyCallback = function (appId,fullId,isReady,jmolApp) {
+	Jmol._readyCallback = function (appId,fullId,isReady,javaApplet,javaAppletPanel) {
 		appId = appId.split("_object")[0];
+    javaAppletPanel || (javaAppletPanel = javaApplet);
 		isReady = (isReady.booleanValue ? isReady.booleanValue() : isReady);
 		// necessary for MSIE in strict mode -- apparently, we can't call 
 		// jmol._readyCallback, but we can call Jmol._readyCallback. Go figure...
-
-		Jmol._track(Jmol._applets[appId])._readyCallback(appId, fullId, isReady, jmolApp);
+    var applet = Jmol._applets[appId];
+    applet._appletPanel = javaAppletPanel;
+    applet._applet = javaApplet;
+		Jmol._track(applet._readyCallback(appId, fullId, isReady));
 	}
 
 	Jmol._getWrapper = function(applet, isHeader) {
@@ -1355,7 +1375,7 @@ Jmol = (function(document) {
 
 	Jmol._destroy = function(applet) {
 		try {
-			if (applet._applet) applet._applet.destroy();
+			if (applet._appletPanel) applet._appletPanel.destroy();
 			applet._applet = null;
 			Jmol._unsetMouse(applet._canvas)
 			applet._canvas = null;
@@ -1472,7 +1492,7 @@ Jmol = (function(document) {
 	Jmol._jsGetXY = function(canvas, ev) {
 		if (!canvas.applet._ready || Jmol._touching && ev.type.indexOf("touch") < 0)
 			return false;
-		ev.preventDefault();
+		//ev.preventDefault(); // removed 5/9/2015 -- caused loss of focus on text-box clicking in SwingJS
 		var offsets = Jmol.$offset(canvas.id);
 		var x, y;
 		var oe = ev.originalEvent;
@@ -1530,59 +1550,83 @@ Jmol = (function(document) {
 	}
 
 	Jmol._jsSetMouse = function(canvas) {
+
+    var doIgnore = function(ev) { return (!ev.target || ("" + ev.target.className).indexOf("swingjs-ui") >= 0) };
+
 		Jmol.$bind(canvas, 'mousedown touchstart', function(ev) {
+      if (doIgnore(ev))
+        return true;
 			Jmol._setMouseOwner(canvas, true);
 			ev.stopPropagation();
-			ev.preventDefault();
+      var ui = ev.target["data-UI"];
+      if (!ui || !ui.handleJSEvent(canvas, 501, ev)) 
+  			ev.preventDefault();
 			canvas.isDragging = true;
 			if ((ev.type == "touchstart") && Jmol._gestureUpdate(canvas, ev))
-				return false;
+				return !!ui;
 			Jmol._setConsoleDiv(canvas.applet._console);
 			var xym = Jmol._jsGetXY(canvas, ev);
-			if(!xym)
-				return false;
-			if (ev.button != 2)
-				Jmol.Swing.hideMenus(canvas.applet);
-
-			canvas.applet._processEvent(501, xym); //J.api.Event.MOUSE_DOWN
-			return false;
+			if(xym) {
+		  	if (ev.button != 2)
+          Jmol.Swing.hideMenus(canvas.applet);
+        canvas.applet._processEvent(501, xym); //java.awt.Event.MOUSE_DOWN
+      }
+			return !!ui;
 		});
+    
 		Jmol.$bind(canvas, 'mouseup touchend', function(ev) {
+      if (doIgnore(ev))
+        return true;
 			Jmol._setMouseOwner(null);
 			ev.stopPropagation();
-			ev.preventDefault();
+      var ui = ev.target["data-UI"];
+      if (!ui || !ui.handleJSEvent(canvas, 502, ev))
+  			ev.preventDefault();
 			canvas.isDragging = false;
 			if (ev.type == "touchend" && Jmol._gestureUpdate(canvas, ev))
-				return false;
+				return !!ui;
 			var xym = Jmol._jsGetXY(canvas, ev);
-			if(!xym) return false;
-			canvas.applet._processEvent(502, xym);//J.api.Event.MOUSE_UP
-			return false;
+			if(xym)
+  			canvas.applet._processEvent(502, xym);//java.awt.Event.MOUSE_UP
+			return !!ui;
 		});
+    
 		Jmol.$bind(canvas, 'mousemove touchmove', function(ev) { // touchmove
+      if (doIgnore(ev))
+        return true;
 		  // defer to console or menu when dragging within this canvas
 			if (Jmol._mouseOwner && Jmol._mouseOwner != canvas && Jmol._mouseOwner.isDragging) {
-				Jmol._mouseOwner.mouseMove(ev);
+        if (!Jmol._mouseOwner.mouseMove)
+          return true;
+	   			Jmol._mouseOwner.mouseMove(ev);
 				return false;
 			}
 			return Jmol._drag(canvas, ev);
 		});
 		
 		Jmol._drag = function(canvas, ev) {
+      
 			ev.stopPropagation();
 			ev.preventDefault();
+      
 			var isTouch = (ev.type == "touchmove");
 			if (isTouch && Jmol._gestureUpdate(canvas, ev))
 				return false;
 			var xym = Jmol._jsGetXY(canvas, ev);
 			if(!xym) return false;
+      
 			if (!canvas.isDragging)
 				xym[2] = 0;
-			canvas.applet._processEvent((canvas.isDragging ? 506 : 503), xym); // J.api.Event.MOUSE_DRAG : J.api.Event.MOUSE_MOVE
-			return false;
+
+      var ui = ev.target["data-UI"];
+      if (canvas.isdragging && (!ui || !ui.handleJSEvent(canvas, 506, ev))) {}
+			canvas.applet._processEvent((canvas.isDragging ? 506 : 503), xym); // java.awt.Event.MOUSE_DRAG : java.awt.Event.MOUSE_MOVE
+			return !!ui;
 		}
 		
 		Jmol.$bind(canvas, 'DOMMouseScroll mousewheel', function(ev) { // Zoom
+      if (doIgnore(ev))
+        return true;
 			ev.stopPropagation();
 			ev.preventDefault();
 			// Webkit or Firefox
@@ -1599,8 +1643,12 @@ Jmol = (function(document) {
 		Jmol.$bind(canvas, "contextmenu", function() {return false;});
 
 		Jmol.$bind(canvas, 'mouseout', function(ev) {
-			if (canvas.applet._applet)
-				canvas.applet._applet.startHoverWatcher(false);
+      if (doIgnore(ev))
+        return true;
+      if (Jmol._mouseOwner && !Jmol._mouseOwner.mouseMove) 
+        Jmol._setMouseOwner(null);
+			if (canvas.applet._appletPanel)
+				canvas.applet._appletPanel.startHoverWatcher(false);
 			//canvas.isDragging = false;
 			var xym = Jmol._jsGetXY(canvas, ev);
 			if (!xym)
@@ -1611,8 +1659,10 @@ Jmol = (function(document) {
 		});
 
 		Jmol.$bind(canvas, 'mouseenter', function(ev) {
-			if (canvas.applet._applet)
-				canvas.applet._applet.startHoverWatcher(true);
+      if (doIgnore(ev))
+        return true;
+			if (canvas.applet._appletPanel)
+				canvas.applet._appletPanel.startHoverWatcher(true);
 			if (ev.buttons === 0 || ev.which === 0) {
 				canvas.isDragging = false;
 				var xym = Jmol._jsGetXY(canvas, ev);
@@ -1625,6 +1675,8 @@ Jmol = (function(document) {
 		});
 
 	Jmol.$bind(canvas, 'mousemoveoutjsmol', function(evspecial, target, ev) {
+      if (doIgnore(ev))
+        return true;
 		if (canvas == Jmol._mouseOwner && canvas.isDragging) {
 			return Jmol._drag(canvas, ev);
 		}
@@ -1638,6 +1690,8 @@ Jmol = (function(document) {
 			});
  
 		Jmol.$bind('body', 'mouseup touchend', function(ev) {
+      if (doIgnore(ev))
+        return true;
 			if (canvas.applet)
 				canvas.isDragging = false;
 			Jmol._setMouseOwner(null);
@@ -2166,14 +2220,14 @@ Jmol.Cache.put = function(filename, data) {
 					var cacheName = "cache://DROP_" + file.name;
 					var bytes = Jmol._toBytes(evt.target.result);
 					if (!cacheName.endsWith(".spt"))
-						me._applet.cacheFileByName("cache://DROP_*",false);
+						me._appletPanel.cacheFileByName("cache://DROP_*",false);
 					if (me._viewType == "JSV" || cacheName.endsWith(".jdx")) // shared by Jmol and JSV
 						Jmol.Cache.put(cacheName, bytes);
 					else
-						me._applet.cachePut(cacheName, bytes);
+						me._appletPanel.cachePut(cacheName, bytes);
 					var xym = Jmol._jsGetXY(me._canvas, e);
-					if(xym && (!me._applet.setStatusDragDropped || me._applet.setStatusDragDropped(0, xym[0], xym[1], cacheName))) {
-						me._applet.openFileAsyncSpecial(cacheName, 1);
+					if(xym && (!me._appletPanel.setStatusDragDropped || me._appletPanel.setStatusDragDropped(0, xym[0], xym[1], cacheName))) {
+						me._appletPanel.openFileAsyncSpecial(cacheName, 1);
 					}
 				}
 			};

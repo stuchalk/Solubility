@@ -28,7 +28,7 @@ Clazz.defineMethod (c$, "jsCylinder",
 }, "~O,~S,~B,JU.P3,JU.P3,~A");
 Clazz.defineMethod (c$, "jsSphere", 
  function (applet, id, isNew, pt, o) {
-}, "~O,~S,~B,JU.P3,~A");
+}, "~O,~S,~B,JU.T3,~A");
 Clazz.defineMethod (c$, "jsSurface", 
 function (applet, vertices, normals, indices, nVertices, nPolygons, nFaces, bsPolygons, faceVertexMax, color, vertexColors, polygonColors) {
 }, "~O,~A,~A,~A,~N,~N,~N,JU.BS,~N,~N,~A,~A");
@@ -61,7 +61,7 @@ var o;
 if (found) o = this.htObjects.get (this.ret[0]);
  else this.htObjects.put (this.ret[0], o =  Clazz.newArray (-1, [this.getColor (colix), Float.$valueOf (radius)]));
 this.jsSphere (this.html5Applet, this.ret[0], !found, ptCenter, o);
-}, "JU.P3,~N,~N,~B");
+}, "JU.T3,~N,~N,~B");
 Clazz.overrideMethod (c$, "outputCylinder", 
 function (ptCenter, pt1, pt2, colix, endcaps, radius, ptX, ptY, checkRadius) {
 if (ptX != null) return false;

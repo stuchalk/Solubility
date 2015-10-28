@@ -58,8 +58,15 @@ class SystemsController extends AppController
         // Replace the systemtype data
         $output['systemtype']=$data['Systemtype'];unset($output['systemtype_id']);unset($output['systemtype']['id']);unset($output['systemtype']['first']);
         // Replace the citation data
-        $output['citation']=$data['Citation'];unset($output['citation_id']);unset($output['citation']['id']);unset($output['citation']['first']);
-        $output['citation']['url']=$path."citations/view/".$data['Citation']['id'];
+        if($data['Citation']['id']!=0) {
+            $output['citation']=$data['Citation'];unset($output['citation_id']);unset($output['citation']['id']);unset($output['citation']['first']);
+            $output['citation']['url']=$path."citations/view/".$data['Citation']['id'];
+            if(!stristr($output['citation']['doi'],'10.')) {
+                unset($output['citation']['doi']);
+            } else {
+                $output['citation']['doi']='http://dx.doi.org/'.$output['citation']['doi'];
+            }
+        }
         // Add chemicals
         $output['chemicals']=[];
         foreach($data['Chemical'] as $c)

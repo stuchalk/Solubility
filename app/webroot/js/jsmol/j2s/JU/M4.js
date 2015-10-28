@@ -459,4 +459,28 @@ Clazz.overrideMethod (c$, "toString",
 function () {
 return "[\n  [" + this.m00 + "\t" + this.m01 + "\t" + this.m02 + "\t" + this.m03 + "]" + "\n  [" + this.m10 + "\t" + this.m11 + "\t" + this.m12 + "\t" + this.m13 + "]" + "\n  [" + this.m20 + "\t" + this.m21 + "\t" + this.m22 + "\t" + this.m23 + "]" + "\n  [" + this.m30 + "\t" + this.m31 + "\t" + this.m32 + "\t" + this.m33 + "] ]";
 });
+Clazz.defineMethod (c$, "round", 
+function (f) {
+this.m00 = this.rnd (this.m00, f);
+this.m01 = this.rnd (this.m01, f);
+this.m02 = this.rnd (this.m02, f);
+this.m03 = this.rnd (this.m03, f);
+this.m10 = this.rnd (this.m10, f);
+this.m11 = this.rnd (this.m11, f);
+this.m12 = this.rnd (this.m12, f);
+this.m13 = this.rnd (this.m13, f);
+this.m20 = this.rnd (this.m20, f);
+this.m21 = this.rnd (this.m21, f);
+this.m22 = this.rnd (this.m22, f);
+this.m23 = this.rnd (this.m23, f);
+this.m30 = this.rnd (this.m30, f);
+this.m31 = this.rnd (this.m31, f);
+this.m32 = this.rnd (this.m32, f);
+this.m33 = this.rnd (this.m33, f);
+return this;
+}, "~N");
+Clazz.defineMethod (c$, "rnd", 
+ function (n, f) {
+return (Math.abs (n) < f ? 0 : n);
+}, "~N,~N");
 });

@@ -7,19 +7,17 @@ App::uses('AppModel', 'Model');
  */
 class Citation extends AppModel
 {
-    // Link to tables via a one-to-many relationship
+    // Link to systems via a one-to-many relationship
     public $hasMany='System';
 
-    // Link to tables via a many-to-many relationship
+    // Link to authors via a many-to-many relationship
     public $hasAndBelongsToMany = [
-		'Author' =>
-			[
+		'Author' => [
 				'className' => 'Author',
 				'joinTable' => 'authors_citations',
 				'foreignKey' => 'citation_id',
 				'associationForeignKey' => 'author_id',
-				'unique' => true
-				]
+				'unique' => true]
 		];
 
     // Create virtual fields to return to views

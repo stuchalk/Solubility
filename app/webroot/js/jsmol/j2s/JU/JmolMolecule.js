@@ -174,7 +174,7 @@ var bonds = atom.getEdges ();
 if (bonds == null) return true;
 for (var i = bonds.length; --i >= 0; ) {
 var bond = bonds[i];
-if (bond.isCovalent () && !JU.JmolMolecule.getCovalentlyConnectedBitSet (atoms, bond.getOtherAtomNode (atom), bsToTest, allowCyclic, allowBioResidue, biobranches, bsResult)) return false;
+if (bond != null && bond.isCovalent () && !JU.JmolMolecule.getCovalentlyConnectedBitSet (atoms, bond.getOtherAtomNode (atom), bsToTest, allowCyclic, allowBioResidue, biobranches, bsResult)) return false;
 }
 return true;
 }, "~A,JU.Node,JU.BS,~B,~B,JU.Lst,JU.BS");

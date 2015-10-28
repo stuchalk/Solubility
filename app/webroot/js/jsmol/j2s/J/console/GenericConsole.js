@@ -256,11 +256,15 @@ if (strEcho == null) {
 this.updateLabels ();
 this.outputMsg (null);
 strEcho = this.defaultMessage;
+} else if (strEcho.equals ("\0")) {
+{
+Clazz.Console.clear();
+}strEcho = null;
 }this.outputMsg (strEcho);
 }, "~S");
 Clazz.defineMethod (c$, "outputMsg", 
  function (message) {
-if (message == null || message.length == 0) {
+if (message == null) {
 this.output.setText ("");
 return;
 }if (message.charAt (message.length - 1) != '\n') message += "\n";

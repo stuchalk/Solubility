@@ -1,6 +1,7 @@
 // JmolApplet.js -- Jmol._Applet and Jmol._Image
 
-// BY 10/19/2014 8:08:51 PM moved applet._cover and applet._displayCoverImage to 
+// BH 4/17/2015 2:33:32 PM update for SwingJS 
+// BH 10/19/2014 8:08:51 PM moved applet._cover and applet._displayCoverImage to 
 // BH 5/8/2014 11:20:21 AM trying to fix AH nd JG problem with multiple applets
 // BH 1/27/2014 8:36:43 AM adding Info.viewSet
 // BH 12/13/2013 9:04:53 AM _evaluate DEPRECATED (see JSmolApi.js Jmol.evaulateVar
@@ -144,6 +145,8 @@
 	}
 
 	Applet._getCanvas = function(id, Info, checkOnly, webGL) {
+    Info._isLayered = false;
+    Info._platform = "J.awtjs2d.Platform";
 		if (webGL && Jmol.featureDetection.supportsWebGL()) {
 			Jmol._Canvas3D.prototype = Jmol.GLmol.extendApplet(Jmol._jsSetPrototype(new Applet(id, Info, true)));
 			return new Jmol._Canvas3D(id, Info, "Jmol", checkOnly);
@@ -233,10 +236,22 @@
 	}
 
 	proto._newApplet = function(viewerOptions) {
+		if (!this._is2D)  
+			viewerOptions.put("script", (viewerOptions.get("script") || "") + ";set multipleBondSpacing 0.35;");
 		this._viewerOptions = viewerOptions;
 		return new J.appletjs.Jmol(viewerOptions);
 	}
 	
+	proto._addCoreFiles = function() {
+		Jmol._addCoreFile("jmol", this._j2sPath, this.__Info.preloadCore);
+		if (!this._is2D) {
+	 		Jmol._addExec([this, null, "J.export.JSExporter","load JSExporter"])
+	//		Jmol._addExec([this, this.__addExportHook, null, "addExportHook"])
+		}
+		if (Jmol._debugCode)
+			Jmol._addExec([this, null, "J.appletjs.Jmol", "load Jmol"]);
+  }
+  
 	proto._create = function(id, Info){
 		Jmol._setObject(this, id, Info);
 		var params = {
@@ -268,13 +283,51 @@
 		Applet._createApplet(this, Info, params);
 	}
 
-	proto._readyCallback = function(id, fullid, isReady, applet) {
+	proto._restoreState = function(clazzName, state) {
+		System.out.println("\n\nasynchronous restore state for " + clazzName + " " + state)
+		var applet = this;
+		var vwr = applet._applet && applet._applet.viewer;
+		switch (state) {
+		case "setOptions":
+			return function(_setOptions) {applet.__startAppletJS(applet)};
+		case "render":
+			return function() {setTimeout(function(){vwr.refresh(2)},10)};
+		default:
+			switch (clazzName) {
+			// debug mode only, when core.z.js has not been loaded and prior to start
+			case "J.shape.Balls":
+			case "J.shape.Sticks":
+			case "J.shape.Frank":
+				return null;
+			}
+			
+			//if (vwr.rm.repaintPending)
+				//return function() {setTimeout(function(){vwr.refresh(2)},10)};
+			if (vwr && vwr.isScriptExecuting && vwr.isScriptExecuting()) {
+				if (Jmol._asyncCallbacks[clazzName]) {
+					System.out.println("...ignored");
+					return 1;
+				}
+				var sc = vwr.getEvalContextAndHoldQueue(vwr.eval);
+				var pc = sc.pc - 1;
+				sc.asyncID = clazzName;
+				Jmol._asyncCallbacks[clazzName] = function(pc) {sc.pc=pc; System.out.println("sc.asyncID="+sc.asyncID+" sc.pc = " + sc.pc);vwr.eval.resumeEval(sc)};
+				vwr.eval.pc = vwr.eval.pcEnd;
+				System.out.println("setting resume for pc=" + sc.pc + " " + clazzName + " to " + Jmol._asyncCallbacks[clazzName] + "//" )
+				return function() {System.out.println("resuming " + clazzName + " " + Jmol._asyncCallbacks[clazzName]);Jmol._asyncCallbacks[clazzName](pc)};					
+			}
+			System.out.println(clazzName + "?????????????????????" + state)
+			return function() {setTimeout(function(){vwr.refresh(2)},10)};
+			//return null;
+		}
+	}
+
+	proto._readyCallback = function(id, fullid, isReady) {
 		if (!isReady)
 			return; // ignore -- page is closing
 		Jmol._setDestroy(this);
 		this._ready = true;
 		var script = this._readyScript;
-		this._applet = applet;
 		if (this._defaultModel)
 			Jmol._search(this, this._defaultModel, (script ? ";" + script : ""));
 		else if (script)

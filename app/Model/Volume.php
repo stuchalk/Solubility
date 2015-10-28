@@ -7,7 +7,7 @@ App::uses('AppModel', 'Model');
  */
 class Volume extends AppModel
 {
-    // Link to tables via a one-to-many relationship
-    public $hasMany = ['System'];
+    // Link to systems via a one-to-many relationship
+    public $hasMany = ['System'=>['order'=>'sysID']];
 	
 }

@@ -1,1 +1,2 @@
-<?php pr($data); ?>
+<?php
+pr($data);

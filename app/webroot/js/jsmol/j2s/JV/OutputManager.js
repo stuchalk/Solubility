@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JV");
-Clazz.load (null, "JV.OutputManager", ["java.lang.Boolean", "java.util.Date", "$.Hashtable", "$.Map", "JU.Lst", "$.OC", "$.PT", "$.Rdr", "$.SB", "J.api.Interface", "J.i18n.GT", "J.io.JmolBinary", "JU.Logger", "JV.FileManager", "$.JC", "$.Viewer"], function () {
+Clazz.load (null, "JV.OutputManager", ["java.lang.Boolean", "java.util.Date", "$.Hashtable", "$.Map", "JU.AU", "$.Lst", "$.OC", "$.PT", "$.SB", "J.api.Interface", "J.i18n.GT", "J.io.JmolBinary", "JU.Logger", "JV.FileManager", "$.JC", "$.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 this.privateKey = 0;
@@ -71,10 +71,9 @@ if (fileName != null && fileName.startsWith ("\1")) {
 isOK = true;
 var info =  new java.util.Hashtable ();
 info.put ("_IMAGE_", image);
-this.vwr.fm.loadImage (info, fileName);
+this.vwr.fm.loadImage (info, fileName, false);
 return errMsg = "OK - viewing " + fileName.substring (1);
-}if (out == null) out = this.openOutputChannel (this.privateKey, fileName, false, false);
-if (out == null) return errMsg = "ERROR: canceled";
+}if (out == null && (out = this.openOutputChannel (this.privateKey, fileName, false, false)) == null) return errMsg = "ERROR: canceled";
 fileName = out.getFileName ();
 var comment = null;
 var stateData = null;
@@ -171,8 +170,8 @@ return false;
 }var doClose = true;
 try {
 if (type.equals ("Gif") && this.vwr.getTestFlag (2)) params.put ("reducedColors", Boolean.TRUE);
-var w = objImage == null ? -1 : JU.PT.isAI (objImage) ? (params.get ("width")).intValue () : this.vwr.apiPlatform.getImageWidth (objImage);
-var h = objImage == null ? -1 : JU.PT.isAI (objImage) ? (params.get ("height")).intValue () : this.vwr.apiPlatform.getImageHeight (objImage);
+var w = objImage == null ? -1 : JU.AU.isAI (objImage) ? (params.get ("width")).intValue () : this.vwr.apiPlatform.getImageWidth (objImage);
+var h = objImage == null ? -1 : JU.AU.isAI (objImage) ? (params.get ("height")).intValue () : this.vwr.apiPlatform.getImageHeight (objImage);
 params.put ("imageWidth", Integer.$valueOf (w));
 params.put ("imageHeight", Integer.$valueOf (h));
 var pixels = this.encodeImage (w, h, objImage);
@@ -196,7 +195,7 @@ Clazz.defineMethod (c$, "encodeImage",
  function (width, height, objImage) {
 if (width < 0) return null;
 var pixels;
-if (JU.PT.isAI (objImage)) {
+if (JU.AU.isAI (objImage)) {
 pixels = objImage;
 } else {
 {
@@ -586,15 +585,14 @@ if (isLocal || includeRemoteFiles) {
 var ptSlash = name.lastIndexOf ("/");
 newName = (name.indexOf ("?") > 0 && name.indexOf ("|") < 0 ? JU.PT.replaceAllCharacters (name, "/:?\"'=&", "_") : JV.FileManager.stripPath (name));
 newName = JU.PT.replaceAllCharacters (newName, "[]", "_");
-var spardirCache = fm.jmb.spardirCache;
-var isSparDir = (spardirCache != null && spardirCache.containsKey (name));
+var isSparDir = (fm.spardirCache != null && fm.spardirCache.containsKey (name));
 if (isLocal && name.indexOf ("|") < 0 && !isSparDir) {
 v.addLast (name);
 v.addLast (newName);
 v.addLast (null);
 } else {
-var ret = (isSparDir ? spardirCache.get (name) : fm.getFileAsBytes (name, null));
-if (!JU.PT.isAB (ret)) return ret;
+var ret = (isSparDir ? fm.spardirCache.get (name) : fm.getFileAsBytes (name, null));
+if (!JU.AU.isAB (ret)) return ret;
 newName = this.addPngFileBytes (name, ret, iFile, crcMap, isSparDir, newName, ptSlash, v);
 }name = "$SCRIPT_PATH$" + newName;
 }crcMap.put (newName, newName);
@@ -632,7 +630,7 @@ v.addLast (bytes);
 }, "~S,~A,~B,JU.OC,~S");
 Clazz.defineMethod (c$, "addPngFileBytes", 
  function (name, ret, iFile, crcMap, isSparDir, newName, ptSlash, v) {
-var crcValue = Integer.$valueOf (JU.Rdr.getCrcValue (this.vwr.getJzt (), ret));
+var crcValue = Integer.$valueOf (this.vwr.getJzt ().getCrcValue (ret));
 if (crcMap.containsKey (crcValue)) {
 newName = crcMap.get (crcValue);
 } else {
@@ -661,7 +659,7 @@ var bos;
 {
 bos = out;
 }var fm = this.vwr.fm;
-var zos = JU.Rdr.getZipOutputStream (this.vwr.getJzt (), bos);
+var zos = this.vwr.getJzt ().getZipOutputStream (bos);
 for (var i = 0; i < fileNamesAndByteArrays.size (); i += 3) {
 var fname = fileNamesAndByteArrays.get (i);
 var bytes = null;
@@ -674,14 +672,14 @@ if (fname.length > 2 && fname.charAt (2) == ':') fname = fname.substring (1);
 fname = fname.substring (8);
 }var fnameShort = fileNamesAndByteArrays.get (i + 1);
 if (fnameShort == null) fnameShort = fname;
-if (data != null) bytes = (JU.PT.isAB (data) ? data : (data).getBytes ());
+if (data != null) bytes = (JU.AU.isAB (data) ? data : (data).getBytes ());
 if (bytes == null) bytes = fileNamesAndByteArrays.get (i + 2);
 var key = ";" + fnameShort + ";";
 if (fileList.indexOf (key) >= 0) {
 JU.Logger.info ("duplicate entry");
 continue;
 }fileList += key;
-JU.Rdr.addZipEntry (this.vwr.getJzt (), zos, fnameShort);
+this.vwr.getJzt ().addZipEntry (zos, fnameShort);
 var nOut = 0;
 if (bytes == null) {
 var $in = this.vwr.getBufferedInputStream (fname);
@@ -693,10 +691,10 @@ nOut += len;
 $in.close ();
 } else {
 zos.write (bytes, 0, bytes.length);
-if (pngjName != null) this.vwr.fm.jmb.recachePngjBytes (pngjName + "|" + fnameShort, bytes);
+if (pngjName != null) this.vwr.fm.recachePngjBytes (pngjName + "|" + fnameShort, bytes);
 nOut += bytes.length;
 }nBytesOut += nOut;
-JU.Rdr.closeZipEntry (this.vwr.getJzt (), zos);
+this.vwr.getJzt ().closeZipEntry (zos);
 JU.Logger.info ("...added " + fname + " (" + nOut + " bytes)");
 }
 zos.flush ();

@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.adapter.smarter");
-Clazz.load (["JU.P3"], "J.adapter.smarter.XtalSymmetry", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.BS", "$.Lst", "$.M3", "$.M4", "$.P3i", "$.PT", "$.SB", "$.V3", "J.adapter.smarter.Atom", "JU.BSUtil", "$.Logger"], function () {
+Clazz.load (["JU.P3"], "J.adapter.smarter.XtalSymmetry", ["java.lang.Boolean", "$.Float", "java.util.Hashtable", "JU.BS", "$.Lst", "$.M3", "$.M4", "$.P3i", "$.PT", "$.SB", "$.V3", "J.adapter.smarter.Atom", "JS.Symmetry", "JU.BSUtil", "$.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.asc = null;
 this.acr = null;
@@ -19,6 +19,7 @@ this.trajectoryUnitCells = null;
 this.doNormalize = true;
 this.doPackUnitCell = false;
 this.baseSymmetry = null;
+this.sym2 = null;
 this.rminx = 0;
 this.rminy = 0;
 this.rminz = 0;
@@ -147,7 +148,7 @@ readerSymmetry = null;
 }this.packingError = this.acr.packingError;
 if (doApplySymmetry) {
 if (readerSymmetry != null) this.symmetry.setSpaceGroupFrom (readerSymmetry);
-this.applySymmetryLattice (this.acr.ms, this.acr.strSupercell);
+this.applySymmetryLattice ();
 if (readerSymmetry != null && this.filterSymop == null) this.setAtomSetSpaceGroupName (readerSymmetry.getSpaceGroupName ());
 }}if (this.acr.iHaveFractionalCoordinates && this.acr.merging && readerSymmetry != null) {
 var atoms = this.asc.atoms;
@@ -162,8 +163,9 @@ Clazz.defineMethod (c$, "setAtomSetSpaceGroupName",
 this.asc.setCurrentModelInfo ("spaceGroup", spaceGroupName + "");
 }, "~S");
 Clazz.defineMethod (c$, "applySymmetryLattice", 
- function (ms, supercell) {
+ function () {
 if (!this.asc.coordinatesAreFractional || this.symmetry.getSpaceGroup () == null) return;
+this.sym2 = null;
 var maxX = this.latticeCells[0];
 var maxY = this.latticeCells[1];
 var maxZ = Math.abs (this.latticeCells[2]);
@@ -171,15 +173,42 @@ this.firstSymmetryAtom = this.asc.getLastAtomSetAtomIndex ();
 var bsAtoms = null;
 this.rminx = this.rminy = this.rminz = 3.4028235E38;
 this.rmaxx = this.rmaxy = this.rmaxz = -3.4028235E38;
-var oabc = null;
-var offset = null;
 var pt0 = null;
+if (this.acr.fillRange != null) {
+if (this.asc.bsAtoms == null) this.asc.bsAtoms =  new JU.BS ();
+bsAtoms = this.asc.bsAtoms;
+bsAtoms.setBits (this.firstSymmetryAtom, this.asc.ac);
+this.doPackUnitCell = false;
+this.minXYZ =  new JU.P3i ();
+this.maxXYZ = JU.P3i.new3 (1, 1, 1);
+var oabc =  new Array (4);
+for (var i = 0; i < 4; i++) oabc[i] = JU.P3.newP (this.acr.fillRange[i]);
+
+this.adjustRangeMinMax (oabc);
+if (this.sym2 == null) {
+this.sym2 =  new JS.Symmetry ();
+this.sym2.getUnitCell (this.acr.fillRange, false, null);
+}this.applyAllSymmetry (this.acr.ms, bsAtoms);
+pt0 =  new JU.P3 ();
+var atoms = this.asc.atoms;
+for (var i = this.asc.ac; --i >= this.firstSymmetryAtom; ) {
+pt0.setT (atoms[i]);
+this.symmetry.toCartesian (pt0, false);
+this.sym2.toFractional (pt0, false);
+if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (pt0, 100000.0);
+if (!this.isWithinCell (this.dtype, pt0, 0, 1, 0, 1, 0, 1, this.packingError)) bsAtoms.clear (i);
+}
+return;
+}var offset = null;
 this.nVib = 0;
 var va = null;
 var vb = null;
 var vc = null;
 this.baseSymmetry = this.symmetry;
-if (supercell != null && supercell.indexOf (",") >= 0) {
+var supercell = this.acr.strSupercell;
+var oabc = null;
+var isSuper = (supercell != null && supercell.indexOf (",") >= 0);
+if (isSuper) {
 oabc = this.symmetry.getV0abc (supercell);
 if (oabc != null) {
 this.minXYZ =  new JU.P3i ();
@@ -189,19 +218,67 @@ pt0 = JU.P3.newP (oabc[0]);
 va = JU.P3.newP (oabc[1]);
 vb = JU.P3.newP (oabc[2]);
 vc = JU.P3.newP (oabc[3]);
+this.adjustRangeMinMax (oabc);
+}}var iAtomFirst = this.asc.getLastAtomSetAtomIndex ();
+if (this.rminx == 3.4028235E38) {
+this.matSupercell = null;
+supercell = null;
+oabc = null;
+} else {
+var doPack0 = this.doPackUnitCell;
+this.doPackUnitCell = doPack0;
+if (this.asc.bsAtoms == null) this.asc.bsAtoms = JU.BSUtil.newBitSet2 (0, this.asc.ac);
+bsAtoms = this.asc.bsAtoms;
+this.applyAllSymmetry (this.acr.ms, null);
+this.doPackUnitCell = doPack0;
+var atoms = this.asc.atoms;
+var atomCount = this.asc.ac;
+for (var i = iAtomFirst; i < atomCount; i++) {
+this.symmetry.toCartesian (atoms[i], true);
+bsAtoms.set (i);
+}
+this.symmetry = null;
+this.symmetry = this.getSymmetry ();
+this.setUnitCell ( Clazz.newFloatArray (-1, [0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]), null, offset);
+this.setAtomSetSpaceGroupName (oabc == null || supercell == null ? "P1" : "cell=" + supercell);
+this.symmetry.setSpaceGroup (this.doNormalize);
+this.symmetry.addSpaceGroupOperation ("x,y,z", 0);
+if (pt0 != null) this.symmetry.toFractional (pt0, true);
+for (var i = iAtomFirst; i < atomCount; i++) {
+this.symmetry.toFractional (atoms[i], true);
+if (pt0 != null) atoms[i].sub (pt0);
+}
+this.asc.haveAnisou = false;
+this.asc.setCurrentModelInfo ("matUnitCellOrientation", null);
+}this.minXYZ =  new JU.P3i ();
+this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
+this.symmetry.setMinMaxLatticeParameters (this.minXYZ, this.maxXYZ);
+if (oabc == null) {
+this.applyAllSymmetry (this.acr.ms, bsAtoms);
+return;
+}if (this.acr.forcePacked || this.doPackUnitCell) {
+var bs = this.asc.bsAtoms;
+var atoms = this.asc.atoms;
+if (bs == null) bs = this.asc.bsAtoms = JU.BSUtil.newBitSet2 (0, this.asc.ac);
+for (var i = bs.nextSetBit (iAtomFirst); i >= 0; i = bs.nextSetBit (i + 1)) {
+if (!this.isWithinCell (this.dtype, atoms[i], this.minXYZ.x, this.maxXYZ.x, this.minXYZ.y, this.maxXYZ.y, this.minXYZ.z, this.maxXYZ.z, this.packingError)) bs.clear (i);
+}
+}});
+Clazz.defineMethod (c$, "adjustRangeMinMax", 
+ function (oabc) {
 var pa =  new JU.P3 ();
 var pb =  new JU.P3 ();
 var pc =  new JU.P3 ();
 if (this.acr.forcePacked) {
-pa.setT (va);
-pb.setT (vb);
-pc.setT (vc);
+pa.setT (oabc[1]);
+pb.setT (oabc[2]);
+pc.setT (oabc[3]);
 pa.scale (this.packingError);
 pb.scale (this.packingError);
 pc.scale (this.packingError);
-}oabc[0].scaleAdd2 (this.minXYZ.x, va, oabc[0]);
-oabc[0].scaleAdd2 (this.minXYZ.y, vb, oabc[0]);
-oabc[0].scaleAdd2 (this.minXYZ.z, vc, oabc[0]);
+}oabc[0].scaleAdd2 (this.minXYZ.x, oabc[1], oabc[0]);
+oabc[0].scaleAdd2 (this.minXYZ.y, oabc[2], oabc[0]);
+oabc[0].scaleAdd2 (this.minXYZ.z, oabc[3], oabc[0]);
 oabc[0].sub (pa);
 oabc[0].sub (pb);
 oabc[0].sub (pc);
@@ -226,53 +303,9 @@ this.symmetry.toCartesian (pt, false);
 pt.add (oabc[1]);
 this.symmetry.toFractional (pt, false);
 this.setSymmetryMinMax (pt);
-this.minXYZ = JU.P3i.new3 (Clazz.doubleToInt (Math.floor (this.rminx + 0.001)), Clazz.doubleToInt (Math.floor (this.rminy + 0.001)), Clazz.doubleToInt (Math.floor (this.rminz + 0.001)));
-this.maxXYZ = JU.P3i.new3 (Clazz.doubleToInt (Math.ceil (this.rmaxx - 0.001)), Clazz.doubleToInt (Math.ceil (this.rmaxy - 0.001)), Clazz.doubleToInt (Math.ceil (this.rmaxz - 0.001)));
-}}if (this.rminx == 3.4028235E38) {
-this.matSupercell = null;
-supercell = null;
-oabc = null;
-} else {
-JU.Logger.info ("setting min/max for original lattice to " + this.minXYZ + " and " + this.maxXYZ);
-var doPack0 = this.doPackUnitCell;
-this.doPackUnitCell = doPack0;
-if (this.asc.bsAtoms == null) this.asc.bsAtoms = JU.BSUtil.setAll (this.asc.ac);
-bsAtoms = this.asc.bsAtoms;
-this.applyAllSymmetry (ms, null);
-this.doPackUnitCell = doPack0;
-var atoms = this.asc.atoms;
-var atomCount = this.asc.ac;
-var iAtomFirst = this.asc.getLastAtomSetAtomIndex ();
-for (var i = iAtomFirst; i < atomCount; i++) this.symmetry.toCartesian (atoms[i], true);
-
-this.symmetry = null;
-this.symmetry = this.getSymmetry ();
-this.setUnitCell ( Clazz.newFloatArray (-1, [0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]), null, offset);
-this.setAtomSetSpaceGroupName (oabc == null ? "P1" : "cell=" + supercell);
-this.symmetry.setSpaceGroup (this.doNormalize);
-this.symmetry.addSpaceGroupOperation ("x,y,z", 0);
-if (pt0 != null) this.symmetry.toFractional (pt0, true);
-for (var i = iAtomFirst; i < atomCount; i++) {
-this.symmetry.toFractional (atoms[i], true);
-if (pt0 != null) atoms[i].sub (pt0);
-}
-this.asc.haveAnisou = false;
-this.asc.setCurrentModelInfo ("matUnitCellOrientation", null);
-}this.minXYZ =  new JU.P3i ();
-this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
-if (oabc == null) {
-this.minXYZ =  new JU.P3i ();
-this.maxXYZ = JU.P3i.new3 (maxX, maxY, maxZ);
-this.applyAllSymmetry (ms, bsAtoms);
-} else if (this.acr.forcePacked || this.doPackUnitCell) {
-this.symmetry.setMinMaxLatticeParameters (this.minXYZ, this.maxXYZ);
-var bs = this.asc.bsAtoms;
-var atoms = this.asc.atoms;
-if (bs == null) bs = this.asc.bsAtoms = JU.BSUtil.newBitSet2 (0, this.asc.ac);
-for (var i = bs.nextSetBit (0); i >= 0; i = bs.nextSetBit (i + 1)) {
-if (!this.isWithinCell (this.dtype, atoms[i], this.minXYZ.x, this.maxXYZ.x, this.minXYZ.y, this.maxXYZ.y, this.minXYZ.z, this.maxXYZ.z, this.packingError)) bs.clear (i);
-}
-}}, "J.adapter.smarter.MSInterface,~S");
+this.minXYZ = JU.P3i.new3 (Clazz.doubleToInt (Math.min (0, Math.floor (this.rminx + 0.001))), Clazz.doubleToInt (Math.min (0, Math.floor (this.rminy + 0.001))), Clazz.doubleToInt (Math.min (0, Math.floor (this.rminz + 0.001))));
+this.maxXYZ = JU.P3i.new3 (Clazz.doubleToInt (Math.max (1, Math.ceil (this.rmaxx - 0.001))), Clazz.doubleToInt (Math.max (1, Math.ceil (this.rmaxy - 0.001))), Clazz.doubleToInt (Math.max (1, Math.ceil (this.rmaxz - 0.001))));
+}, "~A");
 Clazz.defineMethod (c$, "setSymmetryMinMax", 
  function (c) {
 if (this.rminx > c.x) this.rminx = c.x;
@@ -281,10 +314,6 @@ if (this.rminz > c.z) this.rminz = c.z;
 if (this.rmaxx < c.x) this.rmaxx = c.x;
 if (this.rmaxy < c.y) this.rmaxy = c.y;
 if (this.rmaxz < c.z) this.rmaxz = c.z;
-}, "JU.P3");
-Clazz.defineMethod (c$, "isInSymmetryRange", 
- function (c) {
-return (c.x >= this.rminx && c.y >= this.rminy && c.z >= this.rminz && c.x <= this.rmaxx && c.y <= this.rmaxy && c.z <= this.rmaxz);
 }, "JU.P3");
 Clazz.defineMethod (c$, "isWithinCell", 
 function (dtype, pt, minX, maxX, minY, maxY, minZ, maxZ, slop) {
@@ -466,26 +495,26 @@ subSystemId = code.charAt (0);
 symmetry = ms.getSymmetryFromCode (code);
 if (symmetry.getSpaceGroupOperationCount () == 0) this.finalizeSymmetry (symmetry);
 }}if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (ptAtom, 100000.0);
-var cartesian = JU.P3.newP (ptAtom);
-symmetry.toCartesian (cartesian, false);
+var c = JU.P3.newP (ptAtom);
+symmetry.toCartesian (c, false);
 if (this.doPackUnitCell) {
-symmetry.toUnitCell (cartesian, this.ptOffset);
-ptAtom.setT (cartesian);
+symmetry.toUnitCell (c, this.ptOffset);
+ptAtom.setT (c);
 symmetry.toFractional (ptAtom, false);
 if (this.acr.fixJavaFloat) JU.PT.fixPtFloats (ptAtom, 100000.0);
 if (!this.isWithinCell (this.dtype, ptAtom, this.minXYZ0.x, this.maxXYZ0.x, this.minXYZ0.y, this.maxXYZ0.y, this.minXYZ0.z, this.maxXYZ0.z, this.packingError)) continue;
-}if (checkSymmetryMinMax) this.setSymmetryMinMax (cartesian);
+}if (checkSymmetryMinMax) this.setSymmetryMinMax (c);
 var special = null;
 if (checkDistances) {
 var minDist2 = 3.4028235E38;
-if (checkSymmetryRange && !this.isInSymmetryRange (cartesian)) continue;
+if (checkSymmetryRange && (c.x < this.rminx || c.y < this.rminy || c.z < this.rminz || c.x > this.rmaxx || c.y > this.rmaxy || c.z > this.rmaxz)) continue;
 var j0 = (this.checkAll ? this.asc.ac : pt0);
 var name = a.atomName;
 var id = (code == null ? a.altLoc : subSystemId);
 for (var j = j0; --j >= 0; ) {
 var pc = cartesians[j];
 if (pc == null) continue;
-var d2 = cartesian.distanceSquared (pc);
+var d2 = c.distanceSquared (pc);
 if (checkSpecial && d2 < 0.0001) {
 special = this.asc.atoms[this.firstSymmetryAtom + j];
 if ((special.atomName == null || special.atomName.equals (name)) && special.altLoc == id) break;
@@ -510,7 +539,7 @@ atom1.vib.scale (spinOp);
 if (code != null) atom1.altLoc = subSystemId;
 atom1.bsSymmetry = JU.BSUtil.newAndSetBit (iCellOpPt + iSym);
 atom1.bsSymmetry.set (iSym);
-if (addCartesian) cartesians[pt++] = cartesian;
+if (addCartesian) cartesians[pt++] = c;
 var tensors = a.tensors;
 if (tensors != null) {
 atom1.tensors = null;
@@ -571,6 +600,10 @@ for (var i = 0; i < operationCount; i++) symmetryList[i] = "" + this.symmetry.ge
 this.asc.setCurrentModelInfo ("symmetryOperations", symmetryList);
 this.asc.setCurrentModelInfo ("symmetryOps", this.symmetry.getSymmetryOperations ());
 }this.asc.setCurrentModelInfo ("symmetryCount", Integer.$valueOf (operationCount));
+});
+Clazz.defineMethod (c$, "getOverallSpan", 
+function () {
+return (this.maxXYZ0 == null ? JU.V3.new3 (this.maxXYZ.x - this.minXYZ.x, this.maxXYZ.y - this.minXYZ.y, this.maxXYZ.z - this.minXYZ.z) : JU.V3.newVsub (this.maxXYZ0, this.minXYZ0));
 });
 Clazz.defineMethod (c$, "applySymmetryBio", 
 function (thisBiomolecule, unitCellParams, applySymmetryToBonds, filter) {

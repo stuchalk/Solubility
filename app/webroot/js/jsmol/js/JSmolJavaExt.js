@@ -1,4 +1,5 @@
 // JSmolJavaExt.js
+ 
 
 // This library will be wrapped by an additional anonymous function using ANT in 
 // build_03_tojs.xml. This task will also modify variable names. References 
@@ -6,6 +7,11 @@
 // (local scope) Clazz_xxx, allowing them to be further compressed using
 // Google Closure Compiler in that same ANT task.
 
+// BH 9/19/2015 11:05:45 PM Float.isInfinite(), Float.isNaN(), Double.isInfinite(), Double.isNaN() all not implemented
+// BH 5/31/2015 5:53:04 PM Number.compareTo added
+// BH 5/21/2015 5:46:30 PM Number("0xFFFFFFFF") is not -1
+// BH 4/23/2015 9:08:59 AM xx.getComponentType() is nonfunctional. Array.newInstance now defines a wrapper for .getClass().getComponentType() that works  
+// BH 4/12/2015 1:37:44 PM adding Math.rint = Math.round
 // BH 1/16/2015 10:09:38 AM Chrome failure jqGrig due to new String("x").toString() not being a simple string
 // BH 8/14/2014 6:49:22 PM Character class efficiencies
 // BH 7/24/2014 9:02:18 AM most browsers do not support String.codePointAt()
@@ -54,7 +60,7 @@
 	Clazz._Loader.ignore([
 		"net.sf.j2s.ajax.HttpRequest",
 		sJU + ".MapEntry.Type",
-		"java.net.UnknownServiceException",
+		//"java.net.UnknownServiceException",
 		"java.lang.Runtime",
 		"java.security.AccessController",
 		"java.security.PrivilegedExceptionAction",
@@ -62,11 +68,13 @@
 		"java.io.FileInputStream",
 		"java.io.FileWriter",
 		"java.io.OutputStreamWriter",
-		sJU + ".Calendar", // bypassed in ModelCollection
-		"java.text.SimpleDateFormat", // not used
-		"java.text.DateFormat", // not used
+//		sJU + ".Calendar", // bypassed in ModelCollection
+//		"java.text.SimpleDateFormat", // not used
+//		"java.text.DateFormat", // not used
 		sJU + ".concurrent.Executors"
 	])
+
+Math.rint = Math.round;
 
 Math.log10||(Math.log10=function(a){return Math.log(a)/2.302585092994046});
 
@@ -84,7 +92,7 @@ Number.__CLASS_NAME__="Number";
 Clazz.implementOf(Number,java.io.Serializable);
 Number.equals=Clazz._innerFunctions.equals;
 Number.getName=Clazz._innerFunctions.getName;
-
+Number.prototype.compareTo = function(x) { var a = this.value, b = x.value; return (a < b ? -1 : a == b ? 0 : 1) };
 
 Clazz.defineMethod(Number,"shortValue",
 function(){
@@ -269,7 +277,7 @@ if(d.valueOf)d=d.valueOf();
 if (d < 0) {
 var b = d & 0xFFFFFF;
 var c = ((d>>24)&0xFF);
-return c._numberToString(16) + (b = b._numberToString(16)).substring(b.length - 6);
+return c._numberToString(16) + (b = "000000" + b._numberToString(16)).substring(b.length - 6);
 }
 return d._numberToString(16);};
 Integer.toOctalString=Integer.prototype.toOctalString=function(d){if(d.valueOf)d=d.valueOf();return d._numberToString(8);};
@@ -282,7 +290,8 @@ n = n.replace(/\#/, "0x").toLowerCase();
 var radix=(n.startsWith("0x", i) ? 16 : n.startsWith("0", i) ? 8 : 10);
 // The general problem with parseInt is that is not strict -- ParseInt("10whatever") == 10.
 // Number is strict, but Number("055") does not work, though ParseInt("055", 8) does.
-n = Number(n);
+// need to make sure negative numbers are negative
+n = Number(n) & 0xFFFFFFFF;
 return (radix == 8 ? parseInt(n, 8) : n);
 },"~S");
 
@@ -326,7 +335,7 @@ Long.TYPE=Long.prototype.TYPE=Long;
 
 Clazz.defineMethod(Long,"parseLong",
 function(s,radix){
- return Integer.parseInteger(s, radix || 10);
+ return Integer.parseInt(s, radix || 10);
 });
 
 Long.parseLong=Long.prototype.parseLong;
@@ -589,12 +598,12 @@ Float.$valueOf=Float.prototype.$valueOf;
 
 Clazz.defineMethod(Float,"isNaN",
 function(num){
-return isNaN(num);
+return isNaN(arguments.length == 1 ? num : this.valueOf());
 },"Number");
 Float.isNaN=Float.prototype.isNaN;
 Clazz.defineMethod(Float,"isInfinite",
 function(num){
-return!isFinite(num);
+return!isFinite(arguments.length == 1 ? num : this.valueOf());
 },"Number");
 Float.isInfinite=Float.prototype.isInfinite;
 
@@ -637,12 +646,12 @@ Double.TYPE=Double.prototype.TYPE=Double;
 
 Clazz.defineMethod(Double,"isNaN",
 function(num){
-return isNaN(num);
+return isNaN(arguments.length == 1 ? num : this.valueOf());
 },"Number");
 Double.isNaN=Double.prototype.isNaN;
 Clazz.defineMethod(Double,"isInfinite",
 function(num){
-return!isFinite(num);
+return!isFinite(arguments.length == 1 ? num : this.valueOf());
 },"Number");
 Double.isInfinite=Double.prototype.isInfinite;
 
@@ -1692,7 +1701,7 @@ function(c){
  var i = c.charCodeAt(0);
 if(i==0x20||i==0xa0||i==0x1680)return true;
 if(i<0x2000)return false;
-returni<=0x200b||i==0x2028||i==0x2029||i==0x202f||i==0x3000;
+return i<=0x200b||i==0x2028||i==0x2029||i==0x202f||i==0x3000;
 },"~N");
 c$.digit=Clazz.defineMethod(c$,"digit",
 function(c,radix){
@@ -1733,12 +1742,25 @@ Clazz.defineStatics(c$,
 "TYPE",null);
 
 java.lang.Character.TYPE=java.lang.Character.prototype.TYPE=java.lang.Character;
-Array.getComponentType=function(){
-return Object;
-};c$=Clazz.declareType(java.lang.reflect,"Array");
-c$.newInstance=Clazz.defineMethod(c$,"newInstance",
+
+
+
+Clazz._ArrayWrapper = function(a, type) {
+ return {
+   a: a,
+   __CLASS_NAME__:"Array",
+   superClazz: Array,
+   getComponentType: function() {return type},
+   instanceOf: function(o) { return  Clazz.instanceOf(type, o) },
+   getName: function() { return this.__CLASS_NAME__ }
+ };
+}
+c$=Clazz_declareType(java.lang.reflect,"Array");
+c$.newInstance=Clazz_defineMethod(c$,"newInstance",
 function(componentType,size){
-return Clazz.newArray(length);
+var a = Clazz_newArray(size);
+ a.getClass = function() { return new Clazz._ArrayWrapper(this, componentType);};
+return a;
 },"Class,~N");
 
 javautil.Date=Date;
@@ -2791,7 +2813,7 @@ return this.name;
 });
 Clazz.defineMethod(c$,"getParameterTypes",
 function(){
-return this.parameterTypes;
+return this.parameterTypes; 
 });
 Clazz.defineMethod(c$,"getReturnType",
 function(){

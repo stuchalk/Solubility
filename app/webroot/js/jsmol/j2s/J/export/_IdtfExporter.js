@@ -205,7 +205,7 @@ v =  new JU.Lst ();
 this.htNodes.put (key, v);
 this.addShader (key, colix);
 }v.addLast (this.getParentItem ("Jmol", sphereMatrix));
-}, "JU.P3,JU.M4,~N");
+}, "JU.T3,JU.M4,~N");
 Clazz.defineMethod (c$, "getSphereResource", 
  function () {
 var sb =  new JU.SB ();
@@ -501,7 +501,7 @@ Clazz.overrideMethod (c$, "outputSphere",
 function (center, radius, colix, checkRadius) {
 this.setSphereMatrix (center, radius, radius, radius, null, this.sphereMatrix);
 this.outputEllipsoid (center, this.sphereMatrix, colix);
-}, "JU.P3,~N,~N,~B");
+}, "JU.T3,~N,~N,~B");
 Clazz.overrideMethod (c$, "outputTextPixel", 
 function (pt, argb) {
 var colix = JU.C.getColix (argb);

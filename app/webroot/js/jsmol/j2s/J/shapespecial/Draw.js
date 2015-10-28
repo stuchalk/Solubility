@@ -366,7 +366,7 @@ if (vData.size () > 0) {
 this.indicatedModelIndex = (data[3]).intValue ();
 this.lineData = vData;
 }}} else if (this.slabData != null && this.plane != null) {
-this.slabData.getMeshSlicer ().getIntersection (0, this.plane, null, null, null, null, null, false, true, 135266319, false);
+this.slabData.getMeshSlicer ().getIntersection (0, this.plane, null, null, null, null, null, false, true, 134217750, false);
 this.polygon =  new JU.Lst ();
 this.polygon.addLast (this.slabData.vs);
 this.polygon.addLast (this.slabData.pis);
@@ -388,7 +388,7 @@ this.thisMesh.isTriangleSet = true;
 this.thisMesh.vs = this.polygon.get (0);
 this.thisMesh.pis = this.polygon.get (1);
 this.thisMesh.drawVertexCount = this.thisMesh.vc = this.thisMesh.vs.length;
-this.thisMesh.pc = this.thisMesh.pis.length;
+this.thisMesh.pc = (this.thisMesh.pis == null ? -1 : this.thisMesh.pis.length);
 for (var i = 0; i < this.thisMesh.pc; i++) {
 for (var j = 0; j < 3; j++) if (this.thisMesh.pis[i][j] >= this.thisMesh.vc) return false;
 
@@ -525,8 +525,8 @@ if (iModel < 0 || m.ptCenters == null || m.ptCenters[iModel] == null) this.addPo
 case 5:
 var modelBasedPoints = info[1];
 if (this.bsAllModels == null) this.bsAllModels =  new JU.BS ();
-for (var j = 0; j < modelBasedPoints.length; j++) if (iModel < 0 || j == iModel) {
-var point = JU.Escape.uABsM (modelBasedPoints[j]);
+for (var j = 0; j < modelBasedPoints.size (); j++) if (iModel < 0 || j == iModel) {
+var point = modelBasedPoints.get (j);
 this.bsAllModels.set (j);
 if (Clazz.instanceOf (point, JU.P3)) {
 this.addPoint (point, j);
