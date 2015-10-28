@@ -8,7 +8,7 @@ You can download this project, put it up on a server (Apache and PHP) and load t
 - copy modify the database.php config file to authenticate to MySQL.
 
 ## Links
-- Access a working version of this project at [here](http://chalk.coas.unf.edu/solubility)
+- Access a working version of this project at [here](http://chalk.coas.unf.edu/sol)
 - Go to the original source of the data [available from NIST](http://srdata.nist.gov/solubility/)
 - Access the paper published on this site (coming soon...)
 
