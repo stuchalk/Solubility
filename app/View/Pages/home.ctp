@@ -1,10 +1,10 @@
 <?php $url=Configure::read('url.base'); ?>
 <h2>Scraping the IUPAC-NIST Solubility Data Series</h2>
 <div style="width: 900px;">
-    <p>This website was developed as a proof of concept to take an existing website of data,
+    <p style="text-align: justify;">This website was developed as a proof of concept to take an existing website of data,
         <?php echo $this->Html->link('The NIST Solubility Database',$url,['target'=>'_blank']); ?>
         (extracted from papers), and 'scrape' the pages for the data and metadata, clean it, and put it in a
-        relational database.  Subsequently, users (humans and computers) can search the data more effectively
+        relational database (see this project on GitHub).  Subsequently, users (humans and computers) can search the data more effectively
         and access it via a REST style API as follows</p>
     <h3>For Volumes</h3>
     <ul>
@@ -35,7 +35,7 @@
         <li>Index of Citations: <?php echo $this->Html->link('/citations','/citations'); ?></li>
         <li>View a Citation: /citations/view/&lt;id&gt;</li>
     </ul>
-    <p>
+    <p style="text-align: justify;">
         &nbsp;<br />NOTE: The focus of this site was getting the data from the web pages and into a database.  Fields of data
         were only cleaned/organized if they were necesary to afford the correct functioning of this site.  Thus, there
         are many fields of data that have not been cleaned.
