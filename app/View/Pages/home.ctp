@@ -4,7 +4,7 @@
     <p style="text-align: justify;">This website was developed as a proof of concept to take an existing website of data,
         <?php echo $this->Html->link('The NIST Solubility Database',$url,['target'=>'_blank']); ?>
         (extracted from papers), and 'scrape' the pages for the data and metadata, clean it, and put it in a
-        relational database (see this project on GitHub).  Subsequently, users (humans and computers) can search the data more effectively
+        relational database (see this project on <?php echo $this->Html->link('GitHub','https://github.com/stuchalk/Solubility',['target'=>'_blank']); ?>).  Subsequently, users (humans and computers) can search the data more effectively
         and access it via a REST style API as follows</p>
     <h3>For Volumes</h3>
     <ul>
@@ -37,7 +37,7 @@
     </ul>
     <p style="text-align: justify;">
         &nbsp;<br />NOTE: The focus of this site was getting the data from the web pages and into a database.  Fields of data
-        were only cleaned/organized if they were necesary to afford the correct functioning of this site.  Thus, there
+        were only cleaned/organized if they were necessary to afford the correct functioning of this site.  Thus, there
         are many fields of data that have not been cleaned.
     </p>
 </div>
