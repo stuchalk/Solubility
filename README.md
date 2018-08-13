@@ -10,14 +10,9 @@ You can download this project, put it up on a server (Apache and PHP) and load t
 ## Links
 - Access a working version of this project at [here](https://chalk.coas.unf.edu/sol)
 - Go to the original source of the data [available from NIST](http://srdata.nist.gov/solubility/)
-- Access the paper published on this site (coming soon...)
 
-> Stuart Chalk
-
-> Department of Chemistry
-
-> University of North Florida
-
-> Jacksonville, FL 32224 USA
-
-> Email: schalk@unf.edu
+Stuart Chalk  
+Department of Chemistry  
+University of North Florida  
+Jacksonville, FL 32224 USA  
+Email: schalk@unf.edu  
