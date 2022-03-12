@@ -1,10 +1,9 @@
 Clazz.declarePackage ("JV");
-Clazz.load (["javajs.api.BytePoster", "java.util.Hashtable"], "JV.FileManager", ["java.io.BufferedInputStream", "$.BufferedReader", "java.lang.Boolean", "java.net.URL", "$.URLEncoder", "java.util.Map", "JU.AU", "$.BArray", "$.Base64", "$.LimitedLineReader", "$.Lst", "$.OC", "$.PT", "$.Rdr", "$.SB", "J.api.Interface", "J.io.FileReader", "$.JmolBinary", "JS.SV", "JU.Logger", "JV.JmolAsyncException", "$.Viewer"], function () {
+Clazz.load (["javajs.api.BytePoster", "java.util.Hashtable"], "JV.FileManager", ["java.io.BufferedInputStream", "$.BufferedReader", "java.lang.Boolean", "java.net.URL", "$.URLEncoder", "java.util.Map", "JU.AU", "$.BArray", "$.Base64", "$.LimitedLineReader", "$.Lst", "$.OC", "$.PT", "$.Rdr", "$.SB", "J.api.Interface", "J.io.FileReader", "JS.SV", "JU.Escape", "$.Logger", "JV.JC", "$.JmolAsyncException", "$.Viewer"], function () {
 c$ = Clazz.decorateAsClass (function () {
-this.pngjCache = null;
-this.spardirCache = null;
 this.vwr = null;
-this.jmb = null;
+this.spartanDoc = null;
+this.jzu = null;
 this.pathForAllFiles = "";
 this.nameAsGiven = "zapped";
 this.fullPathName = null;
@@ -14,6 +13,8 @@ this.fileName = null;
 this.appletDocumentBaseURL = null;
 this.appletProxy = null;
 this.cache = null;
+this.pngjCache = null;
+this.spardirCache = null;
 Clazz.instantialize (this, arguments);
 }, JV, "FileManager", null, javajs.api.BytePoster);
 Clazz.prepareFields (c$, function () {
@@ -24,9 +25,13 @@ function (vwr) {
 this.vwr = vwr;
 this.clear ();
 }, "JV.Viewer");
-Clazz.defineMethod (c$, "getJmb", 
+Clazz.defineMethod (c$, "spartanUtil", 
 function () {
-return (this.jmb == null ? this.jmb = (J.api.Interface.getInterface ("J.io.JmolBinary", this.vwr, "fm getJmb()")).set (this) : this.jmb);
+return (this.spartanDoc == null ? this.spartanDoc = (J.api.Interface.getInterface ("J.adapter.readers.spartan.SpartanUtil", this.vwr, "fm getSpartanUtil()")).set (this) : this.spartanDoc);
+});
+Clazz.defineMethod (c$, "getJzu", 
+function () {
+return (this.jzu == null ? this.jzu = J.api.Interface.getOption ("io.JmolUtil", this.vwr, "file") : this.jzu);
 });
 Clazz.defineMethod (c$, "clear", 
 function () {
@@ -101,6 +106,10 @@ var name0 = name;
 name = this.vwr.resolveDatabaseFormat (name);
 if (!name0.equals (name) && name0.indexOf ("/") < 0 && JV.Viewer.hasDatabasePrefix (name0)) {
 htParams.put ("dbName", name0);
+}if (name.endsWith ("%2D%")) {
+var filter = htParams.get ("filter");
+htParams.put ("filter", (filter == null ? "" : filter) + "2D");
+name = name.substring (0, name.length - 4);
 }var pt = name.indexOf ("::");
 var nameAsGiven = (pt >= 0 ? name.substring (pt + 2) : name);
 var fileType = (pt >= 0 ? name.substring (0, pt) : null);
@@ -109,9 +118,9 @@ var names = this.getClassifiedName (nameAsGiven, true);
 if (names.length == 1) return names[0];
 var fullPathName = names[0];
 var fileName = names[1];
-htParams.put ("fullPathName", (fileType == null ? "" : fileType + "::") + fullPathName.$replace ('\\', '/'));
-if (this.vwr.getBoolean (603979880) && this.vwr.getBoolean (603979825)) this.vwr.getChimeMessenger ().update (fullPathName);
-var fileReader =  new J.io.FileReader (this, this.vwr, fileName, fullPathName, nameAsGiven, fileType, null, htParams, isAppend);
+htParams.put ("fullPathName", (fileType == null ? "" : fileType + "::") + JV.FileManager.fixDOSName (fullPathName));
+if (this.vwr.getBoolean (603979879) && this.vwr.getBoolean (603979825)) this.vwr.getChimeMessenger ().update (fullPathName);
+var fileReader =  new J.io.FileReader (this.vwr, fileName, fullPathName, nameAsGiven, fileType, null, htParams, isAppend);
 fileReader.run ();
 return fileReader.getAtomSetCollection ();
 }, "~S,java.util.Map,~B");
@@ -124,12 +133,11 @@ var fileTypes =  new Array (fileNames.length);
 for (var i = 0; i < fileNames.length; i++) {
 var pt = fileNames[i].indexOf ("::");
 var nameAsGiven = (pt >= 0 ? fileNames[i].substring (pt + 2) : fileNames[i]);
-System.out.println (i + " FM " + nameAsGiven);
 var fileType = (pt >= 0 ? fileNames[i].substring (0, pt) : null);
 var names = this.getClassifiedName (nameAsGiven, true);
 if (names.length == 1) return names[0];
 fullPathNames[i] = names[0];
-fileNames[i] = names[0].$replace ('\\', '/');
+fileNames[i] = JV.FileManager.fixDOSName (names[0]);
 fileTypes[i] = fileType;
 namesAsGiven[i] = nameAsGiven;
 }
@@ -144,7 +152,7 @@ function (strModel, htParams, isAppend) {
 this.setLoadState (htParams);
 var isAddH = (strModel.indexOf ("Viewer.AddHydrogens") >= 0);
 var fnames = (isAddH ? this.getFileInfo () : null);
-var fileReader =  new J.io.FileReader (this, this.vwr, "string", "string", "string", null, JU.Rdr.getBR (strModel), htParams, isAppend);
+var fileReader =  new J.io.FileReader (this.vwr, "string", null, null, null, JU.Rdr.getBR (strModel), htParams, isAppend);
 fileReader.run ();
 if (fnames != null) this.setFileInfo (fnames);
 if (!isAppend && !(Clazz.instanceOf (fileReader.getAtomSetCollection (), String))) {
@@ -203,16 +211,9 @@ var fr = J.api.Interface.getOption ("io.FilesReader", this.vwr, "file");
 fr.set (this, this.vwr, fullPathNames, namesAsGiven, fileTypes, readers, htParams, isAppend);
 return fr;
 }, "~A,~A,~A,~A,java.util.Map,~B");
-Clazz.defineMethod (c$, "createAtomSetCollectionFromDOM", 
-function (DOMNode, htParams) {
-var aDOMReader = J.api.Interface.getOption ("io.DOMReadaer", this.vwr, "file");
-aDOMReader.set (this, this.vwr, DOMNode, htParams);
-aDOMReader.run ();
-return aDOMReader.getAtomSetCollection ();
-}, "~O,java.util.Map");
 Clazz.defineMethod (c$, "createAtomSetCollectionFromReader", 
 function (fullPathName, name, reader, htParams) {
-var fileReader =  new J.io.FileReader (this, this.vwr, name, fullPathName, name, null, reader, htParams, false);
+var fileReader =  new J.io.FileReader (this.vwr, name, fullPathName, null, null, reader, htParams, false);
 fileReader.run ();
 return fileReader.getAtomSetCollection ();
 }, "~S,~S,~O,java.util.Map");
@@ -228,6 +229,7 @@ var ret = null;
 var errorMessage = null;
 var cacheBytes = (allowCached && outputBytes == null ? cacheBytes = this.getPngjOrDroppedBytes (fullName, name) : null);
 try {
+if (allowCached && name.indexOf (".png") >= 0 && this.pngjCache == null && !this.vwr.getBoolean (603979960)) this.pngjCache =  new java.util.Hashtable ();
 if (cacheBytes == null) {
 var isPngjBinaryPost = (name.indexOf ("?POST?_PNGJBIN_") >= 0);
 var isPngjPost = (isPngjBinaryPost || name.indexOf ("?POST?_PNGJ_") >= 0);
@@ -247,7 +249,6 @@ if (isURL && (iurl = name.indexOf ("?POST?")) >= 0) {
 post = name.substring (iurl + 6);
 name = name.substring (0, iurl);
 }var isApplet = (this.appletDocumentBaseURL != null);
-if (allowCached && name.indexOf (".png") >= 0 && this.pngjCache == null && this.vwr.cachePngFiles ()) this.pngjCache =  new java.util.Hashtable ();
 if (isApplet || isURL) {
 if (isApplet && isURL && this.appletProxy != null) name = this.appletProxy + "?url=" + this.urlEncode (name);
 var url = (isApplet ?  new java.net.URL (this.appletDocumentBaseURL, name, null) :  new java.net.URL (Clazz.castNullAs ("java.net.URL"), name, null));
@@ -289,12 +290,17 @@ throw e;
 }
 return errorMessage;
 }, "~S,~S,~B,~B,~A,~B,~B");
-Clazz.defineMethod (c$, "getPngjOrDroppedBytes", 
- function (fullName, name) {
-var bytes = this.getCachedPngjBytes (fullName);
-if (bytes == null) bytes = this.cacheGet (name, true);
-return bytes;
-}, "~S,~S");
+c$.getBufferedReaderForResource = Clazz.defineMethod (c$, "getBufferedReaderForResource", 
+function (vwr, resourceClass, classPath, resourceName) {
+var url;
+{
+}resourceName = (url == null ? vwr.vwrOptions.get ("codePath") + classPath + resourceName : url.getFile ());
+if (vwr.async) {
+var bytes = vwr.fm.cacheGet (resourceName, false);
+if (bytes == null) throw  new JV.JmolAsyncException (resourceName);
+return JU.Rdr.getBufferedReader (JU.Rdr.getBIS (bytes), null);
+}return vwr.fm.getBufferedReaderOrErrorMessageFromName (resourceName,  Clazz.newArray (-1, [null, null]), false, true);
+}, "JV.Viewer,~O,~S,~S");
 Clazz.defineMethod (c$, "urlEncode", 
  function (name) {
 try {
@@ -307,26 +313,12 @@ throw e;
 }
 }
 }, "~S");
-Clazz.defineMethod (c$, "getEmbeddedFileState", 
-function (fileName, allowCached) {
-var dir = null;
-dir = this.getZipDirectory (fileName, false, allowCached);
-if (dir.length == 0) {
-var state = this.vwr.getFileAsString4 (fileName, -1, false, true, false, "file");
-return (state.indexOf ("**** Jmol Embedded Script ****") < 0 ? "" : J.io.JmolBinary.getEmbeddedScript (state));
-}for (var i = 0; i < dir.length; i++) if (dir[i].indexOf (".spt") >= 0) {
-var data =  Clazz.newArray (-1, [fileName + "|" + dir[i], null]);
-this.getFileDataAsString (data, -1, false, false, false);
-return data[1];
-}
-return "";
-}, "~S,~B");
 Clazz.defineMethod (c$, "getFullPathNameOrError", 
 function (filename, getStream, ret) {
-var names = this.getClassifiedName (filename, true);
+var names = this.getClassifiedName (JV.JC.fixProtocol (filename), true);
 if (names == null || names[0] == null || names.length < 2) return  Clazz.newArray (-1, [null, "cannot read file name: " + filename]);
 var name = names[0];
-var fullPath = names[0].$replace ('\\', '/');
+var fullPath = JV.FileManager.fixDOSName (names[0]);
 name = JU.Rdr.getZipRoot (name);
 var errMsg = this.getBufferedInputStreamOrErrorMessageFromName (name, fullPath, false, !getStream, null, false, !getStream);
 ret[0] = fullPath;
@@ -335,6 +327,7 @@ return errMsg;
 }, "~S,~B,~A");
 Clazz.defineMethod (c$, "getBufferedReaderOrErrorMessageFromName", 
 function (name, fullPathNameReturn, isBinary, doSpecialLoad) {
+name = JV.JC.fixProtocol (name);
 var data = this.cacheGet (name, false);
 var isBytes = JU.AU.isAB (data);
 var bytes = (isBytes ? data : null);
@@ -346,33 +339,39 @@ bytes = data;
 return JU.Rdr.getBR (data);
 }}var names = this.getClassifiedName (name, true);
 if (names == null) return "cannot read file name: " + name;
-if (fullPathNameReturn != null) fullPathNameReturn[0] = names[0].$replace ('\\', '/');
+if (fullPathNameReturn != null) fullPathNameReturn[0] = JV.FileManager.fixDOSName (names[0]);
 return this.getUnzippedReaderOrStreamFromName (names[0], bytes, false, isBinary, false, doSpecialLoad, null);
 }, "~S,~A,~B,~B");
 Clazz.defineMethod (c$, "getUnzippedReaderOrStreamFromName", 
-function (name, bytes, allowZipStream, forceInputStream, isTypeCheckOnly, doSpecialLoad, htParams) {
-if (doSpecialLoad && bytes == null) {
-var o = this.checkOpenSpartanFile (name, isTypeCheckOnly);
+function (name, bytesOrStream, allowZipStream, forceInputStream, isTypeCheckOnly, doSpecialLoad, htParams) {
+if (doSpecialLoad && bytesOrStream == null) {
+var o = (name.endsWith (".spt") ?  Clazz.newArray (-1, [null, null, null]) : name.indexOf (".spardir") < 0 ? null : this.spartanUtil ().getFileList (name, isTypeCheckOnly));
 if (o != null) return o;
-}if (bytes == null && (bytes = this.getCachedPngjBytes (name)) != null && htParams != null) htParams.put ("sourcePNGJ", Boolean.TRUE);
+}name = JV.JC.fixProtocol (name);
+if (bytesOrStream == null && (bytesOrStream = this.getCachedPngjBytes (name)) != null && htParams != null) htParams.put ("sourcePNGJ", Boolean.TRUE);
+name = name.$replace ("#_DOCACHE_", "");
 var fullName = name;
 var subFileList = null;
 if (name.indexOf ("|") >= 0) {
 subFileList = JU.PT.split (name.$replace ('\\', '/'), "|");
-if (bytes == null) JU.Logger.info ("FileManager opening zip " + name);
+if (bytesOrStream == null) JU.Logger.info ("FileManager opening zip " + name);
 name = subFileList[0];
-}var t = (bytes == null ? this.getBufferedInputStreamOrErrorMessageFromName (name, fullName, true, false, null, !forceInputStream, true) : JU.Rdr.getBIS (bytes));
+}var t = (bytesOrStream == null ? this.getBufferedInputStreamOrErrorMessageFromName (name, fullName, true, false, null, !forceInputStream, true) : JU.AU.isAB (bytesOrStream) ? JU.Rdr.getBIS (bytesOrStream) : bytesOrStream);
 try {
 if (Clazz.instanceOf (t, String) || Clazz.instanceOf (t, java.io.BufferedReader)) return t;
 var bis = t;
 if (JU.Rdr.isGzipS (bis)) bis = JU.Rdr.getUnzippedInputStream (this.vwr.getJzt (), bis);
-if (forceInputStream && subFileList == null) return bis;
+ else if (JU.Rdr.isBZip2S (bis)) bis = JU.Rdr.getUnzippedInputStreamBZip2 (this.vwr.getJzt (), bis);
+if (JU.Rdr.isTar (bis)) {
+var o = this.vwr.getJzt ().getZipFileDirectory (bis, subFileList, 1, forceInputStream);
+return (Clazz.instanceOf (o, String) ? JU.Rdr.getBR (o) : o);
+}if (forceInputStream && subFileList == null) return bis;
 if (JU.Rdr.isCompoundDocumentS (bis)) {
 var doc = J.api.Interface.getInterface ("JU.CompoundDocument", this.vwr, "file");
-doc.setStream (this.vwr.getJzt (), bis, true);
+doc.setDocStream (this.vwr.getJzt (), bis);
 var s = doc.getAllDataFiles ("Molecule", "Input").toString ();
 return (forceInputStream ? JU.Rdr.getBIS (s.getBytes ()) : JU.Rdr.getBR (s));
-}if (JU.Rdr.isPickleS (bis)) return bis;
+}if (JU.Rdr.isMessagePackS (bis) || JU.Rdr.isPickleS (bis)) return bis;
 bis = JU.Rdr.getPngZipStream (bis, true);
 if (JU.Rdr.isZipS (bis)) {
 if (allowZipStream) return this.vwr.getJzt ().newZipInputStream (bis);
@@ -386,24 +385,7 @@ return ioe.toString ();
 throw ioe;
 }
 }
-}, "~S,~A,~B,~B,~B,~B,java.util.Map");
-Clazz.defineMethod (c$, "checkOpenSpartanFile", 
- function (name, isTypeCheckOnly) {
-var info = this.getSpartanFileList (name);
-return (isTypeCheckOnly || info == null || info[2] == null ? info : this.getJmb ().spartanFileGetRdr (name, info));
-}, "~S,~B");
-Clazz.defineMethod (c$, "getSpartanFileList", 
- function (name) {
-if (name.endsWith (".spt")) return  Clazz.newArray (-1, [null, null, null]);
-if (name.endsWith (".spardir.zip")) return  Clazz.newArray (-1, ["SpartanSmol", "Directory Entry ", name + "|output"]);
-name = name.$replace ('\\', '/');
-if (!name.endsWith (".spardir") && name.indexOf (".spardir/") < 0) return null;
-var pt = name.lastIndexOf (".spardir");
-if (pt < 0) return null;
-if (name.lastIndexOf ("/") > pt) {
-return  Clazz.newArray (-1, ["SpartanSmol", "Directory Entry ", name + "/input", name + "/archive", name + "/Molecule:asBinaryString", name + "/proparc"]);
-}return  Clazz.newArray (-1, ["SpartanSmol", "Directory Entry ", name + "/output"]);
-}, "~S");
+}, "~S,~O,~B,~B,~B,~B,java.util.Map");
 Clazz.defineMethod (c$, "getZipDirectory", 
 function (fileName, addManifest, allowCached) {
 var t = this.getBufferedInputStreamOrErrorMessageFromName (fileName, fileName, false, false, null, false, allowCached);
@@ -417,15 +399,14 @@ var subFileList = null;
 if (name.indexOf ("|") >= 0) {
 subFileList = JU.PT.split (name, "|");
 name = subFileList[0];
-}var bytes = (subFileList == null ? null : this.getPngjOrDroppedBytes (fullName, name));
-if (bytes != null) return bytes;
+}var bytes = (subFileList != null ? null : this.getPngjOrDroppedBytes (fullName, name));
+if (bytes == null) {
 var t = this.getBufferedInputStreamOrErrorMessageFromName (name, fullName, false, false, null, false, true);
 if (Clazz.instanceOf (t, String)) return "Error:" + t;
 try {
 var bis = t;
-bytes = (out != null || subFileList == null || subFileList.length <= 1 || !JU.Rdr.isZipS (bis) && !JU.Rdr.isPngZipStream (bis) ? JU.Rdr.getStreamAsBytes (bis, out) : this.vwr.getJzt ().getZipFileContentsAsBytes (bis, subFileList, 1));
+bytes = (out != null || subFileList == null || subFileList.length <= 1 || !JU.Rdr.isZipS (bis) && !JU.Rdr.isPngZipStream (bis) && !JU.Rdr.isTar (bis) ? JU.Rdr.getStreamAsBytes (bis, out) : this.vwr.getJzt ().getZipFileContentsAsBytes (bis, subFileList, 1));
 bis.close ();
-return bytes;
 } catch (ioe) {
 if (Clazz.exceptionOf (ioe, Exception)) {
 return ioe.toString ();
@@ -433,14 +414,17 @@ return ioe.toString ();
 throw ioe;
 }
 }
+}if (out == null || !JU.AU.isAB (bytes)) return bytes;
+out.write (bytes, 0, -1);
+return (bytes).length + " bytes";
 }, "~S,JU.OC");
 Clazz.defineMethod (c$, "getFileAsMap", 
-function (name) {
+function (name, type) {
 var bdata =  new java.util.Hashtable ();
 var t;
 if (name == null) {
 var errMsg =  new Array (1);
-var bytes = this.vwr.getImageAsBytes ("PNGJ", -1, -1, -1, errMsg);
+var bytes = this.vwr.getImageAsBytes (type, -1, -1, -1, errMsg);
 if (errMsg[0] != null) {
 bdata.put ("_ERROR_", errMsg[0]);
 return bdata;
@@ -465,7 +449,7 @@ throw e;
 }
 }
 return bdata;
-}, "~S");
+}, "~S,~S");
 Clazz.defineMethod (c$, "getFileDataAsString", 
 function (data, nBytesMax, doSpecialLoad, allowBinary, checkProtected) {
 data[1] = "";
@@ -515,27 +499,31 @@ bytes = JU.Base64.decodeBase64 (name);
 bytes = (nameOrBytes).data;
 } else if (echoName == null || Clazz.instanceOf (nameOrBytes, String)) {
 var names = this.getClassifiedName (nameOrBytes, true);
-nameOrError = (names == null ? "cannot read file name: " + nameOrBytes : names[0].$replace ('\\', '/'));
-if (names != null) image = this.getJmb ().getImage (nameOrError, echoName, forceSync);
+nameOrError = (names == null ? "cannot read file name: " + nameOrBytes : JV.FileManager.fixDOSName (names[0]));
+if (names != null) image = this.getImage (nameOrError, echoName, forceSync);
 isAsynchronous = (image == null);
 } else {
 image = nameOrBytes;
 }if (bytes != null) {
-image = this.getJmb ().getImage (bytes, echoName, true);
+image = this.getImage (bytes, echoName, true);
 isAsynchronous = false;
 }if (Clazz.instanceOf (image, String)) {
 nameOrError = image;
 image = null;
-}if (!this.vwr.isJS && image != null && bytes != null) nameOrError = ";base64," + JU.Base64.getBase64 (bytes).toString ();
-if (!this.vwr.isJS || isPopupImage && nameOrError == null) return this.vwr.loadImageData (image, nameOrError, echoName, null);
+}if (!JV.Viewer.isJS && image != null && bytes != null) nameOrError = ";base64," + JU.Base64.getBase64 (bytes).toString ();
+if (!JV.Viewer.isJS || isPopupImage && nameOrError == null || !isPopupImage && image != null) return this.vwr.loadImageData (image, nameOrError, echoName, null);
 return isAsynchronous;
+}, "~O,~S,~B");
+Clazz.defineMethod (c$, "getImage", 
+function (nameOrBytes, echoName, forceSync) {
+return this.getJzu ().getImage (this.vwr, nameOrBytes, echoName, forceSync);
 }, "~O,~S,~B");
 Clazz.defineMethod (c$, "getClassifiedName", 
  function (name, isFullLoad) {
 if (name == null) return  Clazz.newArray (-1, [null]);
 var doSetPathForAllFiles = (this.pathForAllFiles.length > 0);
-if (name.startsWith ("?") || name.startsWith ("http://?")) {
-if (!this.vwr.isJS && (name = this.vwr.dialogAsk ("Load", name, null)) == null) return  Clazz.newArray (-1, [isFullLoad ? "#CANCELED#" : null]);
+if (name.startsWith ("?") || name.startsWith ("http://?") || name.startsWith ("https://?")) {
+if (!JV.Viewer.isJS && (name = this.vwr.dialogAsk ("Load", name, null)) == null) return  Clazz.newArray (-1, [isFullLoad ? "#CANCELED#" : null]);
 doSetPathForAllFiles = false;
 }var file = null;
 var url = null;
@@ -582,8 +570,9 @@ names[1] = JV.FileManager.stripPath (names[0]);
 var name0 = names[0];
 names[0] = this.pathForAllFiles + names[1];
 JU.Logger.info ("FileManager substituting " + name0 + " --> " + names[0]);
-}if (isFullLoad && (file != null || JU.OC.urlTypeIndex (names[0]) == 4)) {
-var path = (file == null ? JU.PT.trim (names[0].substring (5), "/") : names[0]);
+}if (isFullLoad && JU.OC.isLocal (names[0])) {
+var path = names[0];
+if (file == null) path = JU.PT.trim (names[0].substring (names[0].indexOf (":") + 1), "/");
 var pt = path.length - names[1].length - 1;
 if (pt > 0) {
 path = path.substring (0, pt);
@@ -607,7 +596,7 @@ return (name == null ? "" : name.substring (0, name.lastIndexOf ("/")));
 }, "~S");
 c$.fixPath = Clazz.defineMethod (c$, "fixPath", 
  function (path) {
-path = path.$replace ('\\', '/');
+path = JV.FileManager.fixDOSName (path);
 path = JU.PT.rep (path, "/./", "/");
 var pt = path.lastIndexOf ("//") + 1;
 if (pt < 1) pt = path.indexOf (":/") + 1;
@@ -626,7 +615,7 @@ return protocol + path;
 Clazz.defineMethod (c$, "getFilePath", 
 function (name, addUrlPrefix, asShortName) {
 var names = this.getClassifiedName (name, false);
-return (names == null || names.length == 1 ? "" : asShortName ? names[1] : addUrlPrefix ? names[2] : names[0] == null ? "" : names[0].$replace ('\\', '/'));
+return (names == null || names.length == 1 ? "" : asShortName ? names[1] : addUrlPrefix ? names[2] : names[0] == null ? "" : JV.FileManager.fixDOSName (names[0]));
 }, "~S,~B,~B");
 c$.getLocalDirectory = Clazz.defineMethod (c$, "getLocalDirectory", 
 function (vwr, forDialog) {
@@ -654,7 +643,7 @@ if (!forDialog) vwr.setStringProperty ("defaultDirectoryLocal", path);
 }, "JV.Viewer,~S,~B");
 c$.getLocalPathForWritingFile = Clazz.defineMethod (c$, "getLocalPathForWritingFile", 
 function (vwr, file) {
-if (file.startsWith ("http://")) return file;
+if (file.startsWith ("http://") || file.startsWith ("https://")) return file;
 file = JU.PT.rep (file, "?", "");
 if (file.indexOf ("file:/") == 0) return file.substring (6);
 if (file.indexOf ("/") == 0 || file.indexOf (":") >= 0) return file;
@@ -669,6 +658,139 @@ throw e;
 }
 return (dir == null ? file : JV.FileManager.fixPath (dir.toString () + "/" + file));
 }, "JV.Viewer,~S");
+c$.fixDOSName = Clazz.defineMethod (c$, "fixDOSName", 
+function (fileName) {
+return (fileName.indexOf (":\\") >= 0 ? fileName.$replace ('\\', '/') : fileName);
+}, "~S");
+c$.stripPath = Clazz.defineMethod (c$, "stripPath", 
+function (name) {
+var pt = Math.max (name.lastIndexOf ("|"), name.lastIndexOf ("/"));
+return name.substring (pt + 1);
+}, "~S");
+c$.isScriptType = Clazz.defineMethod (c$, "isScriptType", 
+function (fname) {
+return JU.PT.isOneOf (fname.toLowerCase ().substring (fname.lastIndexOf (".") + 1), ";pse;spt;png;pngj;jmol;zip;");
+}, "~S");
+c$.determineSurfaceFileType = Clazz.defineMethod (c$, "determineSurfaceFileType", 
+function (bufferedReader) {
+var line = null;
+if (Clazz.instanceOf (bufferedReader, JU.Rdr.StreamReader)) {
+var is = (bufferedReader).getStream ();
+if (is.markSupported ()) {
+try {
+is.mark (300);
+var buf =  Clazz.newByteArray (300, 0);
+is.read (buf, 0, 300);
+is.reset ();
+if ((buf[0] & 0xFF) == 0x83) return "BCifDensity";
+if (buf[0] == 80 && buf[1] == 77 && buf[2] == 1 && buf[3] == 0) return "Pmesh";
+if (buf[208] == 77 && buf[209] == 65 && buf[210] == 80) return "Mrc";
+if (buf[0] == 20 && buf[1] == 0 && buf[2] == 0 && buf[3] == 0) return "DelPhi";
+if (buf[36] == 0 && buf[37] == 100) return "Dsn6";
+} catch (e) {
+if (Clazz.exceptionOf (e, java.io.IOException)) {
+} else {
+throw e;
+}
+}
+}}var br = null;
+try {
+br =  new JU.LimitedLineReader (bufferedReader, 16000);
+line = br.getHeader (0);
+} catch (e) {
+if (Clazz.exceptionOf (e, Exception)) {
+} else {
+throw e;
+}
+}
+if (br == null || line == null || line.length == 0) return null;
+var pt0 = line.indexOf ('\0');
+if (pt0 >= 0) {
+if (line.charCodeAt (0) == 0x83) return "BCifDensity";
+if (line.indexOf ("PM\u0001\u0000") == 0) return "Pmesh";
+if (line.indexOf ("MAP ") == 208) return "Mrc";
+if (line.indexOf ("\u0014\u0000\u0000\u0000") == 0) return "DelPhi";
+if (line.length > 37 && (line.charCodeAt (36) == 0 && line.charCodeAt (37) == 100 || line.charCodeAt (36) == 0 && line.charCodeAt (37) == 100)) {
+return "Dsn6";
+}}switch (line.charAt (0)) {
+case '@':
+if (line.indexOf ("@text") == 0) return "Kinemage";
+break;
+case '#':
+if (line.indexOf (".obj") >= 0) return "Obj";
+if (line.indexOf ("MSMS") >= 0) return "Msms";
+if (line.indexOf ("Menu") >= 0) return "MENU";
+break;
+case '&':
+if (line.indexOf ("&plot") == 0) return "Jaguar";
+break;
+case '\r':
+case '\n':
+if (line.indexOf ("ZYX") >= 0) return "Xplor";
+break;
+}
+if (line.indexOf ("Here is your gzipped map") >= 0) return "UPPSALA" + line;
+if (line.startsWith ("data_SERVER")) return "CifDensity";
+if (line.startsWith ("4MESHC")) return "Pmesh4";
+if (line.indexOf ("! nspins") >= 0) return "CastepDensity";
+if (line.indexOf ("<jvxl") >= 0 && line.indexOf ("<?xml") >= 0) return "JvxlXml";
+if (line.indexOf ("#JVXL+") >= 0) return "Jvxl+";
+if (line.indexOf ("#JVXL") >= 0) return "Jvxl";
+if (line.indexOf ("#JmolPmesh") >= 0) return "Pmesh";
+if (line.indexOf ("#obj") >= 0) return "Obj";
+if (line.indexOf ("#pmesh") >= 0) return "Obj";
+if (line.indexOf ("<efvet ") >= 0) return "Efvet";
+if (line.indexOf ("usemtl") >= 0) return "Obj";
+if (line.indexOf ("# object with") == 0) return "Nff";
+if (line.indexOf ("BEGIN_DATAGRID_3D") >= 0 || line.indexOf ("BEGIN_BANDGRID_3D") >= 0) return "Xsf";
+if (line.indexOf ("tiles in x, y") >= 0) return "Ras3D";
+if (line.indexOf (" 0.00000e+00 0.00000e+00      0      0\n") >= 0) return "Uhbd";
+line = br.readLineWithNewline ();
+if (line.indexOf ("object 1 class gridpositions counts") == 0) return "Apbs";
+var tokens = JU.PT.getTokens (line);
+var line2 = br.readLineWithNewline ();
+if (tokens.length == 2 && JU.PT.parseInt (tokens[0]) == 3 && JU.PT.parseInt (tokens[1]) != -2147483648) {
+tokens = JU.PT.getTokens (line2);
+if (tokens.length == 3 && JU.PT.parseInt (tokens[0]) != -2147483648 && JU.PT.parseInt (tokens[1]) != -2147483648 && JU.PT.parseInt (tokens[2]) != -2147483648) return "PltFormatted";
+}var line3 = br.readLineWithNewline ();
+if (line.startsWith ("v ") && line2.startsWith ("v ") && line3.startsWith ("v ")) return "Obj";
+var nAtoms = JU.PT.parseInt (line3);
+if (nAtoms == -2147483648) return (line3.indexOf ("+") == 0 ? "Jvxl+" : null);
+tokens = JU.PT.getTokens (line3);
+if (tokens[0].indexOf (".") > 0) return (line3.length >= 60 || tokens.length != 3 ? null : "VaspChgcar");
+if (nAtoms >= 0) return (tokens.length == 4 || tokens.length == 5 && tokens[4].equals ("1") ? "Cube" : null);
+nAtoms = -nAtoms;
+for (var i = 4 + nAtoms; --i >= 0; ) if ((line = br.readLineWithNewline ()) == null) return null;
+
+var nSurfaces = JU.PT.parseInt (line);
+if (nSurfaces == -2147483648) return null;
+return (nSurfaces < 0 ? "Jvxl" : "Cube");
+}, "java.io.BufferedReader");
+c$.getManifestScriptPath = Clazz.defineMethod (c$, "getManifestScriptPath", 
+function (manifest) {
+if (manifest.indexOf ("$SCRIPT_PATH$") >= 0) return "";
+var ch = (manifest.indexOf ('\n') >= 0 ? "\n" : "\r");
+if (manifest.indexOf (".spt") >= 0) {
+var s = JU.PT.split (manifest, ch);
+for (var i = s.length; --i >= 0; ) if (s[i].indexOf (".spt") >= 0) return "|" + JU.PT.trim (s[i], "\r\n \t");
+
+}return null;
+}, "~S");
+c$.getFileReferences = Clazz.defineMethod (c$, "getFileReferences", 
+function (script, fileList, fileListUTF) {
+for (var ipt = 0; ipt < JV.FileManager.scriptFilePrefixes.length; ipt++) {
+var tag = JV.FileManager.scriptFilePrefixes[ipt];
+var i = -1;
+while ((i = script.indexOf (tag, i + 1)) >= 0) {
+var s = JU.PT.getQuotedStringAt (script, i);
+if (s.indexOf ("\\u") >= 0) s = JU.Escape.unescapeUnicode (s);
+fileList.addLast (s);
+if (fileListUTF != null) {
+if (s.indexOf ("\\u") >= 0) s = JU.Escape.unescapeUnicode (s);
+fileListUTF.addLast (s);
+}}
+}
+}, "~S,JU.Lst,JU.Lst");
 c$.setScriptFileReferences = Clazz.defineMethod (c$, "setScriptFileReferences", 
 function (script, localPath, remotePath, scriptPath) {
 if (localPath != null) script = JV.FileManager.setScriptFileRefs (script, localPath, true);
@@ -688,15 +810,20 @@ c$.setScriptFileRefs = Clazz.defineMethod (c$, "setScriptFileRefs",
 if (dataPath == null) return script;
 var noPath = (dataPath.length == 0);
 var fileNames =  new JU.Lst ();
-J.io.JmolBinary.getFileReferences (script, fileNames);
+JV.FileManager.getFileReferences (script, fileNames, null);
 var oldFileNames =  new JU.Lst ();
 var newFileNames =  new JU.Lst ();
 var nFiles = fileNames.size ();
 for (var iFile = 0; iFile < nFiles; iFile++) {
 var name0 = fileNames.get (iFile);
 var name = name0;
-if (isLocal == JU.OC.isLocal (name)) {
-var pt = (noPath ? -1 : name.indexOf ("/" + dataPath + "/"));
+var pt = name.indexOf ("::");
+var type = "";
+if (pt >= 0) {
+type = name.substring (pt + 2);
+name = name.substring (pt + 2);
+}if (isLocal == JU.OC.isLocal (name)) {
+pt = (noPath ? -1 : name.indexOf ("/" + dataPath + "/"));
 if (pt >= 0) {
 name = name.substring (pt + 1);
 } else {
@@ -704,29 +831,16 @@ pt = name.lastIndexOf ("/");
 if (pt < 0 && !noPath) name = "/" + name;
 if (pt < 0 || noPath) pt++;
 name = dataPath + name.substring (pt);
-}}JU.Logger.info ("FileManager substituting " + name0 + " --> " + name);
+}}name = type + name;
+JU.Logger.info ("FileManager substituting " + name0 + " --> " + name);
 oldFileNames.addLast ("\"" + name0 + "\"");
 newFileNames.addLast ("\1\"" + name + "\"");
 }
 return JU.PT.replaceStrings (script, oldFileNames, newFileNames);
 }, "~S,~S,~B");
-c$.stripPath = Clazz.defineMethod (c$, "stripPath", 
-function (name) {
-var pt = Math.max (name.lastIndexOf ("|"), name.lastIndexOf ("/"));
-return name.substring (pt + 1);
-}, "~S");
-c$.fixFileNameVariables = Clazz.defineMethod (c$, "fixFileNameVariables", 
-function (format, fname) {
-var str = JU.PT.rep (format, "%FILE", fname);
-if (str.indexOf ("%LC") < 0) return str;
-fname = fname.toLowerCase ();
-str = JU.PT.rep (str, "%LCFILE", fname);
-if (fname.length == 4) str = JU.PT.rep (str, "%LC13", fname.substring (1, 3));
-return str;
-}, "~S,~S");
 Clazz.defineMethod (c$, "cachePut", 
 function (key, data) {
-key = key.$replace ('\\', '/');
+key = JV.FileManager.fixDOSName (key);
 if (JU.Logger.debugging) JU.Logger.debug ("cachePut " + key);
 if (data == null || "".equals (data)) {
 this.cache.remove (key);
@@ -736,7 +850,7 @@ this.getCachedPngjBytes (key);
 }, "~S,~O");
 Clazz.defineMethod (c$, "cacheGet", 
 function (key, bytesOnly) {
-key = key.$replace ('\\', '/');
+key = JV.FileManager.fixDOSName (key);
 var pt = key.indexOf ("|");
 if (pt >= 0 && !key.endsWith ("##JmolSurfaceInfo##")) key = key.substring (0, pt);
 key = this.getFilePath (key, true, false);
@@ -760,13 +874,13 @@ this.cacheClear ();
 return -1;
 }var data;
 if (isAdd) {
-fileName = this.vwr.resolveDatabaseFormat (fileName);
+fileName = JV.JC.fixProtocol (this.vwr.resolveDatabaseFormat (fileName));
 data = this.getFileAsBytes (fileName, null);
 if (Clazz.instanceOf (data, String)) return 0;
 this.cachePut (fileName, data);
 } else {
 if (fileName.endsWith ("*")) return JU.AU.removeMapKeys (this.cache, fileName.substring (0, fileName.length - 1));
-data = this.cache.remove (fileName.$replace ('\\', '/'));
+data = this.cache.remove (JV.FileManager.fixDOSName (fileName));
 }return (data == null ? 0 : Clazz.instanceOf (data, String) ? (data).length : (data).length);
 }, "~S,~B");
 Clazz.defineMethod (c$, "cacheList", 
@@ -781,9 +895,27 @@ function (pathName) {
 var names = this.getClassifiedName (pathName, true);
 return (names == null ? pathName : names[2]);
 }, "~S");
+Clazz.defineMethod (c$, "recachePngjBytes", 
+function (fileName, bytes) {
+if (this.pngjCache == null || !this.pngjCache.containsKey (fileName)) return;
+this.pngjCache.put (fileName, bytes);
+JU.Logger.info ("PNGJ recaching " + fileName + " (" + bytes.length + ")");
+}, "~S,~A");
+Clazz.defineMethod (c$, "getPngjOrDroppedBytes", 
+ function (fullName, name) {
+var bytes = this.getCachedPngjBytes (fullName);
+return (bytes == null ? this.cacheGet (name, true) : bytes);
+}, "~S,~S");
+Clazz.defineMethod (c$, "getCachedPngjBytes", 
+ function (pathName) {
+return (pathName == null || this.pngjCache == null || pathName.indexOf (".png") < 0 ? null : this.getJzu ().getCachedPngjBytes (this, pathName));
+}, "~S");
 Clazz.overrideMethod (c$, "postByteArray", 
 function (fileName, bytes) {
-var ret = this.getBufferedInputStreamOrErrorMessageFromName (fileName, null, false, false, bytes, false, true);
+if (fileName.startsWith ("cache://")) {
+this.cachePut (fileName, bytes);
+return "OK " + bytes.length + "cached";
+}var ret = this.getBufferedInputStreamOrErrorMessageFromName (fileName, null, false, false, bytes, false, true);
 if (Clazz.instanceOf (ret, String)) return ret;
 try {
 ret = JU.Rdr.getStreamAsBytes (ret, null);
@@ -803,120 +935,57 @@ throw e;
 }
 return (ret == null ? "" : JU.Rdr.fixUTF (ret));
 }, "~S,~A");
-c$.getBufferedReaderForResource = Clazz.defineMethod (c$, "getBufferedReaderForResource", 
-function (vwr, resourceClass, classPath, resourceName) {
-var url;
-{
-}resourceName = (url == null ? vwr.vwrOptions.get ("codePath") + classPath + resourceName : url.getFile ());
-if (vwr.async) {
-var bytes = vwr.fm.cacheGet (resourceName, false);
-if (bytes == null) throw  new JV.JmolAsyncException (resourceName);
-return JU.Rdr.getBufferedReader (JU.Rdr.getBIS (bytes), null);
-}return vwr.fm.getBufferedReaderOrErrorMessageFromName (resourceName,  Clazz.newArray (-1, [null, null]), false, true);
-}, "JV.Viewer,~O,~S,~S");
-c$.determineSurfaceTypeIs = Clazz.defineMethod (c$, "determineSurfaceTypeIs", 
-function (is) {
-var br;
-try {
-br = JU.Rdr.getBufferedReader ( new java.io.BufferedInputStream (is), "ISO-8859-1");
-} catch (e) {
-if (Clazz.exceptionOf (e, java.io.IOException)) {
-return null;
-} else {
-throw e;
-}
-}
-return JV.FileManager.determineSurfaceFileType (br);
-}, "java.io.InputStream");
-c$.determineSurfaceFileType = Clazz.defineMethod (c$, "determineSurfaceFileType", 
-function (bufferedReader) {
-var line = null;
-var br = null;
-try {
-br =  new JU.LimitedLineReader (bufferedReader, 16000);
-line = br.getHeader (0);
-} catch (e) {
-if (Clazz.exceptionOf (e, Exception)) {
-} else {
-throw e;
-}
-}
-if (br == null || line == null || line.length == 0) return null;
-switch (line.charAt (0)) {
-case '@':
-if (line.indexOf ("@text") == 0) return "Kinemage";
-break;
-case '#':
-if (line.indexOf (".obj") >= 0) return "Obj";
-if (line.indexOf ("MSMS") >= 0) return "Msms";
-break;
-case '&':
-if (line.indexOf ("&plot") == 0) return "Jaguar";
-break;
-case '\r':
-case '\n':
-if (line.indexOf ("ZYX") >= 0) return "Xplor";
-break;
-}
-if (line.indexOf ("Here is your gzipped map") >= 0) return "UPPSALA" + line;
-if (line.startsWith ("4MESHC")) return "Pmesh4";
-if (line.indexOf ("! nspins") >= 0) return "CastepDensity";
-if (line.indexOf ("<jvxl") >= 0 && line.indexOf ("<?xml") >= 0) return "JvxlXml";
-if (line.indexOf ("#JVXL+") >= 0) return "Jvxl+";
-if (line.indexOf ("#JVXL") >= 0) return "Jvxl";
-if (line.indexOf ("<efvet ") >= 0) return "Efvet";
-if (line.indexOf ("usemtl") >= 0) return "Obj";
-if (line.indexOf ("# object with") == 0) return "Nff";
-if (line.indexOf ("BEGIN_DATAGRID_3D") >= 0 || line.indexOf ("BEGIN_BANDGRID_3D") >= 0) return "Xsf";
-if (line.indexOf ("tiles in x, y") >= 0) return "Ras3D";
-var pt0 = line.indexOf ('\0');
-if (pt0 >= 0) {
-if (line.indexOf ("PM\u0001\u0000") == 0) return "Pmesh";
-if (line.indexOf ("\u0014\u0000\u0000\u0000") == 0) return "DelPhi";
-if (line.indexOf ("MAP ") == 208) return "Mrc";
-if (line.length > 37 && (line.charCodeAt (36) == 0 && line.charCodeAt (37) == 100 || line.charCodeAt (36) == 0 && line.charCodeAt (37) == 100)) {
-return "Dsn6";
-}}if (line.indexOf (" 0.00000e+00 0.00000e+00      0      0\n") >= 0) return "Uhbd";
-line = br.readLineWithNewline ();
-if (line.indexOf ("object 1 class gridpositions counts") == 0) return "Apbs";
-var tokens = JU.PT.getTokens (line);
-var line2 = br.readLineWithNewline ();
-if (tokens.length == 2 && JU.PT.parseInt (tokens[0]) == 3 && JU.PT.parseInt (tokens[1]) != -2147483648) {
-tokens = JU.PT.getTokens (line2);
-if (tokens.length == 3 && JU.PT.parseInt (tokens[0]) != -2147483648 && JU.PT.parseInt (tokens[1]) != -2147483648 && JU.PT.parseInt (tokens[2]) != -2147483648) return "PltFormatted";
-}var line3 = br.readLineWithNewline ();
-if (line.startsWith ("v ") && line2.startsWith ("v ") && line3.startsWith ("v ")) return "Obj";
-var nAtoms = JU.PT.parseInt (line3);
-if (nAtoms == -2147483648) return (line3.indexOf ("+") == 0 ? "Jvxl+" : null);
-tokens = JU.PT.getTokens (line3);
-if (tokens[0].indexOf (".") > 0) return (line3.length >= 60 || tokens.length != 3 ? null : "VaspChgcar");
-if (nAtoms >= 0) return (tokens.length == 4 ? "Cube" : null);
-nAtoms = -nAtoms;
-for (var i = 4 + nAtoms; --i >= 0; ) if ((line = br.readLineWithNewline ()) == null) return null;
-
-var nSurfaces = JU.PT.parseInt (line);
-if (nSurfaces == -2147483648) return null;
-return (nSurfaces < 0 ? "Jvxl" : "Cube");
-}, "java.io.BufferedReader");
-Clazz.defineMethod (c$, "getCachedPngjBytes", 
-function (pathName) {
-return (pathName == null || this.pngjCache == null || pathName.indexOf (".png") < 0 ? null : this.getJmb ().getCachedPngjBytes (pathName));
+c$.isJmolType = Clazz.defineMethod (c$, "isJmolType", 
+function (type) {
+return (type.equals ("PNG") || type.equals ("PNGJ") || type.equals ("JMOL") || type.equals ("ZIP") || type.equals ("ZIPALL"));
 }, "~S");
-Clazz.defineMethod (c$, "spardirPut", 
-function (name, bytes) {
-if (this.spardirCache == null) this.spardirCache =  new java.util.Hashtable ();
-this.spardirCache.put (name, bytes);
-}, "~S,~A");
-Clazz.defineMethod (c$, "recachePngjBytes", 
-function (fileName, bytes) {
-if (this.pngjCache == null || !this.pngjCache.containsKey (fileName)) return;
-this.pngjCache.put (fileName, bytes);
-JU.Logger.info ("PNGJ recaching " + fileName + " (" + bytes.length + ")");
-}, "~S,~A");
+c$.isEmbeddable = Clazz.defineMethod (c$, "isEmbeddable", 
+function (type) {
+var pt = type.lastIndexOf ('.');
+if (pt >= 0) type = type.substring (pt + 1);
+type = type.toUpperCase ();
+return (JV.FileManager.isJmolType (type) || JU.PT.isOneOf (type, ";JPG;JPEG;POV;IDTF;"));
+}, "~S");
+Clazz.defineMethod (c$, "getEmbeddedFileState", 
+function (fileName, allowCached, sptName) {
+if (!JV.FileManager.isEmbeddable (fileName)) return "";
+var dir = this.getZipDirectory (fileName, false, allowCached);
+if (dir.length == 0) {
+var state = this.vwr.getFileAsString4 (fileName, -1, false, true, false, "file");
+return (state.indexOf ("**** Jmol Embedded Script ****") < 0 ? "" : JV.FileManager.getEmbeddedScript (state));
+}for (var i = 0; i < dir.length; i++) if (dir[i].indexOf (sptName) >= 0) {
+var data =  Clazz.newArray (-1, [fileName + "|" + dir[i], null]);
+this.getFileDataAsString (data, -1, false, false, false);
+return data[1];
+}
+return "";
+}, "~S,~B,~S");
+c$.stripTypePrefix = Clazz.defineMethod (c$, "stripTypePrefix", 
+function (fileName) {
+var pt = fileName.indexOf ("::");
+return (pt < 0 || pt >= 20 ? fileName : fileName.substring (pt + 2));
+}, "~S");
+c$.getEmbeddedScript = Clazz.defineMethod (c$, "getEmbeddedScript", 
+function (s) {
+if (s == null) return s;
+var pt = s.indexOf ("**** Jmol Embedded Script ****");
+if (pt < 0) return s;
+var pt1 = s.lastIndexOf ("/*", pt);
+var pt2 = s.indexOf ((s.charAt (pt1 + 2) == '*' ? "*" : "") + "*/", pt);
+if (pt1 >= 0 && pt2 >= pt) s = s.substring (pt + "**** Jmol Embedded Script ****".length, pt2) + "\n";
+while ((pt1 = s.indexOf (" #Jmol...\u0000")) >= 0) s = s.substring (0, pt1) + s.substring (pt1 + " #Jmol...\u0000".length + 4);
+
+if (JU.Logger.debugging) JU.Logger.debug (s);
+return s;
+}, "~S");
+Clazz.defineMethod (c$, "isZipStream", 
+function (br) {
+return this.vwr.getJzt ().isZipStream (br);
+}, "~O");
 Clazz.defineStatics (c$,
-"SIMULATION_PROTOCOL", "http://SIMULATION/");
+"SIMULATION_PROTOCOL", "http://SIMULATION/",
+"DELPHI_BINARY_MAGIC_NUMBER", "\24\0\0\0",
+"PMESH_BINARY_MAGIC_NUMBER", "PM\1\0",
+"JPEG_CONTINUE_STRING", " #Jmol...\0");
 c$.scriptFilePrefixes = c$.prototype.scriptFilePrefixes =  Clazz.newArray (-1, ["/*file*/\"", "FILE0=\"", "FILE1=\""]);
-Clazz.defineStatics (c$,
-"JPEG_CONTINUE_STRING", " #Jmol...\0",
-"DELPHI_BINARY_MAGIC_NUMBER", "\24\0\0\0");
 });

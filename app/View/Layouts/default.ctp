@@ -38,7 +38,7 @@
 			?>
 			</div>
 			<div style="float: right;">
-				<?php echo "Scraped by Stuart Chalk @ ".$this->Html->link("University of North Florida",'http://www.unf.edu/',['target' =>'_blank'])." © 2014-2015"; ?>
+				<?php echo "Scraped by Stuart Chalk @ ".$this->Html->link("University of North Florida",'http://www.unf.edu/',['target' =>'_blank'])." © 2014-2021"; ?>
 			</div>
 			<div style="clear: both;"></div>
 		</div>

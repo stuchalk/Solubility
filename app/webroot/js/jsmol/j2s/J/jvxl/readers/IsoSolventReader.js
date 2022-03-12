@@ -84,11 +84,13 @@ this.isCavity = (this.params.isCavity && this.meshDataServer != null);
 this.isPocket = (this.params.pocket != null && this.meshDataServer != null);
 this.doCalculateTroughs = (!isMapData && this.sg.atomDataServer != null && !this.isCavity && this.sr > 0 && (this.dataType == 1195 || this.dataType == 1203));
 this.doUseIterator = this.doCalculateTroughs;
-this.getAtoms (this.params.bsSelected, this.doAddHydrogens, true, false, false, true, false, NaN);
+this.getAtoms (this.params.bsSelected, this.doAddHydrogens, true, false, false, true, false, NaN, null);
 if (this.isCavity || this.isPocket) this.dots = this.meshDataServer.calculateGeodesicSurface (this.bsMySelected, this.envelopeRadius);
 this.setHeader ("solvent/molecular surface", this.params.calculationType);
 if (this.havePlane || !isMapData) {
-var minPtsPerAng = 0;
+var r = Math.max (this.params.solventExtendedAtomRadius, this.params.solventRadius);
+var minPtsPerAng = (r >= 1 ? 1.5 / r : 0);
+if (minPtsPerAng > 0) System.out.println ("IsoSolventReader.minPtsPerAng=" + minPtsPerAng);
 this.setRanges (this.params.solvent_ptsPerAngstrom, this.params.solvent_gridMax, minPtsPerAng);
 this.volumeData.getYzCount ();
 this.margin = this.volumeData.maxGrid * 2.0;
@@ -106,7 +108,7 @@ this.isProgressive = this.isXLowToHigh = true;
 Clazz.overrideMethod (c$, "generateCube", 
 function () {
 if (this.isCavity && this.params.theProperty != null) return;
-if (this.isCavity && this.dataType != 1205 && this.dataType != 1206) {
+if (this.isCavity && this.dataType != 1207 && this.dataType != 1208) {
 this.params.vertexSource = null;
 this.newVoxelDataCube ();
 this.resetVoxelData (3.4028235E38);
@@ -121,7 +123,7 @@ this.generateSolventCube ();
 var info = this.params.slabInfo;
 if (info != null) for (var i = 0; i < info.size (); i++) if ((info.get (i)[2]).booleanValue () && Clazz.instanceOf (info.get (i)[0], JU.P4)) {
 this.volumeData.capData (info.get (i)[0], this.params.cutoff);
-info.remove (i--);
+info.removeItemAt (i--);
 }
 });
 Clazz.overrideMethod (c$, "getSurfacePointAndFraction", 
@@ -184,7 +186,7 @@ if (this.doCalculateTroughs && this.bsSurfacePoints != null) {
 var bsAll =  new JU.BS ();
 var bsSurfaces = this.meshData.getSurfaceSet ();
 var bsSources = null;
-var volumes = (this.isPocket ? null : J.jvxl.data.MeshData.calculateVolumeOrArea (this.meshData, -2147483648, false, false));
+var volumes = (this.isPocket ? null : J.jvxl.data.MeshData.calculateVolumeOrArea (this.meshData, null, false, false));
 var minVolume = (this.isCavity ? (1.5 * 3.141592653589793 * Math.pow (this.sr, 3)) : 0);
 var maxVolume = 0;
 var maxIsNegative = false;
@@ -240,9 +242,9 @@ n++;
 
 JU.Logger.info ("cavities include " + n + " voxel points");
 this.atomRadius =  Clazz.newFloatArray (n, 0);
-this.atomXyz =  new Array (n);
+this.atomXyzTruncated =  new Array (n);
 for (var x = 0, ipt = 0, apt = 0; x < this.nPointsX; ++x) for (var y = 0; y < this.nPointsY; ++y) for (var z = 0; z < this.nPointsZ; ++z) if (bs.get (ipt++)) {
-this.volumeData.voxelPtToXYZ (x, y, z, (this.atomXyz[apt] =  new JU.P3 ()));
+this.volumeData.voxelPtToXYZ (x, y, z, (this.atomXyzTruncated[apt] =  new JU.P3 ()));
 this.atomRadius[apt++] = this.voxelData[x][y][z];
 }
 
@@ -254,7 +256,7 @@ this.setRadii ();
 });
 Clazz.defineMethod (c$, "generateSolventCube", 
  function () {
-if (this.dataType == 1205) return;
+if (this.dataType == 1207) return;
 this.params.vertexSource =  Clazz.newIntArray (this.volumeData.nPoints, 0);
 this.bsSurfaceDone =  new JU.BS ();
 this.bsSurfaceVoxels =  new JU.BS ();
@@ -293,14 +295,14 @@ Clazz.defineMethod (c$, "getEdges",
 for (var iatomA = 0; iatomA < this.myAtomCount; iatomA++) this.bsLocale[iatomA] =  new JU.BS ();
 
 for (var iatomA = 0; iatomA < this.myAtomCount; iatomA++) {
-var ptA = this.atomXyz[iatomA];
+var ptA = this.atomXyzTruncated[iatomA];
 var rA = this.rs[iatomA];
 this.sg.atomDataServer.setIteratorForAtom (this.iter, this.atomIndex[iatomA], rA + this.maxRS);
 while (this.iter.hasNext ()) {
 var iB = this.iter.next ();
 var iatomB = this.myIndex[iB];
 if (iatomA >= this.firstNearbyAtom && iatomB >= this.firstNearbyAtom) continue;
-var ptB = this.atomXyz[iatomB];
+var ptB = this.atomXyzTruncated[iatomB];
 var rB = this.rs[iatomB];
 var dAB = ptA.distance (ptB);
 if (dAB >= rA + rB) continue;
@@ -319,7 +321,7 @@ return this.htEdges.get (i < j ? i + "_" + j : j + "_" + i);
 Clazz.defineMethod (c$, "getFaces", 
  function () {
 var bs =  new JU.BS ();
-this.validSpheres =  new JU.BS ();
+this.params.surfaceAtoms = this.validSpheres =  new JU.BS ();
 this.noFaceSpheres = JU.BSUtil.setAll (this.myAtomCount);
 for (var i = this.vEdges.size (); --i >= 0; ) {
 var edge = this.vEdges.get (i);
@@ -353,7 +355,7 @@ while (this.iter.hasNext ()) {
 var iia = this.iter.next ();
 var iatom = this.myIndex[iia];
 if (iatom == ia || iatom == ib || iatom == ic) continue;
-var d = this.atomData.atomXyz[iia].distance (ptS);
+var d = this.atomData.atoms[iia].distance (ptS);
 if (d < this.atomData.atomRadius[iia] + this.sr) {
 isValid = false;
 break;
@@ -378,9 +380,9 @@ var v1 = this.volumetricVectors[1];
 var v2 = this.volumetricVectors[2];
 for (var fi = this.vFaces.size (); --fi >= 0; ) {
 var f = this.vFaces.get (fi);
-var ptA = this.atomXyz[f.ia];
-var ptB = this.atomXyz[f.ib];
-var ptC = this.atomXyz[f.ic];
+var ptA = this.atomXyzTruncated[f.ia];
+var ptB = this.atomXyzTruncated[f.ib];
+var ptC = this.atomXyzTruncated[f.ic];
 var ptS = f.pS;
 this.setGridLimitsForAtom (ptS, this.sr, this.pt0, this.pt1);
 this.volumeData.voxelPtToXYZ (this.pt0.x, this.pt0.y, this.pt0.z, this.ptV);
@@ -415,8 +417,8 @@ var edge = this.vEdges.get (ei);
 if (!edge.isValid ()) continue;
 var ia = edge.ia;
 var ib = edge.ib;
-var ptA = this.atomXyz[ia];
-var ptB = this.atomXyz[ib];
+var ptA = this.atomXyzTruncated[ia];
+var ptB = this.atomXyzTruncated[ib];
 this.rAS = this.rs[ia];
 this.rBS = this.rs[ib];
 this.rAS2 = this.rs2[ia];
@@ -466,10 +468,10 @@ var rAS = this.rs[ia];
 var v = edge.v;
 var cosAngleBAS = (edge.d2 + this.rs2[ia] - this.rs2[ib]) / (2 * edge.d * rAS);
 var angleBAS = Math.acos (cosAngleBAS);
-this.p.scaleAdd2 (cosAngleBAS * rAS, v, this.atomXyz[ia]);
+this.p.scaleAdd2 (cosAngleBAS * rAS, v, this.atomXyzTruncated[ia]);
 JU.Measure.getPlaneThroughPoint (this.p, v, this.plane);
 var dPS = (Math.sin (angleBAS) * rAS);
-var ptC = this.atomXyz[ic];
+var ptC = this.atomXyzTruncated[ic];
 var rCS = this.rs[ic];
 var dCT = JU.Measure.distanceToPlane (this.plane, ptC);
 if (Math.abs (dCT) >= rCS * 0.9) return false;
@@ -536,7 +538,7 @@ function (pt, getSource) {
 if (this.contactPair != null) return pt.distance (this.contactPair.myAtoms[1]) - this.contactPair.radii[1];
 var value = 3.4028235E38;
 for (var iAtom = 0; iAtom < this.firstNearbyAtom; iAtom++) {
-var r = pt.distance (this.atomXyz[iAtom]) - this.rs[iAtom];
+var r = pt.distance (this.atomXyzTruncated[iAtom]) - this.rs[iAtom];
 if (r < value) value = r;
 }
 return (value == 3.4028235E38 ? NaN : value);
@@ -584,9 +586,9 @@ this.ib = Math.max (b, c);
 this.d = d;
 this.d2 = d * d;
 this.maxr = Math.sqrt (this.d2 / 4 + Math.max (a.rs2[b], a.rs2[c]));
-this.ave (a.atomXyz[b], a.atomXyz[c]);
+this.ave (a.atomXyzTruncated[b], a.atomXyzTruncated[c]);
 this.cosASB2 = (a.rs2[b] + a.rs2[c] - this.d2) / (a.rs[c] * a.rs[b]);
-this.v = JU.V3.newVsub (a.atomXyz[c], a.atomXyz[b]);
+this.v = JU.V3.newVsub (a.atomXyzTruncated[c], a.atomXyzTruncated[b]);
 this.v.normalize ();
 }, "J.jvxl.readers.IsoSolventReader,~N,~N,~N");
 Clazz.defineMethod (c$, "addFace", 
@@ -623,15 +625,6 @@ this.ib = b;
 this.ic = c;
 this.pS = JU.P3.newP (d);
 }, "~N,~N,~N,JU.P3");
-Clazz.defineMethod (c$, "dump", 
-function () {
-var a = this.b$["J.jvxl.readers.IsoSolventReader"].atomXyz[this.ia];
-var b = this.b$["J.jvxl.readers.IsoSolventReader"].atomXyz[this.ib];
-var c = this.b$["J.jvxl.readers.IsoSolventReader"].atomXyz[this.ic];
-var d = "red";
-var e = "f" + this.ia + "_" + this.ib + "_" + this.ic + "_";
-this.b$["J.jvxl.readers.IsoSolventReader"].sg.log ("draw ID \"x" + e + (this.b$["J.jvxl.readers.IsoSolventReader"].nTest++) + "\" " + JU.P3.newP (a) + " " + JU.P3.newP (b) + " " + JU.P3.newP (c) + " color " + d);
-});
 Clazz.overrideMethod (c$, "toString", 
 function () {
 return this.ia + "_" + this.ib + "_" + this.ic + "_" + this.pS;

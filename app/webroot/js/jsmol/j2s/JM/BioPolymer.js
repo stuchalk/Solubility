@@ -12,6 +12,7 @@ this.leadAtomIndices = null;
 this.type = 0;
 this.bioPolymerIndexInModel = 0;
 this.monomerCount = 0;
+this.cyclicFlag = 0;
 this.invalidLead = false;
 this.invalidControl = false;
 this.sheetSmoothing = 0;
@@ -179,7 +180,10 @@ this.leadPoints[0] = leadPoint = this.getLeadPoint (0);
 var previousVectorD = null;
 for (var i = 1; i < this.monomerCount; ++i) {
 leadPointPrev = leadPoint;
-this.leadPoints[i] = leadPoint = this.getLeadPoint (i);
+leadPoint = this.getLeadPoint (i);
+if (leadPoint == null) {
+return;
+}this.leadPoints[i] = leadPoint;
 var midpoint =  new JU.P3 ();
 midpoint.ave (leadPoint, leadPointPrev);
 this.leadMidpoints[i] = midpoint;
@@ -203,10 +207,13 @@ var previousVectorC = null;
 for (var i = 1; i < this.monomerCount; ++i) {
 vectorA.sub2 (this.leadMidpoints[i], this.leadPoints[i]);
 vectorB.sub2 (this.leadPoints[i], this.leadMidpoints[i + 1]);
+if (vectorB.length () == 0) {
+vectorC = previousVectorC;
+} else {
 vectorC.cross (vectorA, vectorB);
 vectorC.normalize ();
 if (previousVectorC != null && previousVectorC.angle (vectorC) > 1.5707963267948966) vectorC.scale (-1);
-previousVectorC = this.wingVectors[i] = JU.V3.newV (vectorC);
+}previousVectorC = this.wingVectors[i] = JU.V3.newV (vectorC);
 }
 }}this.wingVectors[0] = this.wingVectors[1];
 this.wingVectors[this.monomerCount] = this.wingVectors[this.monomerCount - 1];
@@ -308,6 +315,14 @@ function (polymer, bsA, bsB, vHBonds, nMaxPerResidue, min, checkDistances, dsspI
 Clazz.defineMethod (c$, "getType", 
 function () {
 return this.type;
+});
+Clazz.defineMethod (c$, "isCyclic", 
+function () {
+return ((this.cyclicFlag == 0 ? (this.cyclicFlag = (this.monomerCount >= 4 && this.monomers[0].isConnectedAfter (this.monomers[this.monomerCount - 1])) ? 1 : -1) : this.cyclicFlag) == 1);
+});
+Clazz.overrideMethod (c$, "toString", 
+function () {
+return "[Polymer type " + this.type + " n=" + this.monomerCount + " " + (this.monomerCount > 0 ? this.monomers[0] + " " + this.monomers[this.monomerCount - 1] : "") + "]";
 });
 Clazz.defineStatics (c$,
 "TYPE_NOBONDING", 0,

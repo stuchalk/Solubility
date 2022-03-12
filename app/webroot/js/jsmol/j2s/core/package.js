@@ -1,7 +1,7 @@
 // BH 12/15/2012 1:56:28 PM  adds corezip.z.js and corebio.z.js
 // later additions include coresym.z.js, coresurface.z.js, coremenu.z.js
 
-// NOTE: Any changes here must also be reflected in buildtojs.xml
+// NOTE: Any changes here must also be reflected in build_03_tocore.xml
 
 if (!window["java.registered"])
  window["java.registered"] = false;
@@ -23,13 +23,11 @@ if (!window["java.registered"])
 
 
 // note - we don't need to list ALL the classes -- only the ones that are entry points.
-// several more classe are in each of these files -- see build_03_tojs.xml
+// several more classe are in each of these files -- see build_03_tocore.xml
 
-	ClazzLoader.jarClasspath (base + "coretext.z.js",	[    
-	"JM.Object2d",
-	"$.Text",
-	"J.shape.Object2dShape",
-	"$.TextShape",
+	ClazzLoader.jarClasspath (base + "coretext.z.js",	[ 
+	"JM.Text",
+	"J.shape.TextShape",
 	"$.Labels",
 	"$.Measures",
 	"$.Echo",
@@ -76,7 +74,7 @@ if (!window["java.registered"])
 	
 	ClazzLoader.jarClasspath (base + "coreprop.z.js",	[  
     "J.api.JmolPropertyManager", 
-    "JU.PropertyManager" 
+    "JV.PropertyManager" 
 	]);  
   
 	ClazzLoader.jarClasspath (base + "coreconsole.z.js",	[
@@ -87,10 +85,17 @@ if (!window["java.registered"])
 	]);
 
 	ClazzLoader.jarClasspath (base + "coremenu.z.js",	[
-		"J.awtjs2d.JmolJSPopup",	
-		"J.popup.MainPopupResourceBundle",
-		"$.JmolGenericPopup"
+		"J.awtjs2d.JSJmolPopup",	
+        	"$.JSSwingPopupMenuHelper",
+		"J.popup.GenericPopup",
+		"$.JmolGenericPopup",
+		"$.JmolPopup",
+		"$.PopupHelper",
+		"$.PopupResource",
+		"$.MainPopupResourceBundle"
 	]);
+
+
 
 	ClazzLoader.jarClasspath (base + "corebinary.z.js",	[
     "java.io.DataInputStream",
@@ -112,7 +117,6 @@ if (!window["java.registered"])
 	]);
 
 	ClazzLoader.jarClasspath (base + "coremin.z.js",	[
-		"J.api.MinimizerInterface", // -- required by J.minimize.Minimizer
 		"JM.Minimizer",
 		"$.MinObject", // -- required by $.MinAngle
 		"$.MinAngle",
@@ -150,7 +154,6 @@ if (!window["java.registered"])
 
 	ClazzLoader.jarClasspath (base + "coresurface.z.js",	[
 		"JS.IsoExt",
-		"J.api.VolumeDataInterface",
 		"J.jvxl.api.VertexDataServer",
 		"$.MeshDataServer",
 		"J.jvxl.calc.MarchingCubes",
@@ -232,14 +235,12 @@ if (!window["java.registered"])
 	]);
 
 	ClazzLoader.jarClasspath (base + "coreswing.z.js",	[
-				"javajs.api.SC", 
-        "javajs.awt.BorderLayout",
+	  "JS.SC", 
+        "$.AbstractButton",
+        "$.BorderLayout",
         "$.Component",
         "$.Container",
         "$.LayoutManager",
-        "javajs.awt.event.ActionEvent",
-        "javajs.awt.event.ItemEvent",
-        "javajs.swing.AbstractButton",
         "$.AbstractTableModel",
         "$.ButtonGroup",
         "$.Cell",
@@ -273,11 +274,8 @@ if (!window["java.registered"])
         "$.ListSelectionModel",
         "$.SwingConstants",
         "$.TableCellRenderer",
-        "$.TableColumn",
-		"J.popup.GenericSwingPopup",
-		"$.PopupHelper",
-		"$.JSSwingPopupHelper",
-		"$.PopupResource"
+        "$.TableColumn"
+
 	]);
 
 }) (Clazz._Loader);

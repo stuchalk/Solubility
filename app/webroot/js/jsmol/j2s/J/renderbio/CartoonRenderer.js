@@ -7,12 +7,12 @@ Clazz.instantialize (this, arguments);
 Clazz.overrideMethod (c$, "renderBioShape", 
 function (bioShape) {
 if (!this.setupRR (bioShape, false)) return;
-if (this.isNucleic) {
+if (this.isNucleic || this.isPhosphorusOnly) {
 if (this.nucleicRenderer == null) this.nucleicRenderer = J.api.Interface.getInterface ("J.renderbio.NucleicRenderer", this.vwr, "render");
 this.calcScreenControlPoints ();
 this.nucleicRenderer.renderNucleic (this);
 return;
-}var val = this.vwr.getBoolean (603979820);
+}var val = this.vwr.getBoolean (603979819);
 if (this.helixRockets != val) {
 bioShape.falsifyMesh ();
 this.helixRockets = val;

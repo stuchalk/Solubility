@@ -18,19 +18,11 @@ function (canvas) {
 c$.renderScreenImage = Clazz.defineMethod (c$, "renderScreenImage", 
 function (vwr, g, size) {
 {
-}}, "javajs.api.PlatformViewer,~O,~O");
-c$.setTransparentCursor = Clazz.defineMethod (c$, "setTransparentCursor", 
-function (canvas) {
-{
-}}, "~O");
-c$.setCursor = Clazz.defineMethod (c$, "setCursor", 
-function (c, canvas) {
-{
-}}, "~N,~O");
+}}, "J.api.PlatformViewer,~O,~O");
 c$.prompt = Clazz.defineMethod (c$, "prompt", 
 function (label, data, list, asButtons) {
 {
-var s = prompt(label, data);
+var s = (data == null ? alert(label) : prompt(label, data));
 if (s != null)return s;
 }return "null";
 }, "~S,~S,~A,~B");

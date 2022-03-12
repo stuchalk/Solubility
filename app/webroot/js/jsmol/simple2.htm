@@ -15,20 +15,28 @@
 
 ////// special stuff just for this particular page
 
-var s = unescape(document.location.search);
+var s = unescape(document.location.search).split("&fbclid")[0].split("?fbclid")[0];
+var defaultDisplay = ';set antialiasdisplay;set measurementUnits angstroms;set zoomlarge false;'
+
+var script = 'set errorCallback "myCallback";'
+	+ defaultDisplay
+	+'set echo top left;echo loading XXXX...;refresh;'
+	+'load ":XXXX";set echo top center;echo XXXX;'
 var xxxx = s.split("_USE=")[0]
 if (xxxx.length < 2) {
-	xxxx = "ethanol"
-	script = 'set errorCallback "myCallback";'
-	+'set zoomlarge false;set echo top left;echo loading XXXX...;refresh;'
-	+'load ":XXXX";set echo top center;echo XXXX;'
-	+''
-	script = script.replace(/XXXX/g, xxxx)
+  xxxx = "ethanol"
 } else {
-	script = xxxx.substring(1)
-}
+  xxxx = xxxx.substring(1);
+  if (xxxx.indexOf("load ") >= 0) {
+    script = xxxx 	+ defaultDisplay
 
-// ---------------------------------------------------------------------------------
+    xxxx = ""
+  }
+}
+if (xxxx)
+  script = script.replace(/XXXX/g, xxxx)
+
+// --------------------------------------------------------------------------
 
 ////// every page will need one variable and one Info object for each applet object
 
@@ -42,7 +50,7 @@ var Info = {
 	jarFile: "JmolAppletSigned.jar",
 	isSigned: false,
 	addSelectionOptions: false,
-	serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
+	serverURL: "https://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",
 	readyFunction: null,
 	console: "jmol_infodiv",
 	disableInitialConsole: true,
@@ -105,7 +113,7 @@ $(document).ready(function(){
 
 		$("#leftpanel").html(
 		  '<a target="_blank" href="data/chairflip.png">images</a> '
-			+ '<a target="_blank" href="simple2.htm?script%20data/cyclflip2.spt;//&_USE=' + use + '">cyclohexane ring flip</a> '
+			+ '<a target="_blank" href="simple2.htm?load%20data/cyclflip2.spt;//&_USE=' + use + '">cyclohexane ring flip</a> '
 			+ '<a href="simple2.htm?_USE=' + use + '">back</a><br>'
 			+ (true || isApplet ? 
 			'Drag-Minimize '
@@ -118,14 +126,17 @@ $(document).ready(function(){
 			+ "    "
 			+ Jmol.jmolLink(jmol,"set modelkitmode off", "off")
 			+ "<br>Display calculated MMFF94 energy "
-			+ Jmol.jmolLink(jmol,"set minimizationSteps 200;set loadstructcallback 'minimize energy';set minimizationcallback '';set echo top left;echo @{'' + _minimizationEnergy + ' ' + energyUnits + '/mol'};minimize energy", "on")
+			+ Jmol.jmolLink(jmol,"function atomMoved(){set echo top left;minimize energy;echo @{'' + _minimizationEnergy + ' ' + energyUnits + '/mol'}};set minimizationSteps 200;set atomMovedCallback 'jmolscript:atomMoved()';set loadstructcallback 'minimize energy';set minimizationcallback '';set echo top left;echo @{'' + _minimizationEnergy + ' ' + energyUnits + '/mol'};minimize energy", "on")
 			+ "    "
-			+ Jmol.jmolLink(jmol,"echo @{''};set minimizationCallback '';set loadstructcallback ''", "off")
+			+ Jmol.jmolLink(jmol,"echo @{''};set atomMovedCallback '';minimizationCallback '';set loadstructcallback ''", "off")
 			+ "<br>Energy Units "
 			+ Jmol.jmolLink(jmol,"set energyunits kcal;minimize energy", "kcal/mol")
 			+ "    "
 			+ Jmol.jmolLink(jmol,"set energyunits kJ;minimize energy", "kJ/mol")
-			+ "<br>Background: "
+			+ "<br>"
+			+ Jmol.jmolLink(jmol,"calculate chirality;label %[chirality];background labels yellow;set labelPointers", "Show")
+			+ "/" + Jmol.jmolLink(jmol,"labels off", "Hide")
+			+ " R/S Chirality<br>Background: "
 			+ Jmol.jmolRadioGroup(jmol, radios)
 		);
 
@@ -156,7 +167,7 @@ $(document).ready(function(){
 //		+ "<br><br>"
 		Jmol.jmolButton(jmol,"write FILE ?","Save FILE")
 		+ "<br>"
-		+ Jmol.jmolButton(jmol,"write PNGJ ?.png","Save PNG")
+		+ Jmol.jmolButton(jmol,"write PNGJ jsmol.png","Save PNG")
 		+ "<br><br><a href=simple2.htm?_USE=HTML5>HTML5 version</a>"
 		+ "<br><br><a href=simple2.htm?_USE=SIGNED>(Signed) Java version</a>"
 		+ "<br><br>" + Jmol.jmolLink(jmol, "JSCONSOLE", "show info")
@@ -164,7 +175,7 @@ $(document).ready(function(){
 		"<br><br>"
 		+ Jmol.jmolButton(jmol,"write FILE ?","Save FILE")
 		+ "<br>"
-		+ Jmol.jmolButton(jmol,"write PNGJ ?.png","Save PNG")
+		+ Jmol.jmolButton(jmol,"write PNGJ jsmol.png","Save PNG")
 		+ "<br><br><a href=simple2.htm?_USE=SIGNED>JAVA version</a>"
     + "<br><br><a href=javascript:Jmol.showInfo(jmol,true)>show info</a>"
     )

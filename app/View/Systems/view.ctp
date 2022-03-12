@@ -73,7 +73,7 @@ if(isset($chemicals)) {
 		echo "<div id='chemical".$x."' class='chemical'>";
 		//echo $this->Html->image('http://cactus.nci.nih.gov/chemical/structure/'.$chem['inchi'].'/image?format=png&linewidth=2',array('alt'=>$chem['name']));
 		echo "<script type='text/javascript'>\n";
-		$url="https://chalk.coas.unf.edu/sol/admin/proxy?url=http://cactus.nci.nih.gov/chemical/structure/".$id."/file?format=sdf&get3d=True";
+		$url="https://cactus.nci.nih.gov/chemical/structure/".$id."/file?format=sdf&get3d=True";
 		echo "  var Info".$x." = { color: '#000000', height: 190, width: 190, src: '".$url."', use: 'HTML5', j2sPath: '/sol/js/jsmol/j2s' };\n";
 		echo "  Jmol.getTMApplet('chem".$x."', Info".$x.");\n";
 		echo "</script>\n";

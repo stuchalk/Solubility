@@ -1,5 +1,5 @@
 Clazz.declarePackage ("JV");
-Clazz.load (["JV.JmolChimeMessenger"], "JV.ChimeMessenger", ["java.lang.Boolean", "java.util.Hashtable", "J.c.CBK", "$.STR"], function () {
+Clazz.load (["JV.JmolChimeMessenger"], "JV.ChimeMessenger", ["java.lang.Boolean", "java.util.Hashtable", "J.c.CBK", "$.STR", "JU.Logger"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.vwr = null;
 Clazz.instantialize (this, arguments);
@@ -22,7 +22,7 @@ Clazz.overrideMethod (c$, "showHash",
 function (outputBuffer, s) {
 if (s == null) return;
 if (outputBuffer == null) {
-this.vwr.warn (s);
+if (!this.vwr.isPrintOnly) JU.Logger.warn (s);
 this.vwr.scriptStatus (s);
 } else {
 outputBuffer.append (s).appendC ('\n');
@@ -70,14 +70,16 @@ var id;
 var lastid = -1;
 nH = 0;
 for (var i = ac; --i >= 0; ) {
-var isHetero = atoms[i].isHetero ();
+var a = atoms[i];
+if (a == null) continue;
+var isHetero = a.isHetero ();
 if (isHetero) nHetero++;
-var g = atoms[i].group;
+var g = a.group;
 if (!map.containsKey (g)) {
 map.put (g, Boolean.TRUE);
 if (isHetero) ngHetero++;
  else ng++;
-}if (atoms[i].mi == 0) {
+}if (a.mi == 0) {
 if ((id = g.getStrucNo ()) != lastid && id != 0) {
 lastid = id;
 switch (g.getProteinStructureType ()) {

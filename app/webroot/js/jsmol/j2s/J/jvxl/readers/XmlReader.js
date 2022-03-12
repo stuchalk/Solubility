@@ -1,5 +1,5 @@
 Clazz.declarePackage ("J.jvxl.readers");
-Clazz.load (null, "J.jvxl.readers.XmlReader", ["JU.P3", "$.PT", "$.SB", "$.XmlUtil", "JU.Escape"], function () {
+Clazz.load (null, "J.jvxl.readers.XmlReader", ["JU.P3", "$.PT", "$.SB", "JU.Escape"], function () {
 c$ = Clazz.decorateAsClass (function () {
 this.br = null;
 this.line = null;
@@ -29,6 +29,10 @@ this.skipTo ("</" + name + ">");
 }, "~S");
 Clazz.defineMethod (c$, "getXmlData", 
 function (name, data, withTag, allowSelfCloseOption) {
+return this.getXmlDataLF (name, data, withTag, allowSelfCloseOption, false);
+}, "~S,~S,~B,~B");
+Clazz.defineMethod (c$, "getXmlDataLF", 
+function (name, data, withTag, allowSelfCloseOption, addLF) {
 var closer = "</" + name + ">";
 var tag = "<" + name;
 if (data == null) {
@@ -46,15 +50,18 @@ throw e;
 }
 }
 sb.append (this.line);
+if (addLF) sb.append ("\n");
 var selfClosed = false;
 var pt = this.line.indexOf ("/>");
 var pt1 = this.line.indexOf (">");
 if (pt1 < 0 || pt == pt1 - 1) selfClosed = allowSelfCloseOption;
-while (this.line.indexOf (closer) < 0 && (!selfClosed || this.line.indexOf ("/>") < 0)) sb.append (this.line = this.br.readLine ());
-
+while (this.line.indexOf (closer) < 0 && (!selfClosed || this.line.indexOf ("/>") < 0)) {
+sb.append (this.line = this.br.readLine ());
+if (addLF) sb.append ("\n");
+}
 data = sb.toString ();
 }return J.jvxl.readers.XmlReader.extractTag (data, tag, closer, withTag);
-}, "~S,~S,~B,~B");
+}, "~S,~S,~B,~B,~B");
 c$.extractTagOnly = Clazz.defineMethod (c$, "extractTagOnly", 
 function (data, tag) {
 return J.jvxl.readers.XmlReader.extractTag (data, "<" + tag + ">", "</" + tag + ">", false);
@@ -81,8 +88,12 @@ if ((ch = data.charAt (pt1)) == '"') quoted = !quoted;
 if (pt1 >= pt2) return "";
 while (JU.PT.isWhitespace (data.charAt (++pt1))) {
 }
-return JU.XmlUtil.unwrapCdata (data.substring (pt1, pt2));
+return J.jvxl.readers.XmlReader.unwrapCdata (data.substring (pt1, pt2));
 }, "~S,~S,~S,~B");
+c$.unwrapCdata = Clazz.defineMethod (c$, "unwrapCdata", 
+function (s) {
+return (s.startsWith ("<![CDATA[") && s.endsWith ("]]>") ? JU.PT.rep (s.substring (9, s.length - 3), "]]]]><![CDATA[>", "]]>") : s);
+}, "~S");
 c$.getXmlAttrib = Clazz.defineMethod (c$, "getXmlAttrib", 
 function (data, what) {
 var nexta =  Clazz.newIntArray (1, 0);

@@ -20,10 +20,10 @@ class SystemsController extends AppController
 
     /**
      * View a particular system instance
-     * @param $sysID
+     * @param string $sysID
      * @param string $format
      */
-	function view($sysID,$format="")
+	public function view(string $sysID, string $format="")
 	{
         $data=$this->System->find('first', ['conditions'=>['System.sysID'=>$sysID],'recursive'=>1]);
         $citation=$this->Citation->find('first', ['conditions'=>['Citation.id'=>$data['Citation']['id']]]);
@@ -41,10 +41,10 @@ class SystemsController extends AppController
 
     /**
      * Generic export public function for actions above
-     * @param $data
+     * @param array $data
      * @param string $format
      */
-    public function export($data,$format="xml")
+    public function export(array $data, string $format="xml")
     {
         $path=Configure::read('host.base');
         // Make data
@@ -64,42 +64,34 @@ class SystemsController extends AppController
             if(!stristr($output['citation']['doi'],'10.')) {
                 unset($output['citation']['doi']);
             } else {
-                $output['citation']['doi']='http://dx.doi.org/'.$output['citation']['doi'];
+                $output['citation']['doi']='https://doi.org/'.$output['citation']['doi'];
             }
         }
         // Add chemicals
         $output['chemicals']=[];
-        foreach($data['Chemical'] as $c)
-        {
+        foreach($data['Chemical'] as $c) {
             $temp=['name'=>$c['name'],'formula'=>$c['formula'],'casrn'=>$c['casrn'],'inchi'=>$c['inchi'],'inchikey'=>$c['inchikey'],'updated'=>$c['updated']];
             $temp['url']=$path."chemicals/view/".$c['id'];
             $output['chemicals'][]=$temp;
         }
         // Add variables
         $output['variables']=[];
-        foreach($data['Variable'] as $v)
-        {
+        foreach($data['Variable'] as $v) {
             $temp=['name'=>$v['name'],'formula'=>$v['bounds']];
             $output['variables'][]=$temp;
         }
         // Add tables
         $output['tables']=[];
-        foreach($data['Table'] as $t)
-        {
+        foreach($data['Table'] as $t) {
             $temp=['content'=>json_decode($t['content'])];
             $output['tables'][]=$temp;
         }
         // Output data
-        if($format=="xml")
-        {
+        if($format=="xml") {
             $this->Export->xml("","system",$output);
-        }
-        elseif($format=="json")
-        {
+        } elseif($format=="json") {
             $this->Export->json("","system",$output);
-        }
-        elseif($format=="jsonld")
-        {
+        } elseif($format=="jsonld") {
             $context=[
                 "sysID"=>[
                         "@id"=>"http://purl.org/dc/terms/identifier",
@@ -277,11 +269,14 @@ class SystemsController extends AppController
                     ]]
             ];
             $this->Export->jsonld("","system",$output,$context);
-        }
-        else
-        {
+        } else {
             return;
         }
     }
 
+    public function jsonld()
+	{
+		$systems=$this->System->find('all',['contain'=>['Chemical'],'recursive'=>-1]);
+		debug($systems);exit;
+	}
 }

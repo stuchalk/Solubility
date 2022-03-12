@@ -35,7 +35,6 @@ this.pt3 =  new JU.P3 ();
 });
 Clazz.overrideMethod (c$, "render", 
 function () {
-this.isPrecision = true;
 this.needTranslucent = false;
 this.imageFontScaling = this.vwr.imageFontScaling;
 var cgo = this.shape;
@@ -48,7 +47,7 @@ Clazz.defineMethod (c$, "render2",
 this.diameter = this.cgoMesh.diameter;
 this.width = this.cgoMesh.width;
 this.cmds = this.cgoMesh.cmds;
-if (this.cmds == null || !this.cgoMesh.visible) return;
+if (this.cmds == null || !this.cgoMesh.visible || this.cgoMesh.visibilityFlags == 0) return;
 if (!this.g3d.setC (this.cgoMesh.colix)) {
 this.needTranslucent = true;
 return;
@@ -295,6 +294,6 @@ return;
 }, "~N,JU.P3,JU.P3i");
 Clazz.defineMethod (c$, "fillTriangle", 
  function () {
-this.g3d.fillTriangle3CNBits (this.pt0, this.colix0, this.normix0, this.pt1, this.colix1, this.normix1, this.pt2, this.colix2, this.normix2);
+this.g3d.fillTriangle3CNBits (this.pt0, this.colix0, this.normix0, this.pt1, this.colix1, this.normix1, this.pt2, this.colix2, this.normix2, true);
 });
 });

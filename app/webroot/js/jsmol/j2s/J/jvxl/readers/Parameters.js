@@ -89,6 +89,7 @@ this.readAllData = false;
 this.fileIndex = -1;
 this.fileName = null;
 this.modelIndex = -1;
+this.modelInvRotation = null;
 this.isXLowToHigh = false;
 this.insideOut = false;
 this.dataXYReversed = false;
@@ -143,6 +144,12 @@ this.extendGrid = 0;
 this.isMapped = false;
 this.showTiming = false;
 this.pointSize = 0;
+this.probes = null;
+this.isModelConnected = false;
+this.surfaceAtoms = null;
+this.filesData = null;
+this.probeValues = null;
+this.sbOut = null;
 Clazz.instantialize (this, arguments);
 }, J.jvxl.readers, "Parameters");
 Clazz.prepareFields (c$, function () {
@@ -186,6 +193,7 @@ this.extendGrid = 0;
 this.fileIndex = 1;
 this.readAllData = true;
 this.fileName = "";
+this.filesData = null;
 this.fullyLit = false;
 this.functionInfo = null;
 this.iAddGridPoints = false;
@@ -194,6 +202,7 @@ this.isAngstroms = false;
 this.isBicolorMap = this.isCutoffAbsolute = this.isPositiveOnly = false;
 this.isCavity = false;
 this.isColorReversed = false;
+this.isModelConnected = false;
 this.isSquared = false;
 this.isSquaredLinear = false;
 this.isContoured = false;
@@ -207,9 +216,12 @@ this.mapLattice = null;
 this.mep_calcType = -1;
 this.minSet = 0;
 this.modelIndex = -1;
+this.modelInvRotation = null;
 this.nContours = 0;
 this.pocket = null;
 this.pointSize = NaN;
+this.probes = null;
+this.probeValues = null;
 this.propertyDistanceMax = 2147483647;
 this.propertySmoothing = false;
 this.propertySmoothingPower = 4;
@@ -357,27 +369,30 @@ Clazz.defineMethod (c$, "setSolvent",
 function (propertyName, radius) {
 this.isEccentric = this.isAnisotropic = false;
 this.solventRadius = Math.abs (radius);
-this.dataType = (this.intersection != null ? 1333 : "nomap" === propertyName ? 1205 : "molecular" === propertyName ? 1203 : "sasurface" === propertyName || this.solventRadius == 0 ? 1196 : 1195);
+this.dataType = (this.intersection != null ? 1333 : "nomap" === propertyName ? 1207 : "molecular" === propertyName ? 1203 : "sasurface" === propertyName || this.solventRadius == 0 ? 1196 : 1195);
 if (this.state < 2 && (this.cutoffAutomatic || !this.colorDensity) && (this.intersection == null || this.cutoff == 3.4028235E38)) this.cutoff = 0.0;
 switch (this.dataType) {
 case 1333:
 this.calculationType = "VDW intersection";
 break;
-case 1205:
+case 1207:
 this.calculationType = "unmapped plane";
 break;
 case 1203:
 this.calculationType = "molecular surface with radius " + this.solventRadius;
+if (this.minSet == 0) this.minSet = 50;
 break;
 case 1195:
 this.calculationType = "solvent-excluded surface with radius " + this.solventRadius;
+if (this.minSet == 0) this.minSet = 50;
 break;
 case 1196:
 this.calculationType = "solvent-accessible surface with radius " + this.solventRadius;
+if (this.minSet == 0) this.minSet = 50;
 break;
 }
 switch (this.dataType) {
-case 1205:
+case 1207:
 this.solventExtendedAtomRadius = this.solventRadius;
 this.solventRadius = 0;
 this.isContoured = false;
@@ -468,6 +483,7 @@ this.moData =  new java.util.Hashtable ();
 }, "~B");
 Clazz.defineMethod (c$, "setMO", 
 function (iMo, linearCombination) {
+this.isModelConnected = true;
 this.qm_moLinearCombination = linearCombination;
 this.qm_moNumber = (linearCombination == null ? Math.abs (iMo) : Clazz.floatToInt (linearCombination[1]));
 this.qmOrbitalType = (this.moData.containsKey ("haveVolumeData") ? 5 : this.moData.containsKey ("gaussians") ? 1 : this.moData.containsKey ("slaters") ? 2 : 0);
@@ -506,6 +522,7 @@ this.mappedDataMin = -1;
 this.mappedDataMax = 1;
 }if (this.mappedDataMin == 3.4028235E38 || this.mappedDataMin == this.mappedDataMax) {
 var minMax = surfaceReader.getMinMaxMappedValues (haveData);
+System.out.println ("parameters - setmapranges " + minMax[0] + " " + minMax[1]);
 this.mappedDataMin = minMax[0];
 this.mappedDataMax = minMax[1];
 }if (this.mappedDataMin == 0 && this.mappedDataMax == 0) {
@@ -520,6 +537,14 @@ function (slabObject) {
 if (this.slabInfo == null) this.slabInfo =  new JU.Lst ();
 this.slabInfo.addLast (slabObject);
 }, "~A");
+Clazz.defineMethod (c$, "isInsideOut", 
+function () {
+return this.insideOut != this.dataXYReversed;
+});
+Clazz.defineMethod (c$, "isFullyLit", 
+function () {
+return (this.thePlane != null || this.fullyLit);
+});
 Clazz.defineStatics (c$,
 "STATE_UNINITIALIZED", 0,
 "STATE_INITIALIZED", 1,
@@ -550,9 +575,10 @@ Clazz.defineStatics (c$,
 "SURFACE_MLP", 1329,
 "SURFACE_MOLECULAR", 1203,
 "SURFACE_NCI", 1844,
-"SURFACE_INTERSECT", 1333,
-"SURFACE_NOMAP", 1205,
-"SURFACE_PROPERTY", 1206,
+"SURFACE_INTERSECT_ATOM", 1333,
+"SURFACE_INTERSECT_FILE", 1334,
+"SURFACE_NOMAP", 1207,
+"SURFACE_PROPERTY", 1208,
 "ANGSTROMS_PER_BOHR", 0.5291772,
 "defaultEdgeFractionBase", 35,
 "defaultEdgeFractionRange", 90,

@@ -10,9 +10,8 @@ this.atomFormats = null;
 this.specialLabel = null;
 Clazz.instantialize (this, arguments);
 }, J.shape, "Hover", J.shape.TextShape);
-Clazz.defineMethod (c$, "initShape", 
+Clazz.overrideMethod (c$, "initShape", 
 function () {
-Clazz.superCall (this, J.shape.Hover, "initShape", []);
 this.isHover = true;
 var font3d = this.vwr.gdata.getFont3DFSS ("SansSerif", "Plain", 12);
 var bgcolix = JU.C.getColixS ("#FFFFC3");
@@ -37,7 +36,7 @@ return;
 }if ("atomLabel" === propertyName) {
 var text = value;
 if (text != null && text.length == 0) text = null;
-var count = this.vwr.ms.ac;
+var count = this.ms.ac;
 if (this.atomFormats == null || this.atomFormats.length < count) this.atomFormats =  new Array (count);
 for (var i = bsSelected.nextSetBit (0); i >= 0; i = bsSelected.nextSetBit (i + 1)) this.atomFormats[i] = text;
 
@@ -58,10 +57,6 @@ this.atomFormats = JU.AU.deleteElements (this.atomFormats, firstAtomDeleted, nAt
 return;
 }this.setPropTS (propertyName, value, null);
 }, "~S,~O,JU.BS");
-Clazz.overrideMethod (c$, "getShapeState", 
-function () {
-return this.vwr.getShapeState (this);
-});
 Clazz.defineStatics (c$,
 "FONTFACE", "SansSerif",
 "FONTSTYLE", "Plain",

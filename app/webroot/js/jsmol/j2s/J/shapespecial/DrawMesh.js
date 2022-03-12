@@ -17,6 +17,8 @@ this.noHead = false;
 this.isBarb = false;
 this.scale = 1;
 this.isScaleSet = false;
+this.fontID = -1;
+this.titleColor = null;
 Clazz.instantialize (this, arguments);
 }, J.shapespecial, "DrawMesh", J.shape.Mesh);
 Clazz.makeConstructor (c$, 
@@ -85,7 +87,7 @@ Clazz.defineMethod (c$, "isRenderScalable",
 function () {
 switch (this.drawType) {
 case J.shapespecial.Draw.EnumDrawType.ARROW:
-return (this.connections != null);
+return (this.connectedAtoms != null);
 case J.shapespecial.Draw.EnumDrawType.ARC:
 case J.shapespecial.Draw.EnumDrawType.CIRCLE:
 case J.shapespecial.Draw.EnumDrawType.CIRCULARPLANE:

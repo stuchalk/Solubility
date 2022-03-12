@@ -27,19 +27,20 @@ this.vwr = vwr;
 }, "JV.Viewer");
 Clazz.defineMethod (c$, "processDeletedModelAtoms", 
 function (bsAtoms) {
-if (this.bsDeleted != null) JU.BSUtil.deleteBits (this.bsDeleted, bsAtoms);
-if (this.bsSubset != null) JU.BSUtil.deleteBits (this.bsSubset, bsAtoms);
+JU.BSUtil.deleteBits (this.bsDeleted, bsAtoms);
+JU.BSUtil.deleteBits (this.bsSubset, bsAtoms);
 JU.BSUtil.deleteBits (this.bsFixed, bsAtoms);
 JU.BSUtil.deleteBits (this.bsHidden, bsAtoms);
 var bs = JU.BSUtil.copy (this.bsSelection);
 JU.BSUtil.deleteBits (bs, bsAtoms);
 this.setSelectionSet (bs, 0);
+this.selectionChanged (false);
 }, "JU.BS");
 Clazz.defineMethod (c$, "clear", 
 function () {
 this.clearSelection (true);
-this.hide (null, null, 0, true);
 this.setSelectionSubset (null);
+this.hide (null, null, 0, true);
 this.bsDeleted = null;
 this.setMotionFixedAtoms (null);
 });
@@ -47,9 +48,13 @@ Clazz.defineMethod (c$, "display",
 function (modelSet, bs, addRemove, isQuiet) {
 switch (addRemove) {
 default:
+var bsNotSubset = (this.bsSubset == null ? null : JU.BSUtil.andNot (JU.BSUtil.copy (this.bsHidden), this.bsSubset));
 var bsAll = modelSet.getModelAtomBitSetIncludingDeleted (-1, false);
 this.bsHidden.or (bsAll);
-case 1275069441:
+if (bsNotSubset != null) {
+this.bsHidden.and (this.bsSubset);
+this.bsHidden.or (bsNotSubset);
+}case 1275069441:
 if (bs != null) this.bsHidden.andNot (bs);
 break;
 case 1073742119:
@@ -58,19 +63,20 @@ break;
 }
 JU.BSUtil.andNot (this.bsHidden, this.bsDeleted);
 modelSet.setBsHidden (this.bsHidden);
-if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT._ ("{0} atoms hidden"), this.bsHidden.cardinality ()));
+if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT.$ ("{0} atoms hidden"), this.bsHidden.cardinality ()));
 }, "JM.ModelSet,JU.BS,~N,~B");
 Clazz.defineMethod (c$, "hide", 
 function (modelSet, bs, addRemove, isQuiet) {
+var bsNotSubset = (addRemove == 0 || this.bsSubset == null ? null : JU.BSUtil.andNot (JU.BSUtil.copy (this.bsHidden), this.bsSubset));
 JV.SelectionManager.setBitSet (this.bsHidden, bs, addRemove);
+if (bsNotSubset != null) this.bsHidden.or (bsNotSubset);
 if (modelSet != null) modelSet.setBsHidden (this.bsHidden);
-if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT._ ("{0} atoms hidden"), this.bsHidden.cardinality ()));
+if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT.$ ("{0} atoms hidden"), this.bsHidden.cardinality ()));
 }, "JM.ModelSet,JU.BS,~N,~B");
 Clazz.defineMethod (c$, "setSelectionSet", 
 function (set, addRemove) {
 JV.SelectionManager.setBitSet (this.bsSelection, set, addRemove);
 this.empty = -1;
-this.selectionChanged (false);
 }, "JU.BS,~N");
 c$.setBitSet = Clazz.defineMethod (c$, "setBitSet", 
  function (bsWhat, bs, addRemove) {
@@ -108,14 +114,16 @@ if (bs == null) {
 this.selectAll (true);
 if (!this.vwr.getBoolean (1612709900)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1612709900, null));
 if (!this.vwr.getBoolean (1612709894)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1612709894, null));
-this.selectionChanged (false);
 } else {
 this.setSelectionSet (bs, addRemove);
-}var reportChime = this.vwr.getBoolean (603979880);
+if (!this.vwr.getBoolean (1612709900)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1612709900, null));
+if (!this.vwr.getBoolean (1612709894)) this.excludeSelectionSet (this.vwr.ms.getAtoms (1612709894, null));
+}this.selectionChanged (false);
+var reportChime = this.vwr.getBoolean (603979879);
 if (!reportChime && isQuiet) return;
 var n = this.getSelectionCount ();
 if (reportChime) this.vwr.getChimeMessenger ().reportSelection (n);
- else if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT._ ("{0} atoms selected"), n));
+ else if (!isQuiet) this.vwr.reportSelection (J.i18n.GT.i (J.i18n.GT.$ ("{0} atoms selected"), n));
 }, "JU.BS,~N,~B");
 Clazz.defineMethod (c$, "selectAll", 
 function (isQuiet) {
@@ -172,13 +180,13 @@ function () {
 if (this.empty == 1) return 0;
 this.empty = 1;
 var bs;
-if (this.bsSubset != null) {
+if (this.bsSubset == null) {
+bs = this.bsSelection;
+} else {
 this.bsTemp.clearAll ();
 this.bsTemp.or (this.bsSubset);
 this.bsTemp.and (this.bsSelection);
 bs = this.bsTemp;
-} else {
-bs = this.bsSelection;
 }var count = bs.cardinality ();
 if (count > 0) this.empty = 0;
 return count;

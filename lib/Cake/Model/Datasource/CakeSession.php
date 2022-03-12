@@ -7,18 +7,18 @@
  * This class is the implementation of those methods.
  * They are mostly used by the Session Component.
  *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @package       Cake.Model.Datasource
  * @since         CakePHP(tm) v .0.10.0.1222
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('Hash', 'Utility');
@@ -135,6 +135,20 @@ class CakeSession {
 	protected static $_cookieName = null;
 
 /**
+ * Whether or not to make `_validAgentAndTime` 3.x compatible.
+ *
+ * @var bool
+ */
+	protected static $_useForwardsCompatibleTimeout = false;
+
+/**
+ * Whether this session is running under a CLI environment
+ *
+ * @var bool
+ */
+	protected static $_isCLI = false;
+
+/**
  * Pseudo constructor.
  *
  * @param string|null $base The base path for the Session
@@ -143,7 +157,7 @@ class CakeSession {
 	public static function init($base = null) {
 		static::$time = time();
 
-		if (env('HTTP_USER_AGENT')) {
+		if (env('HTTP_USER_AGENT') && !static::$_userAgent) {
 			static::$_userAgent = md5(env('HTTP_USER_AGENT') . Configure::read('Security.salt'));
 		}
 
@@ -155,6 +169,7 @@ class CakeSession {
 		}
 
 		static::$_initialized = true;
+		static::$_isCLI = (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg');
 	}
 
 /**
@@ -202,7 +217,6 @@ class CakeSession {
 
 		$id = static::id();
 		static::_startSession();
-
 		if (!$id && static::started()) {
 			static::_checkValid();
 		}
@@ -218,6 +232,9 @@ class CakeSession {
  * @return bool True if session has been started.
  */
 	public static function started() {
+		if (function_exists('session_status')) {
+			return isset($_SESSION) && (session_status() === PHP_SESSION_ACTIVE);
+		}
 		return isset($_SESSION) && session_id();
 	}
 
@@ -228,8 +245,11 @@ class CakeSession {
  * @return bool True if variable is there
  */
 	public static function check($name) {
-		if (empty($name) || !static::_hasSession() || !static::start()) {
+		if (!static::_hasSession() || !static::start()) {
 			return false;
+		}
+		if (isset($_SESSION[$name])) {
+			return true;
 		}
 
 		return Hash::get($_SESSION, $name) !== null;
@@ -345,12 +365,16 @@ class CakeSession {
  * @return bool
  */
 	protected static function _validAgentAndTime() {
-		$config = static::read('Config');
+		$userAgent = static::read('Config.userAgent');
+		$time = static::read('Config.time');
+		if (static::$_useForwardsCompatibleTimeout) {
+			$time += (Configure::read('Session.timeout') * 60);
+		}
 		$validAgent = (
 			Configure::read('Session.checkAgent') === false ||
-			isset($config['userAgent']) && static::$_userAgent === $config['userAgent']
+			isset($userAgent) && static::$_userAgent === $userAgent
 		);
-		return ($validAgent && static::$time <= $config['time']);
+		return ($validAgent && static::$time <= $time);
 	}
 
 /**
@@ -377,9 +401,6 @@ class CakeSession {
  *   session not started, or provided name not found in the session, false on failure.
  */
 	public static function read($name = null) {
-		if (empty($name) && $name !== null) {
-			return null;
-		}
 		if (!static::_hasSession() || !static::start()) {
 			return null;
 		}
@@ -411,11 +432,11 @@ class CakeSession {
  * Writes value to given session variable name.
  *
  * @param string|array $name Name of variable
- * @param string $value Value to write
+ * @param mixed $value Value to write
  * @return bool True if the write was successful, false if the write failed
  */
 	public static function write($name, $value = null) {
-		if (empty($name) || !static::start()) {
+		if (!static::start()) {
 			return false;
 		}
 
@@ -461,7 +482,12 @@ class CakeSession {
 		}
 
 		if (static::started()) {
+			if (session_id() && static::_hasSession()) {
+				session_write_close();
+				session_start();
+			}
 			session_destroy();
+			unset($_COOKIE[static::_cookieName()]);
 		}
 
 		$_SESSION = null;
@@ -511,6 +537,10 @@ class CakeSession {
 		if (isset($sessionConfig['timeout']) && !isset($sessionConfig['cookieTimeout'])) {
 			$sessionConfig['cookieTimeout'] = $sessionConfig['timeout'];
 		}
+		if (isset($sessionConfig['useForwardsCompatibleTimeout']) && $sessionConfig['useForwardsCompatibleTimeout']) {
+			static::$_useForwardsCompatibleTimeout = true;
+		}
+
 		if (!isset($sessionConfig['ini']['session.cookie_lifetime'])) {
 			$sessionConfig['ini']['session.cookie_lifetime'] = $sessionConfig['cookieTimeout'] * 60;
 		}
@@ -522,6 +552,12 @@ class CakeSession {
 
 		if (!empty($sessionConfig['handler'])) {
 			$sessionConfig['ini']['session.save_handler'] = 'user';
+
+			// In PHP7.2.0+ session.save_handler can't be set to 'user' by the user.
+			// https://github.com/php/php-src/commit/a93a51c3bf4ea1638ce0adc4a899cb93531b9f0d
+			if (version_compare(PHP_VERSION, '7.2.0', '>=')) {
+				unset($sessionConfig['ini']['session.save_handler']);
+			}
 		} elseif (!empty($sessionConfig['session.save_path']) && Configure::read('debug')) {
 			if (!is_dir($sessionConfig['session.save_path'])) {
 				mkdir($sessionConfig['session.save_path'], 0775, true);
@@ -534,8 +570,12 @@ class CakeSession {
 		if (!isset($sessionConfig['ini']['session.cookie_httponly'])) {
 			$sessionConfig['ini']['session.cookie_httponly'] = 1;
 		}
+		// For IE<=8
+		if (!isset($sessionConfig['cacheLimiter'])) {
+			$sessionConfig['cacheLimiter'] = 'must-revalidate';
+		}
 
-		if (empty($_SESSION)) {
+		if (empty($_SESSION) && !headers_sent() && (!function_exists('session_status') || session_status() !== PHP_SESSION_ACTIVE)) {
 			if (!empty($sessionConfig['ini']) && is_array($sessionConfig['ini'])) {
 				foreach ($sessionConfig['ini'] as $setting => $value) {
 					if (ini_set($setting, $value) === false) {
@@ -547,19 +587,24 @@ class CakeSession {
 		if (!empty($sessionConfig['handler']) && !isset($sessionConfig['handler']['engine'])) {
 			call_user_func_array('session_set_save_handler', $sessionConfig['handler']);
 		}
-		if (!empty($sessionConfig['handler']['engine'])) {
+		if (!empty($sessionConfig['handler']['engine']) && !headers_sent()) {
 			$handler = static::_getHandler($sessionConfig['handler']['engine']);
-			session_set_save_handler(
-				array($handler, 'open'),
-				array($handler, 'close'),
-				array($handler, 'read'),
-				array($handler, 'write'),
-				array($handler, 'destroy'),
-				array($handler, 'gc')
-			);
+			if (!function_exists('session_status') || session_status() !== PHP_SESSION_ACTIVE) {
+				session_set_save_handler(
+					array($handler, 'open'),
+					array($handler, 'close'),
+					array($handler, 'read'),
+					array($handler, 'write'),
+					array($handler, 'destroy'),
+					array($handler, 'gc')
+				);
+			}
 		}
 		Configure::write('Session', $sessionConfig);
-		static::$sessionTime = static::$time + ($sessionConfig['timeout'] * 60);
+		static::$sessionTime = static::$time;
+		if (!static::$_useForwardsCompatibleTimeout) {
+			static::$sessionTime += ($sessionConfig['timeout'] * 60);
+		}
 	}
 
 /**
@@ -584,14 +629,18 @@ class CakeSession {
  * @return bool
  */
 	protected static function _hasSession() {
-		return static::started() || isset($_COOKIE[static::_cookieName()]);
+		return static::started()
+			|| !ini_get('session.use_cookies')
+			|| isset($_COOKIE[static::_cookieName()])
+			|| static::$_isCLI
+			|| (ini_get('session.use_trans_sid') && isset($_GET[session_name()]));
 	}
 
 /**
  * Find the handler class and make sure it implements the correct interface.
  *
  * @param string $handler Handler name.
- * @return void
+ * @return CakeSessionHandlerInterface
  * @throws CakeSessionException
  */
 	protected static function _getHandler($handler) {
@@ -689,8 +738,10 @@ class CakeSession {
 				$_SESSION = array();
 			}
 		} else {
-			// For IE<=8
-			session_cache_limiter("must-revalidate");
+			$limit = Configure::read('Session.cacheLimiter');
+			if (!empty($limit)) {
+				session_cache_limiter($limit);
+			}
 			session_start();
 		}
 		return true;
@@ -750,10 +801,14 @@ class CakeSession {
 		if (session_id() === '') {
 			return;
 		}
-		if (isset($_COOKIE[session_name()])) {
+		if (isset($_COOKIE[static::_cookieName()])) {
 			setcookie(Configure::read('Session.cookie'), '', time() - 42000, static::$path);
 		}
-		session_regenerate_id(true);
+		if (!headers_sent()) {
+			session_write_close();
+			session_start();
+			session_regenerate_id(true);
+		}
 	}
 
 /**
