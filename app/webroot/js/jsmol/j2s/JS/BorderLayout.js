@@ -1,10 +1,5 @@
-Clazz.declarePackage ("JS");
-Clazz.load (["JS.LayoutManager"], "JS.BorderLayout", null, function () {
-c$ = Clazz.declareType (JS, "BorderLayout", JS.LayoutManager);
-Clazz.defineStatics (c$,
-"CENTER", "Center",
-"NORTH", "North",
-"SOUTH", "South",
-"EAST", "East",
-"WEST", "West");
+Clazz.declarePackage("JS");
+Clazz.load(["JS.LayoutManager"], "JS.BorderLayout", null, function(){
+var c$ = Clazz.declareType(JS, "BorderLayout", JS.LayoutManager);
 });
+;//5.0.1-v2 Tue Jul 23 17:25:20 CDT 2024

@@ -12,6 +12,8 @@
  * Date: 2014-01-23T21:02Z
  */
 
+// modified by Bob Hanson for local MSIE 11 reading remote files
+
 (function( global, factory ) {
 
 	if ( typeof module === "object" && typeof module.exports === "object" ) {
@@ -9590,6 +9592,24 @@ jQuery.ajaxSettings.xhr = window.ActiveXObject !== undefined ?
 	// For all other browsers, use the standard XMLHttpRequest object
 	createStandardXHR;
 
+//bh
+
+	function createXHR(isMSIE) {
+		try {
+			return (isMSIE ? new window.ActiveXObject( "Microsoft.XMLHTTP" ) : new window.XMLHttpRequest());
+		} catch( e ) {}
+	}
+
+ jQuery.ajaxSettings.xhr = (window.ActiveXObject === undefined ? createXHR :
+	function() {
+		return (this.url == document.location || this.url.indexOf("http") == 0 || !this.isLocal) &&  // BH MSIE fix
+			/^(get|post|head|put|delete|options)$/i.test( this.type ) &&
+			createXHR() || createXHR(1);
+	});
+
+//bh
+
+
 var xhrId = 0,
 	xhrCallbacks = {},
 	xhrSupported = jQuery.ajaxSettings.xhr();
@@ -9624,6 +9644,7 @@ if ( xhrSupported ) {
 						id = ++xhrId;
 
 					// Open the socket
+					console.log("xhr.open async=" + options.async + " url=" + options.url);
 					xhr.open( options.type, options.url, options.async, options.username, options.password );
 
 					// Apply custom fields if provided

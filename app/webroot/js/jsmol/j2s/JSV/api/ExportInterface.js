@@ -1,4 +1,3 @@
-Clazz.declarePackage ("JSV.api");
-Clazz.load (["JSV.api.JSVExporter"], "JSV.api.ExportInterface", null, function () {
-Clazz.declareInterface (JSV.api, "ExportInterface", JSV.api.JSVExporter);
-});
+Clazz.declarePackage("JSV.api");
+Clazz.declareInterface(JSV.api, "ExportInterface", JSV.api.JSVExporter);
+;//5.0.1-v2 Tue Jul 23 17:25:20 CDT 2024

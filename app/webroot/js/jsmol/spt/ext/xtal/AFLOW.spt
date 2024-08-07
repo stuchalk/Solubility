@@ -1,5 +1,7 @@
 //@author Jake LaNasa, St. Olaf College 6/19/2015
 //addition functionality by Ben Hinke, St. Olaf College 8/1/2016
+// showsg added by Bob Hanson 2023.10.24
+
 
 // 10/27/2017 5:54:40 AM BH adding prototype methods
 // 6/5/2017 12:06:09 PM Bob Hanson and Mandy Nguyen
@@ -11,7 +13,7 @@
 // Created: July/6/2017
 // Revised: July/14/2017
 // Author: Bob Hanson, Simon Zhao
-// St. Olaf College 
+// St. Olaf College
 // 7/14/2017 11:11:12 AM
 
 
@@ -20,9 +22,9 @@ AFLOWweb= "http://aflowlib.mems.duke.edu/AFLOWDATA/ICSD_WEB/"
 AFLOWlib= "http://aflowlib.mems.duke.edu/users/jmolers/jmol/get.php?lib="
 
 function aflowLoad(binaryAlloy){
-if(binaryAlloy){
-	load @{AFLOWdir+binaryAlloy+".aflow_binary"}
-}
+	if(binaryAlloy){
+		load @{AFLOWdir+binaryAlloy+".aflow_binary"}
+	}
 }
 print "aflowLoad(binaryAlloy) loaded"
 
@@ -417,9 +419,9 @@ print "aflowCreateBZ"
 
 // AFLOW macro command aflowCompare
 
-var aflowid = "" 
+var aflowid = ""
 
-/* 
+/*
  * Ask for a id and load POSCAR and CONTCAR; return initial standard deviation
  */
 function loadAflowFiles (id){
@@ -440,7 +442,7 @@ function loadAflowFiles (id){
 /*
  * Fix CONTCAR coordinates that have been moved to the next adjacent unitcell and return the fixed standard deviation
  */
-function fixCoord (){ 
+function fixCoord (){
 	frame 2
 	for(var a in {1.1}){
 		unitcell center @a
@@ -460,15 +462,15 @@ function fixCoord (){
 /*
  * return the rmsd of POSCAR and CONTCAR
  */
-function calcSD(){ 
+function calcSD(){
 	return compare({1.1},{2.1}, "stddev")
-}	
+}
 
 /*
  *
  */
 function getLatticeVariations (){
-var origLat = load (AFLOWweb + aflowid + "/?lattice_variation_orig")	
+var origLat = load (AFLOWweb + aflowid + "/?lattice_variation_orig")
 
 var relaxLat = load (AFLOWweb + aflowid + "/?lattice_variation_relax")
 
@@ -476,27 +478,27 @@ return [origLat,relaxLat]
 }
 
 /*
- * ask for id; load POSCAR and CONTCAR; fix coordinate positions;  
+ * ask for id; load POSCAR and CONTCAR; fix coordinate positions;
  */
- 
+
 function aflowCompare (id){
 	aflowid = ""
-	if (!id) id = prompt ("id?","TRI/Li1Mo1S2_ICSD_95571") //ask me what is the id 
+	if (!id) id = prompt ("id?","TRI/Li1Mo1S2_ICSD_95571") //ask me what is the id
 	if (!id) return
 
-	
+
 	oldrmsd = loadAflowFiles(id)
 	if (!aflowid) return
 	rmsd = fixCoord()
 
 	lattices = getLatticeVariations.trim().join("\u2192")
-		
+
 	set echo bottom left
 	echo "Original SD =@{format('%6.4f',oldrmsd)}         Fixed SD =@{format('%6.4f',rmsd)}        Reduced by @{format('%4.2f',(oldrmsd-rmsd)/oldrmsd)*100}% (@{lattices})"
 
 	set echo top center
 	echo "@{aflowid}"
-	
+
 }
 
 print "aflowCompare(id) loaded - for example, aflowCompare('TRI/Li1Mo1S2_ICSD_95571')"
@@ -504,7 +506,7 @@ print "aflowCompare(id) loaded - for example, aflowCompare('TRI/Li1Mo1S2_ICSD_95
 
 
 /*
- * create a key list of elements and their colors  
+ * create a key list of elements and their colors
  */
 function aflowKey() {
 
@@ -522,15 +524,15 @@ function aflowKey() {
 			y -= 30
 		}
  }
- 
+
 }
 
-print "aflowKey() loaded - adds for example, aflowCompare('TRI/Li1Mo1S2_ICSD_95571')"
+print "aflowKey() loaded - adds a key of element symbols with their colors"
 
 
 /*
  * load an AFLOW Crystal Database prototype with the specified ID
- */ 
+ */
 function aflowProtoLoadCif(id) {
 
   var dbpath = "http://aflow.org/CrystalDatabase/CIF"
@@ -547,7 +549,7 @@ function aflowProtoLoadCif(id) {
   load @id packed
   axes center {-1.0 -1.0 -1.0}
   axes scale @axisScale
-  axes @axisWidth 
+  axes @axisWidth
   font axes @fontScale
   unitcell @unitCellScale
   select metal
@@ -555,6 +557,91 @@ function aflowProtoLoadCif(id) {
 
 }
 
+
+
+// showgs
+
+if (!AFLOW)
+  AFLOW = {};
+
+AFLOW.outdir = "c:/temp/bilbao/examples/";
+AFLOW.aflowroot = "https://www.aflowlib.org/prototype-encyclopedia/";
+AFLOW.aflowpages = ["triclinic_lattice.html","monoclinic_lattice.html","orthorhombic_lattice.html","tetragonal_lattice.html",
+"trigonal_lattice.html","hexagonal_lattice.html","cubic_lattice.html"];
+AFLOW.aflowjson = "";
+
+
+
+/* does not work, because these pages are dynamically created.
+
+function getAFLOWPages() {
+	for (var page in aflowpages) {
+		var x = load(aflowroot + page);
+		write var x @{outdir + "data/aflow_" + page};
+	}
+}
+*/
+
+function createAFlowJSON() {
+	var out = {};
+	for (var page in aflowpages) {
+		var fname = "$SCRIPT_PATH$/data/aflow_" + page;
+		var aflowdata = load(fname).split('a href="');
+		for (name in aflowdata) {
+			var aname = name;
+			if (aname[1] != "A") continue;
+			aname = aname.split(".html")[1];
+			var sg = aname.split("_")[3];
+			var sgs = out[sg];
+			if (!sgs) {
+				sgs = [];
+				out[sg] = sgs;
+			}
+			sgs.push(aname);
+		}
+	}
+	out = out.format("JSON");
+	write var out @{"$SCRIPT_PATH$/data/aflow_structures.json"};
+
+}
+
+function getAFLOWPrototypes() {
+	if (!AFLOW.prototypes) {
+		AFLOW.prototypes = load("$SCRIPT_PATH$/data/aflow_structures.json","JSON");
+	}
+}
+
+
+getAFLOWPrototypes();
+
+/*
+* Show a space group, possibly one of several for a set,
+* and turn drawHover ON
+*/
+function showSG(n, i, andSymmetry) {
+	getAFLOWPrototypes();
+	var sgs = AFLOW.prototypes[n];
+	if (!i) i = 1;
+	var aname = sgs[i];
+
+	var url = AFLOW.aflowroot + "CIF/" + aname + ".cif";
+	load @url packed;
+	if (andSymmetry) {
+		draw spacegroup all;
+		set drawhover;
+		color {*} translucent;
+	}
+	if (!AFLOW.credited) {
+		print "AFLOW Encyclopedia of Crystallographic Prototypes, https://www.aflowlib.org/prototype-encyclopedia; see M. J. Mehl, D. Hicks, C. Toher, O. Levy, R. M. Hanson, G. L. W. Hart, and S. Curtarolo, The AFLOW Library of Crystallographic Prototypes: Part 1, Comp. Mat. Sci. 136, S1-S828 (2017). (doi=10.1016/j.commatsci.2017.01.017) and related publications";
+		AFLOW.credited = true;
+	}
+	print "Showing " + aname + " ITA#" + n + " (" + i + " of " + sgs.length + ")";
+
+
+}
+
+print "showSG(n,i,addSymmetry) loaded - load an AFLOW prototype structure; n = space group number, i = index of prototype."
+print "To see all prototypes of group 10, for example, print AFLOW.prototypes[10]"
 
 
 /**

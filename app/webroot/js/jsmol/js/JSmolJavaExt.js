@@ -1,12 +1,19 @@
 // JSmolJavaExt.js
- 
 
-// This library will be wrapped by an additional anonymous function using ANT in 
-// build_03_tojs.xml. This task will also modify variable names. References 
-// to Clazz._ will not be changed, but other Clazz.xxx will be changed to 
+// contains class declarations for
+// Integer, Byte, Short, Float, Double, Character
+// EventObject, EventListenerProxy
+// Throwable, Error
+// and many others. If these classes have js files in java/, those files are unused
+
+
+// This library will be wrapped by an additional anonymous function using ANT in
+// build_03_tojs.xml. This task will also modify variable names. References
+// to Clazz._ will not be changed, but other Clazz.xxx will be changed to
 // (local scope) Clazz_xxx, allowing them to be further compressed using
 // Google Closure Compiler in that same ANT task.
 
+// BH 2023.07.08 NaN.0 fix
 // BH 10/16/2017 6:51:20 AM fixing range error for MSIE in prepareCallback setting arguments.length < 0
 // BH 10/13/2017 7:03:28 AM fix for String.initialize(bytes) applying bytes as arguments
 // BH 9/18/2017 10:15:18 PM adding Integer.compare()
@@ -17,19 +24,19 @@
 // BH 9/19/2015 11:05:45 PM Float.isInfinite(), Float.isNaN(), Double.isInfinite(), Double.isNaN() all not implemented
 // BH 5/31/2015 5:53:04 PM Number.compareTo added
 // BH 5/21/2015 5:46:30 PM Number("0xFFFFFFFF") is not -1
-// BH 4/23/2015 9:08:59 AM xx.getComponentType() is nonfunctional. Array.newInstance now defines a wrapper for .getClass().getComponentType() that works  
+// BH 4/23/2015 9:08:59 AM xx.getComponentType() is nonfunctional. Array.newInstance now defines a wrapper for .getClass().getComponentType() that works
 // BH 4/12/2015 1:37:44 PM adding Math.rint = Math.round
 // BH 1/16/2015 10:09:38 AM Chrome failure jqGrig due to new String("x").toString() not being a simple string
 // BH 8/14/2014 6:49:22 PM Character class efficiencies
 // BH 7/24/2014 9:02:18 AM most browsers do not support String.codePointAt()
-// BH 7/11/2014 4:17:22 PM fix for Boolean.valueOf("false") not being false 
+// BH 7/11/2014 4:17:22 PM fix for Boolean.valueOf("false") not being false
 // BH 5/27/2014 6:29:59 AM ensure floats and doubles have decimal point in toString
-// BH 4/1/2014 12:23:41 PM Encoding moved to Clazz._Encoding; 
+// BH 4/1/2014 12:23:41 PM Encoding moved to Clazz._Encoding;
 // BH 4/1/2014 7:51:46 AM removing java.lang.B00lean
 // BH 3/7/2014 9:17:10 AM removing Array.toString; moving that code here from j2sJmol.js
 // BH 1/30/2014 9:04:25 AM adding Throwable.getStackTrace() as a STRING
 // BH 12/4/2013 9:20:44 PM fix for reassigning Date.prototype.toString()
-// BH 12/3/2013 11:43:10 AM bizarre Safari bug in reassigning Boolean (OK, I admit, we shouldn't have done that...) 
+// BH 12/3/2013 11:43:10 AM bizarre Safari bug in reassigning Boolean (OK, I admit, we shouldn't have done that...)
 // BH 12/1/2013 6:50:16 AM evit Number.prototype.toString assignment removed!
 // BH 11/30/2013 1:46:31 PM fixing Byte, Short, Long, Integer, Float, Double to reflect proper bounds and error conditions
 // BH 11/29/2013 8:58:49 PM removing Boolean.toString(boolean)
@@ -37,10 +44,10 @@
 // BH 10/19/2013 1:29:27 PM fixed String.$replace()
 // BH 10/18/2013 6:09:23 PM fixed (Double|Float).valueOf(NaN).valueOf(), which should return NaN, not throw an error
 // BH 10/12/2013 11:18:44 AM fixed bug in Double(String) and Float(String) that was returning typeof "string"
-// BH 10/10/2013 2:40:20 PM  added Math.log10   
+// BH 10/10/2013 2:40:20 PM  added Math.log10
 // BH 7/23/2013 7:24:01 AM fixing Number.shortValue() and Number.byteValue() for negative values
 // BH 6/16/2013 1:31:30 PM adding /| in String.replace -- thank you David Koes
-// BH 3/13/2013 12:49:23 PM setting Boolean.valueOf() "@" 
+// BH 3/13/2013 12:49:23 PM setting Boolean.valueOf() "@"
 // BH 3/2/2013 10:46:45 PM removed Double.valueOf(String)
 // BH 11/6/2012 8:26:33 PM added instanceof Int32Array in String.instantialize
 // BH 10/13/2012 11:38:07 PM corrected Integer.parseInt to allow only +-0123456789; created Integer.parseIntRadix
@@ -58,7 +65,7 @@
 
   var sJU = "java.util";
 
-  //var sJU = "JU";  
+  //var sJU = "JU";
 	//Clazz._Loader.registerPackages (sJU, ["regex", "zip"]);
 	//var javautil = JU;
 
@@ -321,7 +328,7 @@ function(){
 return this.valueOf();
 });
 
-// Note that Long is problematic in JavaScript 
+// Note that Long is problematic in JavaScript
 
 java.lang.Long=Long=function(){
 Clazz.instantialize(this,arguments);
@@ -555,7 +562,7 @@ return new Byte(n);
 
 Clazz._floatToString = function(f) {
  var s = ""+f
- if (s.indexOf(".") < 0 && s.indexOf("e") < 0)
+ if (s.indexOf(".") < 0 && s.indexOf("e") < 0 && s != "NaN")
  	 s += ".0";
  return s;
 }
@@ -579,12 +586,12 @@ Clazz._a32 = null;
 Float.floatToIntBits = function(f) {
 var a = Clazz._a32 || (Clazz._a32 = new Float32Array(1));
 a[0] = f;
-return new Int32Array(a.buffer)[0]; 
+return new Int32Array(a.buffer)[0];
 }
 
 Clazz.overrideConstructor(Float, function(v){
  v == null && (v = 0);
- if (typeof v != "number") 
+ if (typeof v != "number")
 	v = Number(v);
  this.valueOf=function(){return v;}
 });
@@ -653,7 +660,7 @@ return Clazz._floatToString(this.valueOf());
 
 Clazz.overrideConstructor(Double, function(v){
  v == null && (v = 0);
- if (typeof v != "number") 
+ if (typeof v != "number")
 	v = Double.parseDouble(v);
  this.valueOf=function(){return v;};
 }); // BH
@@ -995,6 +1002,8 @@ return buf.join('');
 
 if(String.prototype.$replace==null){
 java.lang.String=String;
+Clazz._setDeclared("String", String);
+
 if(Clazz._supportsNativeObject){
 for(var i=0;i<Clazz._extendedObjectMethods.length;i++){
 var p=Clazz._extendedObjectMethods[i];
@@ -1018,7 +1027,7 @@ sp.$replace=function(c1,c2){
 	if (c1 == c2 || this.indexOf (c1) < 0) return "" + this;
 	if (c1.length == 1) {
 		if ("\\$.*+|?^{}()[]".indexOf(c1) >= 0) 	c1 = "\\" + c1;
-	} else {    
+	} else {
 		c1=c1.replace(/([\\\$\.\*\+\|\?\^\{\}\(\)\[\]])/g,function($0,$1){return"\\"+$1;});
 	}
 	return this.replace(new RegExp(c1,"gm"),c2);
@@ -1438,17 +1447,17 @@ case 1:
 	if(typeof x=="string"||x instanceof String){
 		return new String(x);
 	}
-	if(x.__CLASS_NAME__=="StringBuffer"||x.__CLASS_NAME__=="java.lang.StringBuffer"){
-		var value=x.shareValue();
-		var length=x.length();
-		var valueCopy=new Array(length);
-		for(var i=0;i<length;i++){
-			valueCopy[i]=value[i];
-		}
-		return valueCopy.join('')
-	}
+//	if(x.__CLASS_NAME__=="StringBuffer"||x.__CLASS_NAME__=="java.lang.StringBuffer"){
+//		var value=x.shareValue();
+//		var length=x.length();
+//		var valueCopy=new Array(length);
+//		for(var i=0;i<length;i++){
+//			valueCopy[i]=value[i];
+//		}
+//		return valueCopy.join('')
+//	}
 	return""+x;
-case 2:	
+case 2:
 	var x=arguments[0];
 	var hibyte=arguments[1];
 	if(typeof hibyte=="string"){
@@ -1526,7 +1535,7 @@ if(navigator.userAgent.toLowerCase().indexOf("chrome")!=-1){
 
 })(Clazz._Encoding);
 
-
+var c$;
 
 c$=Clazz.decorateAsClass(function(){
 this.value=0;
@@ -1631,14 +1640,7 @@ return"class java.lang.Character";
 }
 }return String.valueOf(c);
 },"~N");
-Clazz.defineStatics(c$,
-"MIN_VALUE",'\u0000',
-"MAX_VALUE",'\uffff',
-"MIN_RADIX",2,
-"MAX_RADIX",36,
-"TYPE",null);
-
-java.lang.Character.TYPE=java.lang.Character.prototype.TYPE=java.lang.Character;
+c$.TYPE=c$;
 
 
 
@@ -1652,19 +1654,23 @@ Clazz._ArrayWrapper = function(a, type) {
    getName: function() { return this.__CLASS_NAME__ }
  };
 }
-c$=Clazz_declareType(java.lang.reflect,"Array");
-c$.newInstance=Clazz_defineMethod(c$,"newInstance",
+c$=Clazz.declareType(java.lang.reflect,"Array");
+c$.newInstance=Clazz.defineMethod(c$,"newInstance",
 function(componentType,size){
-var a = Clazz_newArray(size);
+var a = Clazz.newArray(size);
  a.getClass = function() { return new Clazz._ArrayWrapper(this, componentType);};
 return a;
 },"Class,~N");
 
+c$.getLength = function(o){return o.length};
+c$.get = function(o, i){return o[i]};
+
 javautil.Date=Date;
 Date.TYPE="javautil.Date";
 Date.__CLASS_NAME__="Date";
+Clazz._setDeclared("java.util.Date", Date);
+Clazz._setDeclared("Date", Date);
 Clazz.implementOf(Date,[java.io.Serializable,java.lang.Comparable]);
-
 Clazz.defineMethod(javautil.Date,"clone",
 function(){
 return new Date(this.getTime());
@@ -1684,13 +1690,10 @@ return Clazz.instanceOf(obj,javautil.Date)&&this.getTime()==(obj).getTime();
 },"Object");
 Clazz.defineMethod(javautil.Date,"compareTo",
 function(anotherDate){
+if (anotherDate == null)return 1;
 var thisTime=this.getTime();
 var anotherTime=anotherDate.getTime();
 return(thisTime<anotherTime?-1:(thisTime==anotherTime?0:1));
-},"javautil.Date");
-Clazz.defineMethod(javautil.Date,"compareTo",
-function(o){
-return this.compareTo(o);
 },"Object");
 Clazz.overrideMethod(javautil.Date,"hashCode",
 function(){
@@ -1758,22 +1761,19 @@ function(){
 this.fillInStackTrace();
 });
 Clazz.makeConstructor(c$,
-function(message){
-this.fillInStackTrace();
-this.detailMessage=message;
-},"~S");
-Clazz.makeConstructor(c$,
 function(message,cause){
 this.fillInStackTrace();
+if (!cause && typeof message == "object") {
+	cause = message;
+	message = cause.toString();
+}
+cause && (this.cause=cause);
 this.detailMessage=message;
-this.cause=cause;
 },"~S,Throwable");
-Clazz.makeConstructor(c$,
-function(cause){
-this.fillInStackTrace();
-this.detailMessage=(cause==null?null:cause.toString());
-this.cause=cause;
-},"Throwable");
+
+
+
+
 Clazz.defineMethod(c$,"getMessage",
 function(){
 return (this.message || this.detailMessage || this.toString());
@@ -1955,38 +1955,35 @@ return this.lineNumber==-2;
 });
 Clazz.overrideMethod(c$,"toString",
 function(){
-var buf=new StringBuilder(80);
-buf.append(this.getClassName());
-buf.append('.');
-buf.append(this.getMethodName());
+var buf = this.getClassName() + "." + this.getMethodName();
 if(this.isNativeMethod()){
-buf.append("(Native Method)");
+buf += ("(Native Method)");
 }else{
 var fName=this.getFileName();
 if(fName==null){
-buf.append("(Unknown Source)");
+buf += ("(Unknown Source)");
 }else{
 var lineNum=this.getLineNumber();
-buf.append('(');
-buf.append(fName);
+buf += ('(');
+buf += (fName);
 if(lineNum>=0){
-buf.append(':');
-buf.append(lineNum);
-}buf.append(')');
-}}return buf.toString();
+buf += (':');
+buf = buf + lineNum;
+}buf += (')');
+}}return buf;
 });
 TypeError.prototype.getMessage || (TypeError.prototype.getMessage = function(){ return (this.message || this.toString()) + (this.getStackTrace ? this.getStackTrace() : Clazz.getStackTrace())});
 
 
 Clazz.Error = Error;
 
-Clazz.declareTypeError = function (prefix, name, clazzParent, interfacez, 
+Clazz.declareTypeError = function (prefix, name, clazzParent, interfacez,
 		parentClazzInstance, _declareType) {
 	var f = function () {
 		Clazz.instantialize (this, arguments);
     return Clazz.Error();
 	};
-	return Clazz.decorateAsClass (f, prefix, name, clazzParent, interfacez, 
+	return Clazz.decorateAsClass (f, prefix, name, clazzParent, interfacez,
 			parentClazzInstance);
 };
 
@@ -2006,16 +2003,8 @@ c$=Clazz.declareType(java.lang,"AbstractMethodError",IncompatibleClassChangeErro
 c$=Clazz.declareType(java.lang,"AssertionError",Error);
 Clazz.makeConstructor(c$,
 function(detailMessage){
-Clazz.superConstructor(this,AssertionError,[String.valueOf(detailMessage),(Clazz.instanceOf(detailMessage,Throwable)?detailMessage:null)]);
+Clazz.superConstructor(this,AssertionError,["" + detailMessage,(Clazz.instanceOf(detailMessage,Throwable)?detailMessage:null)]);
 },"~O");
-Clazz.makeConstructor(c$,
-function(detailMessage){
-this.construct("" + detailMessage);
-},"~B");
-Clazz.makeConstructor(c$,
-function(detailMessage){
-this.construct("" + detailMessage);
-},"~N");
 
 c$=Clazz.declareType(java.lang,"ClassCircularityError",LinkageError);
 
@@ -2248,55 +2237,14 @@ this.bytesTransferred=0;
 Clazz.instantialize(this,arguments);
 },java.io,"InterruptedIOException",java.io.IOException);
 
-c$=Clazz.declareType(java.io,"ObjectStreamException",java.io.IOException);
-
-c$=Clazz.decorateAsClass(function(){
-this.classname=null;
-Clazz.instantialize(this,arguments);
-},java.io,"InvalidClassException",java.io.ObjectStreamException);
-Clazz.makeConstructor(c$,
-function(className,detailMessage){
-Clazz.superConstructor(this,java.io.InvalidClassException,[detailMessage]);
-this.classname=className;
-},"~S,~S");
-Clazz.defineMethod(c$,"getMessage",
-function(){
-var msg=Clazz.superCall(this,java.io.InvalidClassException,"getMessage",[]);
-if(this.classname!=null){
-msg=this.classname+';' + ' '+msg;
-}return msg;
-});
-
-c$=Clazz.declareType(java.io,"InvalidObjectException",java.io.ObjectStreamException);
-
-c$=Clazz.declareType(java.io,"NotActiveException",java.io.ObjectStreamException);
-
-c$=Clazz.declareType(java.io,"NotSerializableException",java.io.ObjectStreamException);
-
-c$=Clazz.decorateAsClass(function(){
-this.eof=false;
-this.length=0;
-Clazz.instantialize(this,arguments);
-},java.io,"OptionalDataException",java.io.ObjectStreamException);
-
-c$=Clazz.declareType(java.io,"StreamCorruptedException",java.io.ObjectStreamException);
-
 c$=Clazz.declareType(java.io,"SyncFailedException",java.io.IOException);
 
 c$=Clazz.declareType(java.io,"UnsupportedEncodingException",java.io.IOException);
 
 c$=Clazz.declareType(java.io,"UTFDataFormatException",java.io.IOException);
 
-c$=Clazz.decorateAsClass(function(){
-this.detail=null;
-Clazz.instantialize(this,arguments);
-},java.io,"WriteAbortedException",java.io.ObjectStreamException);
-Clazz.makeConstructor(c$,
-function(detailMessage,rootCause){
-Clazz.superConstructor(this,java.io.WriteAbortedException,[detailMessage]);
-this.detail=rootCause;
-this.initCause(rootCause);
-},"~S,Exception");
+// ignore ObjectStream exceptions
+
 Clazz.defineMethod(c$,"getMessage",
 function(){
 var msg=Clazz.superCall(this,java.io.WriteAbortedException,"getMessage",[]);
@@ -2340,11 +2288,9 @@ c$=Clazz.declareType(javautil,"NoSuchElementException",RuntimeException);
 c$=Clazz.declareType(javautil,"TooManyListenersException",Exception);
 
 c$=Clazz.declareType(java.lang,"Void");
-Clazz.defineStatics(c$,
-"TYPE",null);
-{
-java.lang.Void.TYPE=java.lang.Void;
-}Clazz.declareInterface(java.lang.reflect,"GenericDeclaration");
+c$.TYPE = c$;
+
+Clazz.declareInterface(java.lang.reflect,"GenericDeclaration");
 Clazz.declareInterface(java.lang.reflect,"AnnotatedElement");
 
 c$=Clazz.declareType(java.lang.reflect,"AccessibleObject",null,java.lang.reflect.AnnotatedElement);
@@ -2410,11 +2356,8 @@ return 0.0;
 c$.emptyArgs=c$.prototype.emptyArgs=new Array(0);
 Clazz.declareInterface(java.lang.reflect,"InvocationHandler");
 c$=Clazz.declareInterface(java.lang.reflect,"Member");
-Clazz.defineStatics(c$,
-"PUBLIC",0,
-"DECLARED",1);
-
 c$=Clazz.declareType(java.lang.reflect,"Modifier");
+
 Clazz.makeConstructor(c$,
 function(){
 });
@@ -2485,24 +2428,6 @@ if(sb.length>0){
 return sb.join(" ");
 }return"";
 },"~N");
-Clazz.defineStatics(c$,
-"PUBLIC",0x1,
-"PRIVATE",0x2,
-"PROTECTED",0x4,
-"STATIC",0x8,
-"FINAL",0x10,
-"SYNCHRONIZED",0x20,
-"VOLATILE",0x40,
-"TRANSIENT",0x80,
-"NATIVE",0x100,
-"INTERFACE",0x200,
-"ABSTRACT",0x400,
-"STRICT",0x800,
-"BRIDGE",0x40,
-"VARARGS",0x80,
-"SYNTHETIC",0x1000,
-"ANNOTATION",0x2000,
-"ENUM",0x4000);
 
 c$=Clazz.decorateAsClass(function(){
 this.clazz=null;
@@ -2729,7 +2654,7 @@ return this.name;
 });
 Clazz.defineMethod(c$,"getParameterTypes",
 function(){
-return this.parameterTypes; 
+return this.parameterTypes;
 });
 Clazz.defineMethod(c$,"getReturnType",
 function(){

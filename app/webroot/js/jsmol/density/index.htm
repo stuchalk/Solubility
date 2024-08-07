@@ -10,11 +10,11 @@ jmolInitialize("..")
 
 script0 = 'set perspectivedepth false;background white;meshColor={200 0 200};load 3hyd.pdb;wireframe only;wireframe 0;'
 	+'/*boundbox scale 1.2 {tyr};zoomto 0 {tyr} 0*/;set drawhover on;'
-	+'isosurface id ~cloud /*boundbox*/ color density cutoff 0 colorscheme translucent bw "3hyd_map.ccp4.gz" mesh nofill;' 
+	+'isosurface id ~cloud /*boundbox*/ color density cutoff 0 colorscheme translucent bw "3hyd_map.ccp4.gz" mesh nofill;'
 
 var Info = {
-	width: 450,
-	height: 450,
+	width: 800,
+	height: 800,
 	debug: false,
 	color: "white",
 	addSelectionOptions: false,
@@ -45,7 +45,7 @@ Info = []
 
 function doScroll(name, value, position) {
 	value = Math.floor(value * 10)/10
-	Info = [name,value] 
+	Info = [name,value]
 	if (name == "cutoff")thisCutoff = value
 	document.getElementById("scr_" + name + "_caption").innerHTML = name + ": " + value
 	doCmd()
@@ -119,7 +119,7 @@ function doCmd(info) {
 	}
 }
 
-function runScript(script) {	
+function runScript(script) {
 	jmolScript(script)
 }
 function runCommand(name) {
@@ -144,7 +144,7 @@ document.getElementById("jmolform").reset();
 <body onload="init()">
 <table><tr><td>3hyd Density -- Can you find and identify the amino acid residues?</td></tr><tr><td>
 <script type="text/javascript">
-jmolApplet(500, script0)
+jmolApplet(800, script0)
 </script>
 
 <br>

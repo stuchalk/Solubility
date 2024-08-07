@@ -34,7 +34,7 @@ var MInfo;       // for Molfile
 // System.out.println, document.title, or alert commands
 // anywhere in the Java or Jmol code.
 
-Jmol._debugCode = true;//(s.indexOf("debugcode") >= 0);
+//Jmol._debugCode = true;//(s.indexOf("debugcode") >= 0);
 
 jmol_isReady = function(applet) {
 	document.title = (applet._id + " is ready")
@@ -87,7 +87,7 @@ MInfo = {
 
 $(document).ready(function() {
   $("#jmoldiv").html(Jmol.getAppletHtml("jmol", MInfo));
-  $("#jsvdiv").html(Jmol.getAppletHtml(Jmol.getJSVApplet("jsv",SInfo)))  
+  $("#jsvdiv").html(Jmol.getAppletHtml(Jmol.getJSVApplet("jsv",SInfo)))
 });
 
 </script>

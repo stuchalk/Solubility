@@ -8,13 +8,13 @@
 
 klothodir = "klotho/"
 
-/* 
+/*
 Original notes by Bob Hanson hansonr@stolaf.edu 7:55 AM 4/19/2009
 
-http://chemapps.stolaf.edu/klotho/index.htm, with klotho.js (from klotho.xls), 
+http://chemapps.stolaf.edu/klotho/index.htm, with klotho.js (from klotho.xls),
 taps into the database at http://www.biocheminfo.org/klotho.
 
-The page categorizes the compounds there into classes and then presents them using Jmol. 
+The page categorizes the compounds there into classes and then presents them using Jmol.
 It uses several advanced Jmol features to carryout functions such as:
 
 --- loading files with a common molecule size, center, and orientation
@@ -64,7 +64,7 @@ InfoRef = {}
 })()
 
 function addC(name, info) {
- if(name.indexOf("_dm") >= 0 
+ if(name.indexOf("_dm") >= 0
 	|| name.indexOf("nonresonant") >= 0
 	|| name.indexOf("aminoacid_") >= 0
 	|| name.indexOf("peptide_") >= 0
@@ -100,7 +100,7 @@ jmolEvaluate = function(what) { return Jmol.evaluateVar(jmolApplet0, what) }
 jmol_isReady = function(applet) {
 	document.title = ("Klotho - Jmol " + Jmol.___JmolVersion)
   if (theSearch)doSearch(theSearch)
-}		
+}
 
 var Info = {
 	width: 600,
@@ -121,16 +121,17 @@ var Info = {
 
 $(document).ready(function() {
   Jmol.setDocument(0);
-  
+
   var html = Jmol.getAppletHtml("jmolApplet0", Info)
+  $("#appdiv").html(html);
+  html = Jmol.jmolButton(jmolApplet0, "select off *;spacefill off;wireframe 0.05","wireframe")
+    + Jmol.jmolButton(jmolApplet0, "select off *;spacefill 20%;wireframe 0.15","ball and stick")
+    + Jmol.jmolButton(jmolApplet0, "select off *;wireframe off;spacefill","spacefill")
     + "<br>"
-    + Jmol.jmolButton(jmolApplet0, "select *;spacefill off;wireframe 0.05","wireframe")
-    + Jmol.jmolButton(jmolApplet0, "select *;spacefill 20%;wireframe 0.15","ball and stick")
-    + Jmol.jmolButton(jmolApplet0, "select *;wireframe off;spacefill","spacefill")
-    + "<br>"
-    + Jmol.jmolButton(jmolApplet0, "write PNGJ \"?.jpg\"","save PNG+Jmol")
+    + Jmol.jmolButton(jmolApplet0, "write PNGJ \"?.png\"","save PNG+Jmol")
     + Jmol.jmolButton(jmolApplet0, "console")
-  $("#appdiv").html(html);  
+  $("#controldiv").html(html);
+
 
 })
 
@@ -187,7 +188,7 @@ function loadClass(what) {
  var measureScript = ";set showmeasurements false;measure {_C} {_C} {_C} {_C} allconnected;"
  var callbackScript = ';set loadStructCallback "loadCallback0";'// "javascript loadCallback();"
  var chargeScript = ';set fontscaling;var s = {selected};select _N and connected(4);label + ; set labeloffset 4 4;font label 30; select _O and connected(_C) and connected(1, aromaticsingle);label - ;set labeloffset 4 4;font label 30;select @s'
-   
+
 function loadit(d,is2,index) {
  var what = (d ? d[d.selectedIndex].text : theFile)
  var da = document.getElementById("wikiref")
@@ -417,7 +418,7 @@ function doRingFlip() {
   if (theSearch.indexOf("pyranose") < 0) {
 	alert("First select a compound such as alpha-D-glucopyranose that has a pyranose ring that can be flipped.")
 	return
-  } 
+  }
   // here we go!
   // 1) disconnect ringO-ringA bond
   // 2) invert four dihedrals around the ring
@@ -480,42 +481,43 @@ function checkEnter(e) {
 <!-- source: <a target=_blank href=http://www.biocheminfo.org>www.biocheminfo.org</a> Klotho set -->
 <br>
 <br>
-<span id=aminenote style="display:none"><small><i>Note: Amines are not generally depicted correctly in this database. 
+<span id=aminenote style="display:none"><small><i>Note: Amines are not generally depicted correctly in this database.
 A trivalent nitrogen atom adjacent to an sp2 center will generally become sp2 itself.</i></small></span>
-<textarea style='width:300px;height:300px;overflow:auto'> 
+<textarea style='width:300px;height:300px;overflow:auto'>
 
-jsmol/klotho/index.htm from the Jmol/JSmol distribution  
+jsmol/klotho/index.htm from the Jmol/JSmol distribution
 
 Notes by Bob Hanson 10/11/2017
 
-part of the JMOL UNPLUGGED (TM) collection, 
+part of the JMOL UNPLUGGED (TM) collection,
 
 Jmol Unplugged (Jmol Desenchufado) is a joint project between
-Bob Hanson, St. Olaf College and the University of San Simon, 
-Cochabamba, Bolivia, providing internet-free browser-based access 
+Bob Hanson, St. Olaf College and the University of San Simon,
+Cochabamba, Bolivia, providing internet-free browser-based access
 to the best of 3D molecular visualization.
 
-Jmol Unplugged originated in October, 2017, 
-as a part of Fulbright Specialist Project FSP-P001203, 
+Jmol Unplugged originated in October, 2017,
+as a part of Fulbright Specialist Project FSP-P001203,
 "3D Molecular Visualization for Chemistry"
 Edwin Escalara, UMSS
-   
+
 
 Klotho reference:
-   
+
 Wise, W. B., J. Holcomb, and T. Kazic, 2000. Klotho: a Tutorial and Manual. IBC technical report
 
 Klotho: Biochemical Compounds Declarative Database
 created by Toni Kazic, Andrej Bugrim, Francis Fabrizio, Brian Feng,
 Jason Holcomb, Fumio Sawa, Jakub Slomczynski, and William Wise
-although the site http://www.biocheminfo.org/klotho is no more, it lives on as 
+although the site http://www.biocheminfo.org/klotho is no more, it lives on as
 http://web.archive.org/web/20011205065732/http://www.ibc.wustl.edu:80/klotho/
 </textarea>
 
 
 </td><td valign=top>
 <div id=appdiv></div>
-<br>
+</td><td valign=top>
+<div id=controldiv></div>
 <input type=button onclick="doFischer(0)" value="Fischer projection">
 <input type=button onclick="doFischer(1)" value="Reset">
 <input type=button onclick="doRingFlip(0)" value="Flip pyranose">

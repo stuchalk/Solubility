@@ -1,16 +1,18 @@
-Clazz.declarePackage ("JS");
-c$ = Clazz.decorateAsClass (function () {
+Clazz.declarePackage("JS");
+(function(){
+var c$ = Clazz.decorateAsClass(function(){
 this.width = 0;
 this.height = 0;
-Clazz.instantialize (this, arguments);
-}, JS, "Dimension");
-Clazz.makeConstructor (c$, 
-function (w, h) {
-this.set (w, h);
+Clazz.instantialize(this, arguments);}, JS, "Dimension", null);
+Clazz.makeConstructor(c$,
+function(w, h){
+this.set(w, h);
 }, "~N,~N");
-Clazz.defineMethod (c$, "set", 
-function (w, h) {
+Clazz.defineMethod(c$, "set",
+function(w, h){
 this.width = w;
 this.height = h;
 return this;
 }, "~N,~N");
+})();
+;//5.0.1-v2 Tue Jul 23 17:25:20 CDT 2024

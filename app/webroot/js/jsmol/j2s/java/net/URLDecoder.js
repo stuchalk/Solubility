@@ -1,12 +1,9 @@
 Clazz.declarePackage("java.net");
-Clazz.load(null,"java.net.URLDecoder",["java.lang.NullPointerException"],function(){
-c$=Clazz.declareType(java.net,"URLDecoder");
-c$.decode=Clazz.defineMethod(c$,"decode",
+(function(){
+var c$ = Clazz.declareType(java.net, "URLDecoder", null);
+c$.decode = Clazz.defineMethod(c$, "decode",
 function(s){
 return decodeURIComponent(s);
-},"~S");
-c$.decode=Clazz.defineMethod(c$,"decode",
-function(s,enc){
-return decodeURIComponent(s);
-},"~S,~S");
-});
+}, "~S");
+})();
+;//5.0.1-v2 Sat Apr 06 02:44:31 CDT 2024

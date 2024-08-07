@@ -1,2 +1,3 @@
-Clazz.declarePackage ("J.api");
-Clazz.declareInterface (J.api, "JmolSceneGenerator");
+Clazz.declarePackage("J.api");
+Clazz.declareInterface(J.api, "JmolSceneGenerator");
+;//5.0.1-v2 Tue Jul 23 17:25:20 CDT 2024

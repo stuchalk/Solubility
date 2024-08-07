@@ -1,6 +1,5 @@
-Clazz.declarePackage ("J.api");
-c$ = Clazz.declareInterface (J.api, "JmolGestureServerInterface");
-Clazz.defineStatics (c$,
-"OK", 1,
-"HAS_CLIENT", 2,
-"HAS_DRIVER", 4);
+Clazz.declarePackage("J.api");
+(function(){
+var c$ = Clazz.declareInterface(J.api, "JmolGestureServerInterface");
+})();
+;//5.0.1-v2 Tue Jul 23 17:25:20 CDT 2024
